@@ -439,7 +439,349 @@
             color: #374151;
         }
 
-        /* CTA Section */
+        /* Pricing Section */
+        .pricing-section {
+            padding: 8rem 0;
+            background: white;
+        }
+
+        .value-comparison {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 4rem 0;
+        }
+
+        .value-comparison h3 {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 3rem;
+            color: #1e293b;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .traditional-cost, .legacyos-value {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .traditional-cost h4 {
+            color: #ef4444;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+
+        .legacyos-value h4 {
+            color: #22c55e;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+
+        .cost-item, .value-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .cost-item:last-of-type, .value-item:last-of-type {
+            border-bottom: none;
+        }
+
+        .service, .feature {
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .cost {
+            font-weight: 600;
+            color: #ef4444;
+        }
+
+        .included {
+            font-weight: 600;
+            color: #22c55e;
+        }
+
+        .total-cost, .total-value {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 2px solid #e5e7eb;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .total-cost strong {
+            color: #ef4444;
+        }
+
+        .total-value strong {
+            color: #22c55e;
+        }
+
+        .vs-divider {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #667eea;
+            text-align: center;
+            background: white;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin: 4rem 0;
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .pricing-card.popular {
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .plan-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .plan-header h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .price {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .currency {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .amount {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #1e293b;
+        }
+
+        .period {
+            font-size: 1.2rem;
+            color: #64748b;
+            margin-left: 0.25rem;
+        }
+
+        .plan-description {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+
+        .plan-features {
+            margin-bottom: 2rem;
+        }
+
+        .feature-item {
+            padding: 0.75rem 0;
+            color: #374151;
+            line-height: 1.5;
+        }
+
+        .btn-plan {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-align: center;
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+        .btn-plan:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .starter .btn-plan {
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+        }
+
+        .legacy .btn-plan {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        /* ROI Calculator */
+        .roi-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 4rem 0;
+            color: white;
+            text-align: center;
+        }
+
+        .roi-section h3 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+        }
+
+        .roi-calculator {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .calculator-input label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .calculator-input select {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 10px;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .calculator-result {
+            text-align: left;
+        }
+
+        .savings-amount, .payback-time {
+            margin-bottom: 1.5rem;
+        }
+
+        .savings-number, .payback-number {
+            display: block;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #fbbf24;
+        }
+
+        .savings-label, .payback-label {
+            display: block;
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        /* Guarantee */
+        .guarantee {
+            text-align: center;
+            background: #f0f9f0;
+            border: 2px solid #22c55e;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        .guarantee-badge {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .guarantee h3 {
+            color: #16a34a;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .guarantee p {
+            color: #166534;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Responsive Pricing */
+        @media (max-width: 768px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .vs-divider {
+                order: 2;
+                margin: 1rem auto;
+            }
+
+            .pricing-card.popular {
+                transform: none;
+            }
+
+            .roi-calculator {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .calculator-result {
+                text-align: center;
+            }
+        }
         .cta-section {
             padding: 8rem 0;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -811,7 +1153,178 @@
         </div>
     </section>
 
-    <!-- CTA Section -->
+    <!-- Pricing Section -->
+    <section class="pricing-section" id="pricing">
+        <div class="container">
+            <div class="section-header">
+                <h2>Simple Pricing for Every Family</h2>
+                <p>Get the power of a $10,000+ family office team for the cost of a streaming service</p>
+            </div>
+            
+            <!-- Value Comparison -->
+            <div class="value-comparison">
+                <h3>What You're Replacing</h3>
+                <div class="comparison-grid">
+                    <div class="traditional-cost">
+                        <h4>Traditional Approach</h4>
+                        <div class="cost-item">
+                            <span class="service">Financial Advisor</span>
+                            <span class="cost">$2,000-5,000/yr</span>
+                        </div>
+                        <div class="cost-item">
+                            <span class="service">Estate Planning</span>
+                            <span class="cost">$500-3,000+</span>
+                        </div>
+                        <div class="cost-item">
+                            <span class="service">Tax Strategist</span>
+                            <span class="cost">$750-2,500/yr</span>
+                        </div>
+                        <div class="cost-item">
+                            <span class="service">Budgeting Tools</span>
+                            <span class="cost">$180/yr</span>
+                        </div>
+                        <div class="cost-item">
+                            <span class="service">Wealth Coaching</span>
+                            <span class="cost">$1,200-6,000/yr</span>
+                        </div>
+                        <div class="total-cost">
+                            <strong>Total: $4,630-16,680/year</strong>
+                        </div>
+                    </div>
+                    <div class="vs-divider">VS</div>
+                    <div class="legacyos-value">
+                        <h4>The SIXWING System</h4>
+                        <div class="value-item">
+                            <span class="feature">Strategic Action Plans</span>
+                            <span class="included">✓ Included</span>
+                        </div>
+                        <div class="value-item">
+                            <span class="feature">Estate Planning Guidance</span>
+                            <span class="included">✓ Included</span>
+                        </div>
+                        <div class="value-item">
+                            <span class="feature">Tax Optimization Wing</span>
+                            <span class="included">✓ Included</span>
+                        </div>
+                        <div class="value-item">
+                            <span class="feature">Advanced Progress Tracking</span>
+                            <span class="included">✓ Included</span>
+                        </div>
+                        <div class="value-item">
+                            <span class="feature">Family Wealth Education</span>
+                            <span class="included">✓ Included</span>
+                        </div>
+                        <div class="total-value">
+                            <strong>Starting at $15/month</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing Cards -->
+            <div class="pricing-grid">
+                <div class="pricing-card starter">
+                    <div class="plan-header">
+                        <h3>Free Trial</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">0</span>
+                            <span class="period">/14 days</span>
+                        </div>
+                        <p class="plan-description">Get hooked on the SIXWING System</p>
+                    </div>
+                    <div class="plan-features">
+                        <div class="feature-item">✓ Full Legacy Score assessment</div>
+                        <div class="feature-item">✓ Progress tracking across all 6 wings</div>
+                        <div class="feature-item">✓ Level 1 action plans</div>
+                        <div class="feature-item">✓ Basic quarterly review</div>
+                        <div class="feature-item">✓ Introduction to family collaboration</div>
+                    </div>
+                    <a href="#" class="btn-plan">Start Free Trial</a>
+                </div>
+
+                <div class="pricing-card core popular">
+                    <div class="popular-badge">Most Popular</div>
+                    <div class="plan-header">
+                        <h3>Core Plan</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">19</span>
+                            <span class="period">/month</span>
+                        </div>
+                        <p class="plan-description">Perfect for growing families</p>
+                    </div>
+                    <div class="plan-features">
+                        <div class="feature-item">✓ Everything in Free Trial</div>
+                        <div class="feature-item">✓ <strong>Complete access to all 6 wings</strong></div>
+                        <div class="feature-item">✓ <strong>Advanced action plan generation</strong></div>
+                        <div class="feature-item">✓ <strong>Professional quarterly reports</strong></div>
+                        <div class="feature-item">✓ <strong>Family collaboration (1 partner)</strong></div>
+                        <div class="feature-item">✓ <strong>Tool integrations & auto-fill</strong></div>
+                        <div class="feature-item">✓ Email support</div>
+                    </div>
+                    <a href="#" class="btn-plan">Get My Legacy Score</a>
+                </div>
+
+                <div class="pricing-card legacy">
+                    <div class="plan-header">
+                        <h3>Legacy+ Plan</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">49</span>
+                            <span class="period">/month</span>
+                        </div>
+                        <p class="plan-description">For serious wealth builders</p>
+                    </div>
+                    <div class="plan-features">
+                        <div class="feature-item">✓ Everything in Core Plan</div>
+                        <div class="feature-item">✓ <strong>Guided onboarding & walkthroughs</strong></div>
+                        <div class="feature-item">✓ <strong>Up to 5 family collaborators</strong></div>
+                        <div class="feature-item">✓ <strong>Custom PDF reports for advisors</strong></div>
+                        <div class="feature-item">✓ <strong>Advanced integrations (DAF, trusts)</strong></div>
+                        <div class="feature-item">✓ <strong>Priority support & expert guidance</strong></div>
+                        <div class="feature-item">✓ <strong>Document vault storage</strong></div>
+                        <div class="feature-item">✓ <strong>Annual family wealth review call</strong></div>
+                    </div>
+                    <a href="#" class="btn-plan">Start Building Your Family Office</a>
+                </div>
+            </div>
+
+            <!-- ROI Calculator -->
+            <div class="roi-section">
+                <h3>Calculate Your Savings</h3>
+                <div class="roi-calculator">
+                    <div class="calculator-input">
+                        <label>Your current net worth:</label>
+                        <select id="networth">
+                            <option value="50000">$50,000</option>
+                            <option value="100000">$100,000</option>
+                            <option value="250000">$250,000</option>
+                            <option value="500000">$500,000</option>
+                            <option value="1000000">$1,000,000+</option>
+                        </select>
+                    </div>
+                    <div class="calculator-result">
+                        <div class="savings-amount">
+                            <span class="savings-number">$3,400</span>
+                            <span class="savings-label">Annual Savings vs Traditional Advisors</span>
+                        </div>
+                        <div class="payback-time">
+                            <span class="payback-number">2 weeks</span>
+                            <span class="payback-label">Payback Period</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Money Back Guarantee -->
+            <div class="guarantee">
+                <div class="guarantee-badge">💰</div>
+                <h3>60-Day Money-Back Guarantee</h3>
+                <p>Not seeing progress in your Legacy Score? Get a full refund, no questions asked. We're confident the SIXWING System will transform your family's financial future.</p>
+            </div>
+        </div>
+    </section>
     <section class="cta-section">
         <div class="container">
             <h2>Start Building Your Family Office Today</h2>
@@ -1064,6 +1577,52 @@
                 }
             });
         };
+
+        // ROI Calculator functionality
+        const setupROICalculator = () => {
+            const networthSelect = document.getElementById('networth');
+            const savingsNumber = document.querySelector('.savings-number');
+            const paybackNumber = document.querySelector('.payback-number');
+            
+            const calculateSavings = (networth) => {
+                // Traditional advisor costs based on net worth
+                let advisorCost = Math.max(2000, networth * 0.01); // 1% AUM, minimum $2000
+                let estatePlanningCost = networth > 500000 ? 3000 : 1500;
+                let taxStrategistCost = networth > 250000 ? 2500 : 1500;
+                let toolsCost = 180;
+                let coachingCost = networth > 100000 ? 3000 : 1200;
+                
+                let totalTraditionalCost = advisorCost + estatePlanningCost + taxStrategistCost + toolsCost + coachingCost;
+                let legacyOSCost = 19 * 12; // Core plan annual cost
+                let savings = Math.round(totalTraditionalCost - legacyOSCost);
+                
+                return {
+                    savings: savings,
+                    paybackDays: Math.round((legacyOSCost / savings) * 365)
+                };
+            };
+            
+            const updateCalculator = () => {
+                const networth = parseInt(networthSelect.value);
+                const result = calculateSavings(networth);
+                
+                savingsNumber.textContent = `${result.savings.toLocaleString()}`;
+                
+                if (result.paybackDays < 30) {
+                    paybackNumber.textContent = `${result.paybackDays} days`;
+                } else if (result.paybackDays < 365) {
+                    paybackNumber.textContent = `${Math.round(result.paybackDays / 30)} months`;
+                } else {
+                    paybackNumber.textContent = `${Math.round(result.paybackDays / 365)} years`;
+                }
+            };
+            
+            networthSelect.addEventListener('change', updateCalculator);
+            updateCalculator(); // Initial calculation
+        };
+
+        // Initialize ROI calculator when page loads
+        document.addEventListener('DOMContentLoaded', setupROICalculator);
 
         createMobileMenu();
     </script>
