@@ -1,1 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - LegacyOS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Background Animation */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><radialGradient id="grad1" cx="20%" cy="80%" r="60%"><stop offset="0%" style="stop-color:%23ffffff;stop-opacity:0.1" /><stop offset="100%" style="stop-color:%23ffffff;stop-opacity:0" /></radialGradient></defs><circle cx="200" cy="800" r="600" fill="url(%23grad1)" /></svg>') no-repeat;
+            background-size: cover;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        /* Login Container */
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 450px;
+            margin: 2rem;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Login Header */
+        .login-header {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: white;
+            padding: 3rem 2rem 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .login-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="80" cy="20" r="30" fill="rgba(255,255,255,0.05)" /></svg>') no-repeat;
+            background-size: cover;
+        }
+
+        .logo {
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo p {
+            color: #cbd5e1;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Login Form */
+        .login-form {
+            padding: 3rem 2rem;
+        }
+
+        .welcome-text {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .welcome-text h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-text p {
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .password-container {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            color: #667eea;
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #667eea;
+        }
+
+        .forgot-password {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .forgot-password:hover {
+            color: #5b6fe8;
+            text-decoration: underline;
+        }
+
+        .login-button {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            margin-bottom: 1.5rem;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .login-button.loading {
+            opacity: 0.8;
+            cursor: not-allowed;
+        }
+
+        /* Demo Account */
+        .demo-section {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .demo-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .demo-accounts {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .demo-account {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .demo-account:hover {
+            border-color: #667eea;
+            background: #f8fafc;
+        }
+
+        .demo-account-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .demo-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .demo-details {
+            flex: 1;
+        }
+
+        .demo-name {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 0.9rem;
+        }
+
+        .demo-stats {
+            color: #64748b;
+            font-size: 0.8rem;
+        }
+
+        .demo-score {
+            background: #dcfce7;
+            color: #16a34a;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* Footer Links */
+        .login-footer {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .login-footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Back to Home */
+        .back-home {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .back-home:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .login-container {
+                margin: 1rem;
+                max-width: none;
+            }
+
+            .login-header {
+                padding: 2rem 1.5rem 1.5rem;
+            }
+
+            .login-form {
+                padding: 2rem 1.5rem;
+            }
+
+            .back-home {
+                top: 1rem;
+                left: 1rem;
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Success Animation */
+        @keyframes checkmark {
+            0% {
+                stroke-dashoffset: 100;
+            }
+            100% {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        .success-checkmark {
+            display: none;
+            width: 80px;
+            height: 80px;
+            margin: 1rem auto;
+        }
+
+        .success-checkmark circle {
+            stroke: #22c55e;
+            stroke-width: 3;
+            fill: none;
+        }
+
+        .success-checkmark path {
+            stroke: #22c55e;
+            stroke-width: 3;
+            fill: none;
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: checkmark 0.8s ease-in-out forwards;
+        }
+    </style>
+</head>
+<body>
+    <!-- Back to Home Link -->
+    <a href="index.html" class="back-home">← Back to Home</a>
+
+    <!-- Login Container -->
+    <div class="login-container">
+        <!-- Login Header -->
+        <div class="login-header">
+            <div class="logo">
+                <h1>LegacyOS</h1>
+                <p>Your Family Office Platform</p>
+            </div>
+        </div>
+
+        <!-- Login Form -->
+        <div class="login-form">
+            <div class="welcome-text">
+                <h2>Welcome Back</h2>
+                <p>Continue building your family's legacy</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        class="form-input" 
+                        placeholder="john@example.com"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <div class="password-container">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            class="form-input" 
+                            placeholder="Enter your password"
+                            required
+                        >
+                        <button type="button" class="password-toggle" onclick="togglePassword()">
+                            👁️
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" id="remember">
+                        <span>Remember me</span>
+                    </label>
+                    <a href="#" class="forgot-password">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="login-button" id="loginBtn">
+                    Access Your Family Office
+                </button>
+            </form>
+
+            <!-- Demo Section -->
+            <div class="demo-section">
+                <div class="demo-title">
+                    🎮 Try a Demo Account
+                </div>
+                <div class="demo-accounts">
+                    <div class="demo-account" onclick="loginDemo('johnson')">
+                        <div class="demo-account-info">
+                            <div class="demo-avatar">JJ</div>
+                            <div class="demo-details">
+                                <div class="demo-name">The Johnson Family</div>
+                                <div class="demo-stats">Net Worth: $47K • 6 wings active</div>
+                            </div>
+                        </div>
+                        <div class="demo-score">Score: 73</div>
+                    </div>
+                    
+                    <div class="demo-account" onclick="loginDemo('rodriguez')">
+                        <div class="demo-account-info">
+                            <div class="demo-avatar">MR</div>
+                            <div class="demo-details">
+                                <div class="demo-name">The Rodriguez Family</div>
+                                <div class="demo-stats">Net Worth: $425K • 6 wings active</div>
+                            </div>
+                        </div>
+                        <div class="demo-score">Score: 89</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success Animation (Hidden) -->
+            <svg class="success-checkmark" id="successCheck" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45"/>
+                <path d="M30 50 L45 65 L70 35"/>
+            </svg>
+
+            <div class="login-footer">
+                Don't have an account? <a href="index.html#pricing">Start free trial</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Password toggle functionality
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleBtn = document.querySelector('.password-toggle');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleBtn.textContent = '🙈';
+            } else {
+                passwordInput.type = 'password';
+                toggleBtn.textContent = '👁️';
+            }
+        }
+
+        // Demo login functionality
+        function loginDemo(family) {
+            const loginBtn = document.getElementById('loginBtn');
+            const successCheck = document.getElementById('successCheck');
+            
+            // Show loading state
+            loginBtn.textContent = 'Logging in...';
+            loginBtn.classList.add('loading');
+            
+            // Simulate login process
+            setTimeout(() => {
+                // Show success animation
+                successCheck.style.display = 'block';
+                loginBtn.style.display = 'none';
+                
+                // Redirect to dashboard after animation
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+            }, 1500);
+        }
+
+        // Regular form submission
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const successCheck = document.getElementById('successCheck');
+            
+            if (!email || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            // Show loading state
+            loginBtn.textContent = 'Verifying credentials...';
+            loginBtn.classList.add('loading');
+            
+            // Simulate authentication
+            setTimeout(() => {
+                if (email.includes('@') && password.length >= 6) {
+                    // Show success animation
+                    successCheck.style.display = 'block';
+                    loginBtn.style.display = 'none';
+                    
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                } else {
+                    // Reset form on error
+                    loginBtn.textContent = 'Access Your Family Office';
+                    loginBtn.classList.remove('loading');
+                    alert('Invalid credentials. Try the demo accounts or use a valid email/password.');
+                }
+            }, 2000);
+        });
+
+        // Auto-fill demo credentials on click
+        function fillDemoCredentials() {
+            document.getElementById('email').value = 'demo@legacyos.com';
+            document.getElementById('password').value = 'demo123';
+        }
+
+        // Enhanced UX: Focus states and animations
+        document.querySelectorAll('.form-input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'translateY(-2px)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'translateY(0)';
+            });
+        });
+
+        // Keyboard navigation for demo accounts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === '1') {
+                loginDemo('johnson');
+            } else if (e.key === '2') {
+                loginDemo('rodriguez');
+            }
+        });
+
+        // Add subtle floating animation to background
+        let animationFrame = 0;
+        function animateBackground() {
+            animationFrame++;
+            const body = document.body;
+            const offset = Math.sin(animationFrame * 0.01) * 10;
+            body.style.backgroundPosition = `${offset}px ${offset}px`;
+            requestAnimationFrame(animateBackground);
+        }
+        animateBackground();
+    </script>
+</body>
+</html>
