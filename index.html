@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LegacyOS - Your Family Office for Generational Wealth</title>
+    <title>LegacyOS Dashboard - The Johnson Family</title>
     <style>
         * {
             margin: 0;
@@ -13,1168 +13,630 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
             line-height: 1.6;
-            color: #1a1a1a;
-            overflow-x: hidden;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
-
-        /* Header */
-        header {
+        /* Sidebar Navigation */
+        .sidebar {
             position: fixed;
+            left: 0;
             top: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(180deg, #1e293b 0%, #334155 100%);
+            color: white;
+            padding: 2rem 0;
             z-index: 1000;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
-        }
-
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 0;
+            overflow-y: auto;
         }
 
         .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .nav-links {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-        }
-
-        .nav-links a {
-            text-decoration: none;
-            color: #64748b;
-            font-weight: 500;
-            transition: color 0.3s ease;
-        }
-
-        .nav-links a:hover {
-            color: #667eea;
-        }
-
-        .cta-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .cta-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-        }
-
-        /* Hero Section */
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><radialGradient id="grad1" cx="50%" cy="50%" r="50%"><stop offset="0%" style="stop-color:%23667eea;stop-opacity:0.1" /><stop offset="100%" style="stop-color:%23764ba2;stop-opacity:0" /></radialGradient></defs><circle cx="200" cy="200" r="300" fill="url(%23grad1)" /><circle cx="800" cy="800" r="400" fill="url(%23grad1)" /></svg>') no-repeat;
-            background-size: cover;
-            opacity: 0.6;
-        }
-
-        .hero-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4rem;
-            align-items: center;
-            position: relative;
-            z-index: 1;
-        }
-
-        .hero-text h1 {
-            font-size: 3.5rem;
-            font-weight: 900;
-            line-height: 1.1;
-            margin-bottom: 1.5rem;
-            background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero-text p {
-            font-size: 1.25rem;
-            color: #64748b;
-            margin-bottom: 2rem;
-            line-height: 1.7;
-        }
-
-        .hero-buttons {
-            display: flex;
-            gap: 1rem;
+            padding: 0 2rem;
             margin-bottom: 3rem;
         }
 
-        .btn-primary {
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo p {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-top: 0.25rem;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-title {
+            padding: 0 2rem;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 2rem;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: rgba(102, 126, 234, 0.2);
+            border-left-color: #667eea;
+            color: white;
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+            margin-right: 1rem;
+            width: 20px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            background: #f8fafc;
+        }
+
+        /* Top Header */
+        .top-header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .header-left p {
+            color: #64748b;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .legacy-score-header {
+            text-align: center;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 1rem 2rem;
+            padding: 1rem 1.5rem;
             border-radius: 12px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
 
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        .score-number-header {
+            font-size: 2rem;
+            font-weight: 900;
+            line-height: 1;
         }
 
-        .btn-secondary {
-            background: white;
-            color: #475569;
-            padding: 1rem 2rem;
-            border-radius: 12px;
-            text-decoration: none;
+        .score-label-header {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .user-menu:hover {
+            background: #f1f5f9;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
             font-weight: 600;
-            font-size: 1.1rem;
-            border: 2px solid #e2e8f0;
-            transition: all 0.3s ease;
         }
 
-        .btn-secondary:hover {
-            border-color: #667eea;
-            color: #667eea;
+        /* Dashboard Content */
+        .dashboard-content {
+            padding: 2rem;
+        }
+
+        /* Quick Stats */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
             transform: translateY(-2px);
         }
 
-        .stats {
+        .stat-card.networth { border-left-color: #22c55e; }
+        .stat-card.savings { border-left-color: #3b82f6; }
+        .stat-card.goals { border-left-color: #f59e0b; }
+        .stat-card.next-review { border-left-color: #8b5cf6; }
+
+        .stat-header {
             display: flex;
-            gap: 2rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
         }
 
-        .stat {
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #667eea;
-        }
-
-        .stat-label {
+        .stat-title {
             font-size: 0.9rem;
             color: #64748b;
             text-transform: uppercase;
+            font-weight: 600;
             letter-spacing: 0.5px;
         }
 
-        .hero-visual {
-            position: relative;
+        .stat-trend {
+            font-size: 0.8rem;
+            font-weight: 600;
         }
 
-        .dashboard-preview {
+        .trend-up { color: #22c55e; }
+        .trend-neutral { color: #64748b; }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-subtitle {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        /* Wing Progress Section */
+        .wing-progress-section {
             background: white;
-            border-radius: 20px;
+            border-radius: 16px;
             padding: 2rem;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.1);
-            transform: perspective(1000px) rotateY(-15deg) rotateX(10deg);
-            transition: transform 0.5s ease;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         }
 
-        .dashboard-preview:hover {
-            transform: perspective(1000px) rotateY(-10deg) rotateX(5deg);
-        }
-
-        .dashboard-header {
+        .section-header {
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
         }
 
-        .legacy-score-display {
-            text-align: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 1rem;
-            border-radius: 12px;
-            margin-left: auto;
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
         }
 
-        .score-big {
-            font-size: 2.5rem;
-            font-weight: 900;
+        .view-all-btn {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: background 0.3s ease;
+        }
+
+        .view-all-btn:hover {
+            background: #f1f5f9;
         }
 
         .wings-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 1.5rem;
         }
 
-        .wing-item {
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid;
-        }
-
-        .wing-growth { background: #f0f9f0; border-left-color: #22c55e; }
-        .wing-preservation { background: #eff6ff; border-left-color: #3b82f6; }
-        .wing-philanthropy { background: #fef2f2; border-left-color: #ef4444; }
-        .wing-experiences { background: #fffbeb; border-left-color: #f59e0b; }
-
-        .wing-name {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .wing-level {
-            font-size: 0.9rem;
-            color: #64748b;
-        }
-
-        .progress-bar-mini {
-            height: 4px;
-            background: #e2e8f0;
-            border-radius: 2px;
-            margin-top: 0.5rem;
-            overflow: hidden;
-        }
-
-        .progress-fill-mini {
-            height: 100%;
-            border-radius: 2px;
-        }
-
-        .wing-growth .progress-fill-mini { background: #22c55e; width: 65%; }
-        .wing-preservation .progress-fill-mini { background: #3b82f6; width: 30%; }
-        .wing-philanthropy .progress-fill-mini { background: #ef4444; width: 45%; }
-        .wing-experiences .progress-fill-mini { background: #f59e0b; width: 80%; }
-
-        /* Features Section */
-        .features {
-            padding: 8rem 0;
-            background: white;
-        }
-
-        .section-header {
-            text-align: center;
-            margin-bottom: 5rem;
-        }
-
-        .section-header h2 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 1rem;
-            color: #1e293b;
-        }
-
-        .section-header p {
-            font-size: 1.2rem;
-            color: #64748b;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 3rem;
-        }
-
-        .feature-card {
-            background: white;
-            border-radius: 16px;
-            padding: 2.5rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-            border: 1px solid #f1f5f9;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .feature-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-        }
-
-        .feature-icon {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .wing-card {
+            background: #f8fafc;
             border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .feature-card h3 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            color: #1e293b;
-        }
-
-        .feature-card p {
-            color: #64748b;
-            line-height: 1.7;
-        }
-
-        /* Wings Section */
-        .wings-section {
-            padding: 8rem 0;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-        }
-
-        .wings-showcase {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-top: 4rem;
-        }
-
-        .wing-showcase {
-            background: white;
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
+            padding: 1.5rem;
             border-left: 5px solid;
+            transition: all 0.3s ease;
         }
 
-        .wing-showcase:hover {
-            transform: translateY(-5px);
+        .wing-card:hover {
+            background: white;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
 
-        .wing-showcase.growth { border-left-color: #22c55e; }
-        .wing-showcase.preservation { border-left-color: #3b82f6; }
-        .wing-showcase.philanthropy { border-left-color: #ef4444; }
-        .wing-showcase.experiences { border-left-color: #f59e0b; }
-        .wing-showcase.legacy { border-left-color: #8b5cf6; }
-        .wing-showcase.operations { border-left-color: #6b7280; }
+        .wing-card.growth { border-left-color: #22c55e; }
+        .wing-card.preservation { border-left-color: #3b82f6; }
+        .wing-card.philanthropy { border-left-color: #ef4444; }
+        .wing-card.experiences { border-left-color: #f59e0b; }
+        .wing-card.legacy { border-left-color: #8b5cf6; }
+        .wing-card.operations { border-left-color: #6b7280; }
 
-        .wing-showcase h3 {
+        .wing-header {
             display: flex;
             align-items: center;
-            font-size: 1.3rem;
-            font-weight: 700;
+            justify-content: space-between;
             margin-bottom: 1rem;
-            color: #1e293b;
         }
 
-        .wing-showcase .wing-icon {
+        .wing-title-group {
+            display: flex;
+            align-items: center;
+        }
+
+        .wing-icon {
             font-size: 1.5rem;
             margin-right: 0.75rem;
         }
 
-        .wing-levels {
-            margin-top: 1rem;
-        }
-
-        .level-item {
-            display: flex;
-            align-items: center;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .level-number {
-            width: 30px;
-            height: 30px;
-            background: #f1f5f9;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 0.9rem;
-            margin-right: 1rem;
-            color: #64748b;
-        }
-
-        .level-title {
-            font-weight: 600;
-            color: #374151;
-        }
-
-        /* Pricing Section */
-        .pricing-section {
-            padding: 8rem 0;
-            background: white;
-        }
-
-        .value-comparison {
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            border-radius: 20px;
-            padding: 3rem;
-            margin: 4rem 0;
-        }
-
-        .value-comparison h3 {
-            text-align: center;
-            font-size: 1.8rem;
+        .wing-name {
+            font-size: 1.1rem;
             font-weight: 700;
-            margin-bottom: 3rem;
             color: #1e293b;
         }
 
-        .comparison-grid {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            gap: 3rem;
-            align-items: center;
+        .wing-level {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
         }
 
-        .traditional-cost, .legacyos-value {
-            background: white;
-            border-radius: 15px;
-            padding: 2rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        .wing-progress {
+            margin-bottom: 1rem;
         }
 
-        .traditional-cost h4 {
-            color: #ef4444;
-            margin-bottom: 1.5rem;
-            font-size: 1.3rem;
-            text-align: center;
-        }
-
-        .legacyos-value h4 {
-            color: #22c55e;
-            margin-bottom: 1.5rem;
-            font-size: 1.3rem;
-            text-align: center;
-        }
-
-        .cost-item, .value-item {
+        .progress-info {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .cost-item:last-of-type, .value-item:last-of-type {
-            border-bottom: none;
-        }
-
-        .service, .feature {
-            font-weight: 500;
-            color: #374151;
-        }
-
-        .cost {
-            font-weight: 600;
-            color: #ef4444;
-        }
-
-        .included {
-            font-weight: 600;
-            color: #22c55e;
-        }
-
-        .total-cost, .total-value {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 2px solid #e5e7eb;
-            text-align: center;
-            font-size: 1.1rem;
-        }
-
-        .total-cost strong {
-            color: #ef4444;
-        }
-
-        .total-value strong {
-            color: #22c55e;
-        }
-
-        .vs-divider {
-            font-size: 2rem;
-            font-weight: 900;
-            color: #667eea;
-            text-align: center;
-            background: white;
-            border-radius: 50%;
-            width: 80px;
-            height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-
-        .pricing-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 2rem;
-            margin: 4rem 0;
-        }
-
-        .pricing-card {
-            background: white;
-            border-radius: 20px;
-            padding: 2.5rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            border: 2px solid transparent;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .pricing-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-        }
-
-        .pricing-card.popular {
-            border-color: #667eea;
-            transform: scale(1.05);
-        }
-
-        .popular-badge {
-            position: absolute;
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 0.5rem 1.5rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-
-        .plan-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .plan-header h3 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin-bottom: 1rem;
-        }
-
-        .price {
-            display: flex;
-            align-items: baseline;
-            justify-content: center;
-            margin-bottom: 1rem;
-        }
-
-        .currency {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #64748b;
-        }
-
-        .amount {
-            font-size: 3rem;
-            font-weight: 900;
-            color: #1e293b;
-        }
-
-        .period {
-            font-size: 1.2rem;
-            color: #64748b;
-            margin-left: 0.25rem;
-        }
-
-        .plan-description {
-            color: #64748b;
-            font-size: 1.1rem;
-        }
-
-        .plan-features {
-            margin-bottom: 2rem;
-        }
-
-        .feature-item {
-            padding: 0.75rem 0;
-            color: #374151;
-            line-height: 1.5;
-        }
-
-        .btn-plan {
-            width: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 1rem 2rem;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1.1rem;
-            text-align: center;
-            display: block;
-            transition: all 0.3s ease;
-        }
-
-        .btn-plan:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-        }
-
-        .starter .btn-plan {
-            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
-        }
-
-        .legacy .btn-plan {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        }
-
-        /* Enhanced ROI Calculator */
-        .roi-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 20px;
-            padding: 4rem;
-            margin: 4rem 0;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .roi-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            border-radius: 50%;
-        }
-
-        .roi-header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        .roi-header h3 {
-            font-size: 2.2rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .roi-header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .roi-calculator {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            gap: 3rem;
-            align-items: start;
-            max-width: 1000px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 1;
-        }
-
-        .calculator-left {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 2rem;
-            backdrop-filter: blur(10px);
-        }
-
-        .calculator-input {
-            margin-bottom: 2rem;
-        }
-
-        .calculator-input label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
-        }
-
-        .calculator-input select {
-            width: 100%;
-            padding: 1rem;
-            border-radius: 10px;
-            border: none;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #1e293b;
-            background: white;
-        }
-
-        .traditional-breakdown h4 {
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
-            color: #fbbf24;
-        }
-
-        .cost-breakdown {
-            space-y: 0.5rem;
-        }
-
-        .cost-line {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .cost-line:last-child {
-            border-bottom: none;
-            font-weight: 600;
-            padding-top: 1rem;
-            border-top: 2px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .cost-amount {
-            font-weight: 600;
-            color: #fbbf24;
-        }
-
-        .vs-arrow {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .arrow-content {
-            background: white;
-            color: #667eea;
-            border-radius: 50%;
-            width: 80px;
-            height: 80px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-            font-size: 1.2rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .arrow-icon {
-            font-size: 1.5rem;
-            margin-top: 0.25rem;
-        }
-
-        .calculator-right {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-
-        .legacyos-offer {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 15px;
-            padding: 2rem;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .offer-badge {
-            background: #22c55e;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            display: inline-block;
-            margin-bottom: 1rem;
-        }
-
-        .offer-price {
-            margin-bottom: 1.5rem;
-        }
-
-        .price-large {
-            font-size: 3rem;
-            font-weight: 900;
-            color: #fbbf24;
-        }
-
-        .price-period {
-            font-size: 1.2rem;
-            opacity: 0.8;
-        }
-
-        .offer-features {
-            text-align: left;
-        }
-
-        .feature {
-            padding: 0.5rem 0;
-            opacity: 0.9;
-        }
-
-        .savings-highlight {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .savings-result, .payback-result {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 1.5rem;
-            text-align: center;
-            backdrop-filter: blur(10px);
-        }
-
-        .savings-number, .payback-number {
-            display: block;
-            font-size: 2.2rem;
-            font-weight: 900;
-            color: #22c55e;
             margin-bottom: 0.5rem;
         }
 
-        .savings-label, .payback-label {
+        .current-milestone {
             font-size: 0.9rem;
-            opacity: 0.8;
-        }
-
-        .roi-footnote {
-            text-align: center;
-            margin-top: 2rem;
-            opacity: 0.7;
-        }
-
-        /* Enhanced Guarantee */
-        .guarantee {
-            background: linear-gradient(135deg, #f0f9f0 0%, #dcfce7 100%);
-            border: 2px solid #22c55e;
-            border-radius: 20px;
-            padding: 0;
-            margin-top: 3rem;
-            overflow: hidden;
-        }
-
-        .guarantee-content {
-            display: grid;
-            grid-template-columns: auto 1fr auto;
-            gap: 3rem;
-            align-items: center;
-            padding: 3rem;
-        }
-
-        .guarantee-badge {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            background: white;
-            padding: 1.5rem;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(34, 197, 94, 0.2);
-        }
-
-        .badge-icon {
-            font-size: 3rem;
-        }
-
-        .badge-title {
-            font-size: 1.8rem;
-            font-weight: 900;
-            color: #16a34a;
-            line-height: 1;
-        }
-
-        .badge-subtitle {
-            font-size: 1rem;
-            color: #166534;
+            color: #374151;
             font-weight: 600;
         }
 
-        .guarantee-center h3 {
+        .progress-percentage {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.8s ease;
+        }
+
+        .wing-card.growth .progress-fill { background: linear-gradient(90deg, #22c55e, #16a34a); }
+        .wing-card.preservation .progress-fill { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+        .wing-card.philanthropy .progress-fill { background: linear-gradient(90deg, #ef4444, #dc2626); }
+        .wing-card.experiences .progress-fill { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        .wing-card.legacy .progress-fill { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
+        .wing-card.operations .progress-fill { background: linear-gradient(90deg, #6b7280, #4b5563); }
+
+        .wing-action {
+            font-size: 0.9rem;
+            color: #64748b;
+            font-style: italic;
+        }
+
+        .action-needed {
+            color: #dc2626;
+            font-weight: 500;
+        }
+
+        .on-track {
             color: #16a34a;
-            font-size: 1.8rem;
+            font-weight: 500;
+        }
+
+        /* Action Items Section */
+        .action-items-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .action-items-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .action-item {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+            transition: all 0.3s ease;
+        }
+
+        .action-item:hover {
+            background: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .action-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .action-item.high { border-left-color: #ef4444; }
+        .action-item.medium { border-left-color: #f59e0b; }
+        .action-item.low { border-left-color: #22c55e; }
+
+        .action-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .action-priority {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .action-item.medium .action-priority {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .action-item.low .action-priority {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .action-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .action-description {
+            color: #64748b;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .action-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .action-wing {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .action-time {
+            color: #64748b;
+        }
+
+        /* Quick Actions Widget */
+        .quick-actions-widget {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .widget-title {
+            font-size: 1.3rem;
             font-weight: 700;
             margin-bottom: 1rem;
         }
 
-        .guarantee-center p {
-            color: #166534;
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin-bottom: 2rem;
-        }
-
-        .guarantee-stats {
-            display: flex;
-            gap: 2rem;
-        }
-
-        .guarantee-stat {
-            text-align: center;
-        }
-
-        .guarantee-stat .stat-number {
-            display: block;
-            font-size: 1.5rem;
-            font-weight: 900;
-            color: #16a34a;
-        }
-
-        .guarantee-stat .stat-label {
-            font-size: 0.8rem;
-            color: #166534;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .testimonial-card {
-            background: white;
-            border-radius: 15px;
-            padding: 2rem;
-            box-shadow: 0 10px 30px rgba(34, 197, 94, 0.1);
-            max-width: 280px;
-        }
-
-        .testimonial-quote {
-            font-style: italic;
-            color: #374151;
+        .widget-description {
+            opacity: 0.9;
             margin-bottom: 1.5rem;
             line-height: 1.5;
         }
 
-        .testimonial-author {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
+        .quick-action-btn {
+            background: white;
+            color: #667eea;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            margin: 0.25rem;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
         }
 
-        .author-avatar {
-            width: 50px;
-            height: 50px;
+        .quick-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Recent Activity */
+        .recent-activity {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
+            margin-right: 1rem;
             font-size: 1.2rem;
         }
 
-        .author-name {
-            font-weight: 600;
-            color: #1e293b;
+        .activity-icon.completed {
+            background: #dcfce7;
+            color: #16a34a;
         }
 
-        .author-detail {
-            font-size: 0.8rem;
+        .activity-icon.progress {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .activity-icon.alert {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-description {
+            font-size: 0.9rem;
             color: #64748b;
         }
 
-        /* Enhanced Responsive for new sections */
-        @media (max-width: 768px) {
-            .roi-calculator {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-            
-            .vs-arrow {
-                order: 2;
-            }
-            
-            .calculator-right {
-                order: 3;
-            }
-
-            .savings-highlight {
-                grid-template-columns: 1fr;
-            }
-
-            .guarantee-content {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-                text-align: center;
-            }
-
-            .guarantee-stats {
-                justify-content: center;
-                flex-wrap: wrap;
-            }
-
-            .testimonial-card {
-                max-width: none;
-            }
-        }
-
-        /* Responsive Pricing */
-        @media (max-width: 768px) {
-            .comparison-grid {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-            
-            .vs-divider {
-                order: 2;
-                margin: 1rem auto;
-            }
-
-            .pricing-card.popular {
-                transform: none;
-            }
-
-            .roi-calculator {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-
-            .calculator-result {
-                text-align: center;
-            }
-        }
-        .cta-section {
-            padding: 8rem 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            text-align: center;
-        }
-
-        .cta-section h2 {
-            font-size: 3rem;
-            font-weight: 900;
-            margin-bottom: 1.5rem;
-        }
-
-        .cta-section p {
-            font-size: 1.3rem;
-            margin-bottom: 3rem;
-            opacity: 0.9;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .btn-cta {
-            background: white;
-            color: #667eea;
-            padding: 1.5rem 3rem;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 1.2rem;
-            display: inline-block;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn-cta:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Footer */
-        footer {
-            background: #1e293b;
-            color: white;
-            padding: 4rem 0 2rem;
-        }
-
-        .footer-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 3rem;
-            margin-bottom: 2rem;
-        }
-
-        .footer-section h3 {
-            font-size: 1.2rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            color: #f8fafc;
-        }
-
-        .footer-section p, .footer-section a {
+        .activity-time {
+            font-size: 0.8rem;
             color: #94a3b8;
-            text-decoration: none;
-            line-height: 1.8;
+            white-space: nowrap;
         }
 
-        .footer-section a:hover {
-            color: #667eea;
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .action-items-section {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .footer-bottom {
-            text-align: center;
-            padding-top: 2rem;
-            border-top: 1px solid #374151;
-            color: #94a3b8;
-        }
-
-        /* Responsive */
         @media (max-width: 768px) {
-            .hero-content {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-
-            .hero-text h1 {
-                font-size: 2.5rem;
-            }
-
-            .nav-links {
-                display: none;
-            }
-
-            .features-grid, .wings-showcase {
+            .wings-grid {
                 grid-template-columns: 1fr;
             }
 
-            .dashboard-preview {
-                transform: none;
+            .quick-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .top-header {
+                padding: 1rem;
+            }
+
+            .dashboard-content {
+                padding: 1rem;
             }
         }
 
         /* Animations */
-        @keyframes fadeInUp {
+        @keyframes slideIn {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(20px);
             }
             to {
                 opacity: 1;
@@ -1182,724 +644,449 @@
             }
         }
 
-        .hero-text, .hero-visual {
-            animation: fadeInUp 0.8s ease-out;
+        .wing-card, .stat-card, .action-item {
+            animation: slideIn 0.6s ease-out;
         }
 
-        .hero-visual {
-            animation-delay: 0.2s;
-        }
+        .wing-card:nth-child(1) { animation-delay: 0.1s; }
+        .wing-card:nth-child(2) { animation-delay: 0.2s; }
+        .wing-card:nth-child(3) { animation-delay: 0.3s; }
+        .wing-card:nth-child(4) { animation-delay: 0.4s; }
+        .wing-card:nth-child(5) { animation-delay: 0.5s; }
+        .wing-card:nth-child(6) { animation-delay: 0.6s; }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <nav class="container">
-            <div class="logo">LegacyOS</div>
-            <ul class="nav-links">
-                <li><a href="#features">Features</a></li>
-                <li><a href="#wings">Six Wings</a></li>
-                <li><a href="#pricing">Pricing</a></li>
-                <li><a href="#about">About</a></li>
-            </ul>
-            <a href="#" class="cta-button">Start Building Your Family Office</a>
-        </nav>
-    </header>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="logo">
+            <h1>LegacyOS</h1>
+            <p>The Johnson Family</p>
+        </div>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <div class="hero-text">
-                    <h1>The SIXWING System for Generational Wealth</h1>
-                    <p>Build intentional wealth across six key areas with the proven SIXWING methodology. Level up your finances like a game, but create real generational impact for your family.</p>
-                    <div class="hero-buttons">
-                        <a href="#" class="btn-primary">Get My Legacy Score</a>
-                        <a href="#" class="btn-secondary">Watch How It Works</a>
-                    </div>
-                    <div class="stats">
-                        <div class="stat">
-                            <div class="stat-number">6</div>
-                            <div class="stat-label">Wealth Wings</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-number">5</div>
-                            <div class="stat-label">Levels Each</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-number">∞</div>
-                            <div class="stat-label">Legacy Impact</div>
-                        </div>
-                    </div>
+        <div class="nav-section">
+            <div class="nav-title">Dashboard</div>
+            <a href="#" class="nav-item active">
+                <span class="nav-icon">📊</span>
+                Overview
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🎯</span>
+                Action Plan
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">📈</span>
+                Progress Report
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-title">Six Wings</div>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🚀</span>
+                Growth
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🛡️</span>
+                Preservation
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">❤️</span>
+                Philanthropy
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🌟</span>
+                Experiences
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">📜</span>
+                Legacy
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                Operations
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-title">Family Office</div>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">👥</span>
+                Family Members
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">📋</span>
+                Quarterly Review
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🔗</span>
+                Integrations
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                Settings
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Header -->
+        <div class="top-header">
+            <div class="header-left">
+                <h2>Welcome back, John!</h2>
+                <p>Here's your family's wealth building progress</p>
+            </div>
+            <div class="header-right">
+                <div class="legacy-score-header">
+                    <div class="score-number-header">73</div>
+                    <div class="score-label-header">Legacy Score</div>
                 </div>
-                <div class="hero-visual">
-                    <div class="dashboard-preview">
-                        <div class="dashboard-header">
-                            <h3>The Johnson Family</h3>
-                            <div class="legacy-score-display">
-                                <div class="score-big">73</div>
-                                <div>Legacy Score</div>
-                            </div>
-                        </div>
-                        <div class="wings-grid">
-                            <div class="wing-item wing-growth">
-                                <div class="wing-name">🚀 Growth</div>
-                                <div class="wing-level">Level 2 - Portfolio Pioneer</div>
-                                <div class="progress-bar-mini">
-                                    <div class="progress-fill-mini"></div>
-                                </div>
-                            </div>
-                            <div class="wing-item wing-preservation">
-                                <div class="wing-name">🛡️ Preservation</div>
-                                <div class="wing-level">Level 1 - Safety Net Starter</div>
-                                <div class="progress-bar-mini">
-                                    <div class="progress-fill-mini"></div>
-                                </div>
-                            </div>
-                            <div class="wing-item wing-philanthropy">
-                                <div class="wing-name">❤️ Philanthropy</div>
-                                <div class="wing-level">Level 2 - Strategic Giver</div>
-                                <div class="progress-bar-mini">
-                                    <div class="progress-fill-mini"></div>
-                                </div>
-                            </div>
-                            <div class="wing-item wing-experiences">
-                                <div class="wing-name">🌟 Experiences</div>
-                                <div class="wing-level">Level 2 - Adventure Planner</div>
-                                <div class="progress-bar-mini">
-                                    <div class="progress-fill-mini"></div>
-                                </div>
-                            </div>
-                        </div>
+                <div class="user-menu">
+                    <div class="user-avatar">JJ</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.9rem;">John Johnson</div>
+                        <div style="font-size: 0.8rem; color: #64748b;">Family Admin</div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
 
-    <!-- Features Section -->
-    <section class="features" id="features">
-        <div class="container">
-            <div class="section-header">
-                <h2>The SIXWING Methodology</h2>
-                <p>From beginner to institutional-level wealth management, the SIXWING System grows with your family's journey across all six critical areas.</p>
-            </div>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3>Progress Tracking</h3>
-                    <p>Visual skill trees show your progress across all six wings of the SIXWING System. See what's lagging behind and get personalized recommendations to maintain balanced growth.</p>
+        <!-- Dashboard Content -->
+        <div class="dashboard-content">
+            <!-- Quick Stats -->
+            <div class="quick-stats">
+                <div class="stat-card networth">
+                    <div class="stat-header">
+                        <div class="stat-title">Net Worth</div>
+                        <div class="stat-trend trend-up">↗ +14.8%</div>
+                    </div>
+                    <div class="stat-value">$47,332</div>
+                    <div class="stat-subtitle">+$6,847 this quarter</div>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🎯</div>
-                    <h3>Action Plan Generator</h3>
-                    <p>Get specific, actionable steps for each level. From opening your first investment account to setting up dynasty trusts - we guide every step.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔗</div>
-                    <h3>Tool Integrations</h3>
-                    <p>Connect seamlessly with Fidelity, Vanguard, Trust & Will, and other providers. Auto-fill applications and track progress across platforms.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📋</div>
-                    <h3>Quarterly Reviews</h3>
-                    <p>Professional family office reports every quarter. Track net worth, assess risks, and align financial progress with family values.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">👥</div>
-                    <h3>Family Collaboration</h3>
-                    <p>Invite your spouse and children to participate. Assign tasks, make decisions together, and build financial literacy across generations.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🏆</div>
-                    <h3>Legacy Score</h3>
-                    <p>Gamified but meaningful composite score based on balanced progress. Build wealth that creates lasting impact, not just accumulation.</p>
-                </div>
-            </div>
-        </div>
-    </section>
 
-    <!-- Six Wings Section -->
-    <section class="wings-section" id="wings">
-        <div class="container">
-            <div class="section-header">
-                <h2>The Six Wings of the SIXWING System</h2>
-                <p>Build generational wealth through balanced progress across all six wings that matter for your family's future.</p>
-            </div>
-            <div class="wings-showcase">
-                <div class="wing-showcase growth">
-                    <h3><span class="wing-icon">🚀</span>Growth</h3>
-                    <p>Build wealth through smart investing in stocks, real estate, and businesses. Progress from basic accounts to managing your own company.</p>
-                    <div class="wing-levels">
-                        <div class="level-item">
-                            <div class="level-number">1</div>
-                            <div class="level-title">Foundation Builder</div>
-                        </div>
-                        <div class="level-item">
-                            <div class="level-number">2</div>
-                            <div class="level-title">Portfolio Pioneer</div>
-                        </div>
-                        <div class="level-item">
-                            <div class="level-number">3</div>
-                            <div class="level-title">Asset Acquirer</div>
-                        </div>
+                <div class="stat-card savings">
+                    <div class="stat-header">
+                        <div class="stat-title">Savings Rate</div>
+                        <div class="stat-trend trend-up">↗ +6%</div>
                     </div>
+                    <div class="stat-value">34%</div>
+                    <div class="stat-subtitle">$2,650/month average</div>
                 </div>
-                <div class="wing-showcase preservation">
-                    <h3><span class="wing-icon">🛡️</span>Preservation</h3>
-                    <p>Protect your wealth with emergency funds, insurance, and risk management strategies that grow more sophisticated over time.</p>
-                    <div class="wing-levels">
-                        <div class="level-item">
-                            <div class="level-number">1</div>
-                            <div class="level-title">Safety Net Starter</div>
-                        </div>
-                        <div class="level-item">
-                            <div class="level-number">2</div>
-                            <div class="level-title">Risk Mitigator</div>
-                        </div>
-                        <div class="level-item">
-                            <div class="level-number">3</div>
-                            <div class="level-title">Fortress Builder</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="wing-showcase philanthropy">
-                    <h3><span class="wing-icon">❤️</span>Philanthropy</h3>
-                    <p>Give back meaningfully through strategic charitable giving, donor advised funds, and family philanthropy traditions.</p>
-                    <div class="wing-levels">
-                        <div class="level-item">
-                            <div class="level-number">1</div>
-                            <div class="level-title">Giving Beginner</div>
-                        </div>
-                        <div class="level-item">
-                            <div class="level-number">2</div>
-                            <div class="level-title">Strategic Giver</div>
-                        </div>
-                        <div class="level-item">
-                            <div class="level-number">3</div>
-                            <div class="level-title">Impact Investor</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="wing-showcase experiences">
-                    <h3><span class="wing-icon">🌟</span>Experiences</h3>
-                    <p>Create lasting family memories through intentional travel, adventures, and shared experiences that bond generations.</p>
-                    <div class="wing-levels">
-                        <div class="level-item">
-                            <div class="level-number">1</div>
-                            <div class="level-title">Memory Maker</div>
-                        </div>
-                        <div class="level-item">
-                            <div class="level-number">2</div>
-                            <div class="level-title">Adventure Planner</div>
-                        </div>
-                        <div class="level-item">
-                            <div class="level-number">3</div>
-                            <div class="level-title">Experience Curator</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="wing-showcase legacy">
-                    <h3><span class="wing-icon">📜</span>Legacy</h3>
-                    <p>Plan for generations with estate documents, trusts, family governance, and wealth transition strategies.</p>
-                    <div class="wing-levels">
-                        <div class="level-item">
-                            <div class="level-number">1</div>
-                            <div class="level-title">Document Creator</div>
-                        </div>
-                        <div class="level-item">
-                            <div class="level-number">2</div>
-                            <div class="level-title">Protection Planner</div>
-                        </div>
-                        <div class="level-item">
-                            <div class="level-number">3</div>
-                            <div class="level-title">Family Vision Builder</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="wing-showcase operations">
-                    <h3><span class="wing-icon">⚙️</span>Operations</h3>
-                    <p>Manage the machine with net worth tracking, tax optimization, legal structures, and professional advisory coordination.</p>
-                    <div class="wing-levels">
-                        <div class="level-item">
-                            <div class="level-number">1</div>
-                            <div class="level-title">Tracker</div>
-                        </div>
-                        <div class="level-item">
-                            <div class="level-number">2</div>
-                            <div class="level-title">Optimizer</div>
-                        </div>
-                        <div class="level-item">
-                            <div class="level-number">3</div>
-                            <div class="level-title">Strategist</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
 
-    <!-- Pricing Section -->
-    <section class="pricing-section" id="pricing">
-        <div class="container">
-            <div class="section-header">
-                <h2>Simple Pricing for Every Family</h2>
-                <p>Access institutional family office strategies without the $10M minimum</p>
-            </div>
-            
-            <!-- Value Comparison -->
-            <div class="value-comparison">
-                <h3>What You're Replacing</h3>
-                <div class="comparison-grid">
-                    <div class="traditional-cost">
-                        <h4>Traditional Approach</h4>
-                        <div class="cost-item">
-                            <span class="service">Financial Advisor</span>
-                            <span class="cost">$2,000-5,000/yr</span>
-                        </div>
-                        <div class="cost-item">
-                            <span class="service">Estate Planning</span>
-                            <span class="cost">$500-3,000+</span>
-                        </div>
-                        <div class="cost-item">
-                            <span class="service">Tax Strategist</span>
-                            <span class="cost">$750-2,500/yr</span>
-                        </div>
-                        <div class="cost-item">
-                            <span class="service">Budgeting Tools</span>
-                            <span class="cost">$180/yr</span>
-                        </div>
-                        <div class="cost-item">
-                            <span class="service">Wealth Coaching</span>
-                            <span class="cost">$1,200-6,000/yr</span>
-                        </div>
-                        <div class="total-cost">
-                            <strong>Total: $4,630-16,680/year</strong>
-                        </div>
+                <div class="stat-card goals">
+                    <div class="stat-header">
+                        <div class="stat-title">Active Goals</div>
+                        <div class="stat-trend trend-neutral">5 in progress</div>
                     </div>
-                    <div class="vs-divider">VS</div>
-                    <div class="legacyos-value">
-                        <h4>The SIXWING System</h4>
-                        <div class="value-item">
-                            <span class="feature">Strategic Action Plans</span>
-                            <span class="included">✓ Included</span>
-                        </div>
-                        <div class="value-item">
-                            <span class="feature">Estate Planning Guidance</span>
-                            <span class="included">✓ Included</span>
-                        </div>
-                        <div class="value-item">
-                            <span class="feature">Tax Optimization Wing</span>
-                            <span class="included">✓ Included</span>
-                        </div>
-                        <div class="value-item">
-                            <span class="feature">Advanced Progress Tracking</span>
-                            <span class="included">✓ Included</span>
-                        </div>
-                        <div class="value-item">
-                            <span class="feature">Family Wealth Education</span>
-                            <span class="included">✓ Included</span>
-                        </div>
-                        <div class="total-value">
-                            <strong>Starting at $19/month</strong>
-                        </div>
+                    <div class="stat-value">83%</div>
+                    <div class="stat-subtitle">completion rate</div>
+                </div>
+
+                <div class="stat-card next-review">
+                    <div class="stat-header">
+                        <div class="stat-title">Next Review</div>
+                        <div class="stat-trend trend-neutral">Q4 2025</div>
                     </div>
+                    <div class="stat-value">45</div>
+                    <div class="stat-subtitle">days remaining</div>
                 </div>
             </div>
 
-            <!-- Pricing Cards -->
-            <div class="pricing-grid">
-                <div class="pricing-card starter">
-                    <div class="plan-header">
-                        <h3>Free Trial</h3>
-                        <div class="price">
-                            <span class="currency">$</span>
-                            <span class="amount">0</span>
-                            <span class="period">/14 days</span>
-                        </div>
-                        <p class="plan-description">Get hooked on the SIXWING System</p>
-                    </div>
-                    <div class="plan-features">
-                        <div class="feature-item">✓ Full Legacy Score assessment</div>
-                        <div class="feature-item">✓ Progress tracking across all 6 wings</div>
-                        <div class="feature-item">✓ Level 1 action plans</div>
-                        <div class="feature-item">✓ Basic quarterly review</div>
-                        <div class="feature-item">✓ Introduction to family collaboration</div>
-                    </div>
-                    <a href="#" class="btn-plan">Start Free Trial</a>
+            <!-- Wing Progress Section -->
+            <div class="wing-progress-section">
+                <div class="section-header">
+                    <h2 class="section-title">SIXWING Progress</h2>
+                    <a href="#" class="view-all-btn">View All Wings →</a>
                 </div>
 
-                <div class="pricing-card core popular">
-                    <div class="popular-badge">Most Popular</div>
-                    <div class="plan-header">
-                        <h3>Core Plan</h3>
-                        <div class="price">
-                            <span class="currency">$</span>
-                            <span class="amount">19</span>
-                            <span class="period">/month</span>
+                <div class="wings-grid">
+                    <div class="wing-card growth">
+                        <div class="wing-header">
+                            <div class="wing-title-group">
+                                <span class="wing-icon">🚀</span>
+                                <span class="wing-name">Growth</span>
+                            </div>
+                            <span class="wing-level">Level 2</span>
                         </div>
-                        <p class="plan-description">Perfect for growing families</p>
-                    </div>
-                    <div class="plan-features">
-                        <div class="feature-item">✓ Everything in Free Trial</div>
-                        <div class="feature-item">✓ <strong>Complete access to all 6 wings</strong></div>
-                        <div class="feature-item">✓ <strong>Advanced action plan generation</strong></div>
-                        <div class="feature-item">✓ <strong>Professional quarterly reports</strong></div>
-                        <div class="feature-item">✓ <strong>Family collaboration (1 partner)</strong></div>
-                        <div class="feature-item">✓ <strong>Tool integrations & auto-fill</strong></div>
-                        <div class="feature-item">✓ Email support</div>
-                    </div>
-                    <a href="#" class="btn-plan">Get My Legacy Score</a>
-                </div>
-
-                <div class="pricing-card legacy">
-                    <div class="plan-header">
-                        <h3>Legacy+ Plan</h3>
-                        <div class="price">
-                            <span class="currency">$</span>
-                            <span class="amount">49</span>
-                            <span class="period">/month</span>
-                        </div>
-                        <p class="plan-description">For serious wealth builders</p>
-                    </div>
-                    <div class="plan-features">
-                        <div class="feature-item">✓ Everything in Core Plan</div>
-                        <div class="feature-item">✓ <strong>Guided onboarding & walkthroughs</strong></div>
-                        <div class="feature-item">✓ <strong>Up to 5 family collaborators</strong></div>
-                        <div class="feature-item">✓ <strong>Custom PDF reports for advisors</strong></div>
-                        <div class="feature-item">✓ <strong>Advanced integrations (DAF, trusts)</strong></div>
-                        <div class="feature-item">✓ <strong>Priority support & expert guidance</strong></div>
-                        <div class="feature-item">✓ <strong>Document vault storage</strong></div>
-                        <div class="feature-item">✓ <strong>Annual family wealth review call</strong></div>
-                    </div>
-                    <a href="#" class="btn-plan">Start Building Your Family Office</a>
-                </div>
-            </div>
-
-            <!-- Enhanced ROI Calculator -->
-            <div class="roi-section">
-                <div class="roi-header">
-                    <h3>See Your Personal Savings</h3>
-                    <p>Most families overpay for scattered financial advice. See how much you'll save with the integrated SIXWING System.</p>
-                </div>
-                
-                <div class="roi-calculator">
-                    <div class="calculator-left">
-                        <div class="calculator-input">
-                            <label>Your current net worth:</label>
-                            <select id="networth">
-                                <option value="50000">$50,000</option>
-                                <option value="100000">$100,000</option>
-                                <option value="250000">$250,000</option>
-                                <option value="500000">$500,000</option>
-                                <option value="1000000">$1,000,000+</option>
-                            </select>
-                        </div>
-                        
-                        <div class="traditional-breakdown">
-                            <h4>What You're Currently Paying:</h4>
-                            <div class="cost-breakdown">
-                                <div class="cost-line">
-                                    <span>Financial Advisor (1% AUM)</span>
-                                    <span class="cost-amount" id="advisor-cost">$5,000</span>
-                                </div>
-                                <div class="cost-line">
-                                    <span>Estate Planning</span>
-                                    <span class="cost-amount" id="estate-cost">$3,000</span>
-                                </div>
-                                <div class="cost-line">
-                                    <span>Tax Strategy</span>
-                                    <span class="cost-amount" id="tax-cost">$2,500</span>
-                                </div>
-                                <div class="cost-line">
-                                    <span>Wealth Tools & Apps</span>
-                                    <span class="cost-amount">$180</span>
-                                </div>
-                                <div class="cost-line">
-                                    <span>Financial Coaching</span>
-                                    <span class="cost-amount" id="coaching-cost">$3,000</span>
-                                </div>
+                        <div class="wing-progress">
+                            <div class="progress-info">
+                                <span class="current-milestone">Portfolio Pioneer</span>
+                                <span class="progress-percentage">65%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 65%"></div>
                             </div>
                         </div>
+                        <div class="wing-action action-needed">
+                            Action needed: Increase monthly contributions to $500
+                        </div>
                     </div>
+
+                    <div class="wing-card preservation">
+                        <div class="wing-header">
+                            <div class="wing-title-group">
+                                <span class="wing-icon">🛡️</span>
+                                <span class="wing-name">Preservation</span>
+                            </div>
+                            <span class="wing-level">Level 1</span>
+                        </div>
+                        <div class="wing-progress">
+                            <div class="progress-info">
+                                <span class="current-milestone">Safety Net Starter</span>
+                                <span class="progress-percentage">30%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 30%"></div>
+                            </div>
+                        </div>
+                        <div class="wing-action action-needed">
+                            Priority: Build emergency fund to 3 months expenses
+                        </div>
+                    </div>
+
+                    <div class="wing-card philanthropy">
+                        <div class="wing-header">
+                            <div class="wing-title-group">
+                                <span class="wing-icon">❤️</span>
+                                <span class="wing-name">Philanthropy</span>
+                            </div>
+                            <span class="wing-level">Level 2</span>
+                        </div>
+                        <div class="wing-progress">
+                            <div class="progress-info">
+                                <span class="current-milestone">Strategic Giver</span>
+                                <span class="progress-percentage">45%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 45%"></div>
+                            </div>
+                        </div>
+                        <div class="wing-action on-track">
+                            ✓ On track with 3.2% giving rate
+                        </div>
+                    </div>
+
+                    <div class="wing-card experiences">
+                        <div class="wing-header">
+                            <div class="wing-title-group">
+                                <span class="wing-icon">🌟</span>
+                                <span class="wing-name">Experiences</span>
+                            </div>
+                            <span class="wing-level">Level 2</span>
+                        </div>
+                        <div class="wing-progress">
+                            <div class="progress-info">
+                                <span class="current-milestone">Adventure Planner</span>
+                                <span class="progress-percentage">80%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 80%"></div>
+                            </div>
+                        </div>
+                        <div class="wing-action on-track">
+                            ✓ Yellowstone trip completed - plan international next
+                        </div>
+                    </div>
+
+                    <div class="wing-card legacy">
+                        <div class="wing-header">
+                            <div class="wing-title-group">
+                                <span class="wing-icon">📜</span>
+                                <span class="wing-name">Legacy</span>
+                            </div>
+                            <span class="wing-level">Level 1</span>
+                        </div>
+                        <div class="wing-progress">
+                            <div class="progress-info">
+                                <span class="current-milestone">Document Creator</span>
+                                <span class="progress-percentage">90%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 90%"></div>
+                            </div>
+                        </div>
+                        <div class="wing-action action-needed">
+                            Almost done: Complete healthcare directives
+                        </div>
+                    </div>
+
+                    <div class="wing-card operations">
+                        <div class="wing-header">
+                            <div class="wing-title-group">
+                                <span class="wing-icon">⚙️</span>
+                                <span class="wing-name">Operations</span>
+                            </div>
+                            <span class="wing-level">Level 3</span>
+                        </div>
+                        <div class="wing-progress">
+                            <div class="progress-info">
+                                <span class="current-milestone">Strategist</span>
+                                <span class="progress-percentage">20%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 20%"></div>
+                            </div>
+                        </div>
+                        <div class="wing-action action-needed">
+                            Next step: Consider business entity formation
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Items & Quick Actions -->
+            <div class="action-items-section">
+                <div class="action-items-card">
+                    <div class="section-header">
+                        <h2 class="section-title">Priority Actions This Week</h2>
+                        <a href="#" class="view-all-btn">View All →</a>
+                    </div>
+
+                    <div class="action-item high">
+                        <div class="action-header">
+                            <span class="action-priority">High Priority</span>
+                        </div>
+                        <h3 class="action-title">Build Emergency Fund</h3>
+                        <p class="action-description">Your Preservation wing is lagging behind. Increase automatic savings to reach your 3-month expense goal faster.</p>
+                        <div class="action-details">
+                            <span class="action-wing">🛡️ Preservation Wing</span>
+                            <span class="action-time">Est. 2 hours setup</span>
+                        </div>
+                    </div>
+
+                    <div class="action-item high">
+                        <div class="action-header">
+                            <span class="action-priority">High Priority</span>
+                        </div>
+                        <h3 class="action-title">Complete Healthcare Directives</h3>
+                        <p class="action-description">You're 90% done with Legacy Level 1! Finish your healthcare directives to level up and unlock new milestones.</p>
+                        <div class="action-details">
+                            <span class="action-wing">📜 Legacy Wing</span>
+                            <span class="action-time">Est. 1 hour</span>
+                        </div>
+                    </div>
+
+                    <div class="action-item medium">
+                        <div class="action-header">
+                            <span class="action-priority">Medium</span>
+                        </div>
+                        <h3 class="action-title">Research Business Formation</h3>
+                        <p class="action-description">Consider LLC formation for tax optimization as your investments grow. This will help advance your Operations wing.</p>
+                        <div class="action-details">
+                            <span class="action-wing">⚙️ Operations Wing</span>
+                            <span class="action-time">Est. 3 hours research</span>
+                        </div>
+                    </div>
+
+                    <div class="action-item low">
+                        <div class="action-header">
+                            <span class="action-priority">Low Priority</span>
+                        </div>
+                        <h3 class="action-title">Plan International Trip</h3>
+                        <p class="action-description">You're ready for Level 3 Experiences! Start planning your first international family adventure for 2026.</p>
+                        <div class="action-details">
+                            <span class="action-wing">🌟 Experiences Wing</span>
+                            <span class="action-time">Est. 2 hours planning</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-actions-widget">
+                    <h3 class="widget-title">Quick Actions</h3>
+                    <p class="widget-description">Fast-track your progress with these one-click integrations and tools</p>
                     
-                    <div class="vs-arrow">
-                        <div class="arrow-content">
-                            <span>VS</span>
-                            <div class="arrow-icon">→</div>
-                        </div>
-                    </div>
-                    
-                    <div class="calculator-right">
-                        <div class="legacyos-offer">
-                            <div class="offer-badge">SIXWING System</div>
-                            <div class="offer-price">
-                                <span class="price-large">$228</span>
-                                <span class="price-period">/year</span>
-                            </div>
-                            <div class="offer-features">
-                                <div class="feature">✓ All 6 wings covered</div>
-                                <div class="feature">✓ Family collaboration</div>
-                                <div class="feature">✓ Quarterly reviews</div>
-                                <div class="feature">✓ Expert guidance</div>
-                            </div>
-                        </div>
-                        
-                        <div class="savings-highlight">
-                            <div class="savings-result">
-                                <div class="savings-number">$11,952</div>
-                                <div class="savings-label">You Save Annually</div>
-                            </div>
-                            <div class="payback-result">
-                                <div class="payback-number">7 days</div>
-                                <div class="payback-label">Payback Period</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="roi-footnote">
-                    <p><small>* Savings calculated against average advisor fees. Your actual savings may vary based on current provider costs and net worth.</small></p>
+                    <a href="#" class="quick-action-btn">💰 Open Fidelity Account</a>
+                    <a href="#" class="quick-action-btn">📄 Complete Trust & Will</a>
+                    <a href="#" class="quick-action-btn">🏦 Set Up Auto-Transfer</a>
+                    <a href="#" class="quick-action-btn">📊 Generate Report</a>
+                    <a href="#" class="quick-action-btn">👨‍👩‍👧‍👦 Invite Spouse</a>
+                    <a href="#" class="quick-action-btn">📅 Schedule Review</a>
                 </div>
             </div>
 
-            <!-- Enhanced Money Back Guarantee -->
-            <div class="guarantee">
-                <div class="guarantee-content">
-                    <div class="guarantee-left">
-                        <div class="guarantee-badge">
-                            <div class="badge-icon">💰</div>
-                            <div class="badge-text">
-                                <div class="badge-title">60-Day</div>
-                                <div class="badge-subtitle">Money-Back Guarantee</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="guarantee-center">
-                        <h3>Risk-Free Family Office Trial</h3>
-                        <p>Not seeing measurable progress in your Legacy Score within 60 days? We'll refund every penny, no questions asked. We're confident the SIXWING System will transform your family's financial trajectory.</p>
-                        
-                        <div class="guarantee-stats">
-                            <div class="guarantee-stat">
-                                <span class="stat-number">98%</span>
-                                <span class="stat-label">Keep their subscription</span>
-                            </div>
-                            <div class="guarantee-stat">
-                                <span class="stat-number">23 pts</span>
-                                <span class="stat-label">Avg Legacy Score increase</span>
-                            </div>
-                            <div class="guarantee-stat">
-                                <span class="stat-number">6 months</span>
-                                <span class="stat-label">To see major progress</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="guarantee-right">
-                        <div class="testimonial-card">
-                            <div class="testimonial-quote">"We saw our Legacy Score jump 28 points in just 4 months. LegacyOS helped us organize everything we were doing wrong."</div>
-                            <div class="testimonial-author">
-                                <div class="author-avatar">👨‍👩‍👧</div>
-                                <div class="author-info">
-                                    <div class="author-name">The Rodriguez Family</div>
-                                    <div class="author-detail">Net worth: $340K → $425K</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <!-- Recent Activity -->
+            <div class="recent-activity">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Activity</h2>
+                    <a href="#" class="view-all-btn">View All Activity →</a>
                 </div>
-            </div>
-        </div>
-    </section>
-    <section class="cta-section">
-        <div class="container">
-            <h2>Start Building Your Family Office Today</h2>
-            <p>Join families who are building generational wealth with intention, balance, and purpose.</p>
-            <a href="#" class="btn-cta">Get My Legacy Score</a>
-        </div>
-    </section>
 
-    <!-- Enhanced Footer -->
-    <footer>
-        <div class="container">
-            <!-- Newsletter Section -->
-            <div class="footer-newsletter">
-                <div class="newsletter-content">
-                    <h3>The SIXWING Weekly</h3>
-                    <p>Get exclusive wealth-building strategies, family office insights, and early access to new features.</p>
-                </div>
-                <div class="newsletter-form">
-                    <input type="email" placeholder="Enter your email address" class="newsletter-input">
-                    <button class="newsletter-btn">Subscribe</button>
-                </div>
-            </div>
-            
-            <div class="footer-content">
-                <div class="footer-section brand-section">
-                    <div class="footer-logo">LegacyOS</div>
-                    <p>Empowering families to build generational wealth through the proven SIXWING System. From first dollar to family office.</p>
-                    <div class="social-links">
-                        <a href="#" class="social-link">📱 Twitter</a>
-                        <a href="#" class="social-link">📘 LinkedIn</a>
-                        <a href="#" class="social-link">📺 YouTube</a>
-                        <a href="#" class="social-link">📧 Newsletter</a>
+                <div class="activity-item">
+                    <div class="activity-icon completed">✓</div>
+                    <div class="activity-content">
+                        <div class="activity-title">Completed Yellowstone Family Trip</div>
+                        <div class="activity-description">Experience Wing milestone achieved - created lasting family memories</div>
                     </div>
+                    <div class="activity-time">3 days ago</div>
                 </div>
-                
-                <div class="footer-section">
-                    <h3>Platform</h3>
-                    <div class="footer-links">
-                        <a href="#">Dashboard Overview</a>
-                        <a href="#">Wing Progress Tracking</a>
-                        <a href="#">Action Plan Generator</a>
-                        <a href="#">Quarterly Reviews</a>
-                        <a href="#">Family Collaboration</a>
-                        <a href="#">Legacy Score Calculator</a>
+
+                <div class="activity-item progress">
+                    <div class="activity-icon progress">📈</div>
+                    <div class="activity-content">
+                        <div class="activity-title">Investment Contribution Increased</div>
+                        <div class="activity-description">Monthly contribution raised from $300 to $420 - Growth Wing progress</div>
                     </div>
+                    <div class="activity-time">1 week ago</div>
                 </div>
-                
-                <div class="footer-section">
-                    <h3>SIXWING System</h3>
-                    <div class="footer-links">
-                        <a href="#">🚀 Growth Wing Guide</a>
-                        <a href="#">🛡️ Preservation Strategies</a>
-                        <a href="#">❤️ Philanthropy Planning</a>
-                        <a href="#">🌟 Experience Curation</a>
-                        <a href="#">📜 Legacy Building</a>
-                        <a href="#">⚙️ Operations Mastery</a>
+
+                <div class="activity-item completed">
+                    <div class="activity-icon completed">✓</div>
+                    <div class="activity-content">
+                        <div class="activity-title">Estate Planning Documents Signed</div>
+                        <div class="activity-description">Basic wills completed through Trust & Will integration</div>
                     </div>
+                    <div class="activity-time">2 weeks ago</div>
                 </div>
-                
-                <div class="footer-section">
-                    <h3>Learning Center</h3>
-                    <div class="footer-links">
-                        <a href="#">SIXWING Methodology Guide</a>
-                        <a href="#">Family Office Playbook</a>
-                        <a href="#">Estate Planning Basics</a>
-                        <a href="#">Investment Level-Up Path</a>
-                        <a href="#">Tax Optimization Strategies</a>
-                        <a href="#">Wealth Transfer Planning</a>
+
+                <div class="activity-item alert">
+                    <div class="activity-icon alert">⚠️</div>
+                    <div class="activity-content">
+                        <div class="activity-title">Emergency Fund Below Target</div>
+                        <div class="activity-description">Currently at 1.2 months expenses - recommend increasing to 3 months</div>
                     </div>
+                    <div class="activity-time">3 weeks ago</div>
                 </div>
-                
-                <div class="footer-section">
-                    <h3>Support & Company</h3>
-                    <div class="footer-links">
-                        <a href="#">Help Center</a>
-                        <a href="#">Live Chat Support</a>
-                        <a href="#">Book a Demo</a>
-                        <a href="#">Security & Privacy</a>
-                        <a href="#">Terms of Service</a>
-                        <a href="#">About Our Mission</a>
+
+                <div class="activity-item progress">
+                    <div class="activity-icon progress">🎯</div>
+                    <div class="activity-content">
+                        <div class="activity-title">Quarterly Review Generated</div>
+                        <div class="activity-description">Q3 2025 Family Office Report ready for review</div>
                     </div>
-                </div>
-            </div>
-            
-            <!-- Footer Stats -->
-            <div class="footer-stats">
-                <div class="stat-item">
-                    <div class="stat-number">$2.1M</div>
-                    <div class="stat-label">Average net worth growth</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">500+</div>
-                    <div class="stat-label">Families served</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">$850K</div>
-                    <div class="stat-label">Total advisory fees saved</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">98%</div>
-                    <div class="stat-label">User satisfaction</div>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
-                <div class="footer-bottom-left">
-                    <p>&copy; 2025 LegacyOS. All rights reserved.</p>
-                    <p>Building generational wealth, one family at a time.</p>
-                </div>
-                <div class="footer-bottom-right">
-                    <div class="security-badges">
-                        <span class="badge">🔒 Bank-level Security</span>
-                        <span class="badge">✓ SOC 2 Compliant</span>
-                        <span class="badge">🛡️ Privacy Protected</span>
-                    </div>
+                    <div class="activity-time">1 month ago</div>
                 </div>
             </div>
         </div>
-    </footer>
+    </main>
 
     <script>
-        // Smooth scrolling for navigation links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
-            });
-        });
-
-        // Header background on scroll
-        window.addEventListener('scroll', () => {
-            const header = document.querySelector('header');
-            if (window.scrollY > 100) {
-                header.style.background = 'rgba(255, 255, 255, 0.98)';
-                header.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.1)';
-            } else {
-                header.style.background = 'rgba(255, 255, 255, 0.95)';
-                header.style.boxShadow = 'none';
-            }
-        });
-
-        // Animate progress bars in dashboard preview
-        const animateProgressBars = () => {
-            const progressBars = document.querySelectorAll('.progress-fill-mini');
-            progressBars.forEach(bar => {
-                const width = bar.style.width || getComputedStyle(bar).width;
-                bar.style.width = '0%';
-                setTimeout(() => {
-                    bar.style.transition = 'width 1.5s ease-out';
-                    bar.style.width = width;
-                }, 500);
-            });
-        };
-
-        // Intersection Observer for animations
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    if (entry.target.querySelector('.progress-fill-mini')) {
-                        animateProgressBars();
+        // Progress bar animations
+        function animateProgressBars() {
+            const progressBars = document.querySelectorAll('.progress-fill');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const width = entry.target.style.width;
+                        entry.target.style.width = '0%';
+                        setTimeout(() => {
+                            entry.target.style.transition = 'width 1.5s ease-out';
+                            entry.target.style.width = width;
+                        }, 200);
                     }
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, observerOptions);
+                });
+            }, { threshold: 0.1 });
 
-        // Observe elements for animation
-        document.querySelectorAll('.feature-card, .wing-showcase, .dashboard-preview').forEach(el => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(30px)';
-            el.style.transition = 'all 0.6s ease-out';
-            observer.observe(el);
-        });
+            progressBars.forEach(bar => observer.observe(bar));
+        }
 
-        // Dynamic Legacy Score animation
-        const animateLegacyScore = () => {
-            const scoreElement = document.querySelector('.score-big');
+        // Legacy Score counter animation
+        function animateLegacyScore() {
+            const scoreElement = document.querySelector('.score-number-header');
             const targetScore = 73;
             let currentScore = 0;
-            const increment = targetScore / 50;
+            const increment = targetScore / 60;
             
             const timer = setInterval(() => {
                 currentScore += increment;
@@ -1908,181 +1095,166 @@
                     clearInterval(timer);
                 }
                 scoreElement.textContent = Math.floor(currentScore);
-            }, 40);
-        };
+            }, 30);
+        }
 
-        // Start animations when page loads
-        window.addEventListener('load', () => {
-            setTimeout(animateLegacyScore, 1000);
-        });
-
-        // Interactive hover effects for wing cards
-        document.querySelectorAll('.wing-showcase').forEach(wing => {
-            wing.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-10px) scale(1.02)';
-                this.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.15)';
-            });
+        // Net worth counter animation
+        function animateNetWorth() {
+            const netWorthElement = document.querySelector('.stat-card.networth .stat-value');
+            const targetValue = 47332;
+            let currentValue = 0;
+            const increment = targetValue / 80;
             
-            wing.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateY(0) scale(1)';
-                this.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
-            });
-        });
-
-        // Add particle animation to hero background
-        const createParticles = () => {
-            const hero = document.querySelector('.hero');
-            const particleCount = 50;
-            
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                particle.style.position = 'absolute';
-                particle.style.width = Math.random() * 4 + 1 + 'px';
-                particle.style.height = particle.style.width;
-                particle.style.background = 'rgba(102, 126, 234, 0.1)';
-                particle.style.borderRadius = '50%';
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.top = Math.random() * 100 + '%';
-                particle.style.animation = `float ${Math.random() * 10 + 10}s infinite linear`;
-                particle.style.zIndex = '0';
-                hero.appendChild(particle);
-            }
-        };
-
-        // Add floating animation keyframes
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes float {
-                0% { transform: translateY(0px) rotate(0deg); opacity: 0.7; }
-                50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
-                100% { transform: translateY(0px) rotate(360deg); opacity: 0.7; }
-            }
-            
-            @keyframes pulse {
-                0%, 100% { transform: scale(1); }
-                50% { transform: scale(1.05); }
-            }
-            
-            .legacy-score-display {
-                animation: pulse 4s infinite ease-in-out;
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Initialize particles
-        createParticles();
-
-        // Add typing effect to hero title
-        const typeWriter = (element, text, speed = 100) => {
-            let i = 0;
-            element.innerHTML = '';
-            
-            const type = () => {
-                if (i < text.length) {
-                    element.innerHTML += text.charAt(i);
-                    i++;
-                    setTimeout(type, speed);
+            const timer = setInterval(() => {
+                currentValue += increment;
+                if (currentValue >= targetValue) {
+                    currentValue = targetValue;
+                    clearInterval(timer);
                 }
-            };
-            
-            type();
-        };
+                netWorthElement.textContent = ' + Math.floor(currentValue).toLocaleString();
+            }, 25);
+        }
 
-        // Enhanced mobile menu functionality
-        const createMobileMenu = () => {
-            const nav = document.querySelector('nav');
-            const navLinks = document.querySelector('.nav-links');
-            
-            // Create hamburger menu
+        // Mobile sidebar toggle
+        function initMobileSidebar() {
+            const sidebar = document.querySelector('.sidebar');
             const hamburger = document.createElement('div');
             hamburger.innerHTML = '☰';
-            hamburger.style.display = 'none';
-            hamburger.style.fontSize = '1.5rem';
-            hamburger.style.cursor = 'pointer';
-            hamburger.style.color = '#667eea';
+            hamburger.className = 'mobile-hamburger';
+            hamburger.style.cssText = `
+                display: none;
+                position: fixed;
+                top: 1.5rem;
+                left: 1rem;
+                z-index: 1001;
+                font-size: 1.5rem;
+                color: #667eea;
+                cursor: pointer;
+                background: white;
+                padding: 0.5rem;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            `;
             
-            // Insert hamburger before CTA button
-            nav.insertBefore(hamburger, nav.lastElementChild);
+            document.body.appendChild(hamburger);
             
-            // Show/hide hamburger on mobile
-            const checkMobile = () => {
-                if (window.innerWidth <= 768) {
+            function checkMobile() {
+                if (window.innerWidth <= 1024) {
                     hamburger.style.display = 'block';
-                    navLinks.style.display = 'none';
                 } else {
                     hamburger.style.display = 'none';
-                    navLinks.style.display = 'flex';
+                    sidebar.classList.remove('open');
                 }
-            };
+            }
+            
+            hamburger.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+            });
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 1024 && 
+                    !sidebar.contains(e.target) && 
+                    !hamburger.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            });
             
             window.addEventListener('resize', checkMobile);
             checkMobile();
-            
-            // Toggle mobile menu
-            hamburger.addEventListener('click', () => {
-                if (navLinks.style.display === 'none') {
-                    navLinks.style.display = 'flex';
-                    navLinks.style.flexDirection = 'column';
-                    navLinks.style.position = 'absolute';
-                    navLinks.style.top = '100%';
-                    navLinks.style.left = '0';
-                    navLinks.style.right = '0';
-                    navLinks.style.background = 'white';
-                    navLinks.style.padding = '2rem';
-                    navLinks.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.1)';
-                    hamburger.innerHTML = '✕';
-                } else {
-                    navLinks.style.display = 'none';
-                    hamburger.innerHTML = '☰';
+        }
+
+        // Simulate real-time updates
+        function simulateUpdates() {
+            // Update savings rate occasionally
+            setInterval(() => {
+                const savingsElement = document.querySelector('.stat-card.savings .stat-value');
+                const currentRate = parseInt(savingsElement.textContent);
+                const newRate = currentRate + (Math.random() > 0.5 ? 1 : -1);
+                if (newRate >= 30 && newRate <= 40) {
+                    savingsElement.textContent = newRate + '%';
                 }
+            }, 30000);
+        }
+
+        // Interactive nav items
+        function initNavigation() {
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    // Remove active class from all items
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    
+                    // Add active class to clicked item
+                    item.classList.add('active');
+                });
             });
-        };
+        }
 
-        // ROI Calculator functionality
-        const setupROICalculator = () => {
-            const networthSelect = document.getElementById('networth');
-            const savingsNumber = document.querySelector('.savings-number');
-            const paybackNumber = document.querySelector('.payback-number');
+        // Action item interactions
+        function initActionItems() {
+            const actionItems = document.querySelectorAll('.action-item');
             
-            const calculateSavings = (networth) => {
-                // Traditional advisor costs based on net worth
-                let advisorCost = Math.max(2000, networth * 0.01); // 1% AUM, minimum $2000
-                let estatePlanningCost = networth > 500000 ? 3000 : 1500;
-                let taxStrategistCost = networth > 250000 ? 2500 : 1500;
-                let toolsCost = 180;
-                let coachingCost = networth > 100000 ? 3000 : 1200;
-                
-                let totalTraditionalCost = advisorCost + estatePlanningCost + taxStrategistCost + toolsCost + coachingCost;
-                let legacyOSCost = 19 * 12; // Core plan annual cost
-                let savings = Math.round(totalTraditionalCost - legacyOSCost);
-                
-                return {
-                    savings: savings,
-                    paybackDays: Math.round((legacyOSCost / savings) * 365)
-                };
-            };
+            actionItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    item.style.transform = 'scale(0.98)';
+                    setTimeout(() => {
+                        item.style.transform = 'scale(1)';
+                    }, 150);
+                });
+            });
+        }
+
+        // Quick action buttons
+        function initQuickActions() {
+            const quickActionBtns = document.querySelectorAll('.quick-action-btn');
             
-            const updateCalculator = () => {
-                const networth = parseInt(networthSelect.value);
-                const result = calculateSavings(networth);
-                
-                savingsNumber.textContent = `${result.savings.toLocaleString()}`;
-                
-                if (result.paybackDays < 30) {
-                    paybackNumber.textContent = `${result.paybackDays} days`;
-                } else if (result.paybackDays < 365) {
-                    paybackNumber.textContent = `${Math.round(result.paybackDays / 30)} months`;
-                } else {
-                    paybackNumber.textContent = `${Math.round(result.paybackDays / 365)} years`;
+            quickActionBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    // Add loading state
+                    const originalText = btn.textContent;
+                    btn.textContent = '⏳ Loading...';
+                    btn.style.opacity = '0.7';
+                    
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.style.opacity = '1';
+                    }, 2000);
+                });
+            });
+        }
+
+        // Initialize everything when DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            animateProgressBars();
+            setTimeout(animateLegacyScore, 500);
+            setTimeout(animateNetWorth, 800);
+            initMobileSidebar();
+            simulateUpdates();
+            initNavigation();
+            initActionItems();
+            initQuickActions();
+        });
+
+        // Add some CSS for mobile hamburger
+        const mobileStyles = document.createElement('style');
+        mobileStyles.textContent = `
+            @media (max-width: 1024px) {
+                .main-content {
+                    padding-left: 0;
                 }
-            };
-            
-            networthSelect.addEventListener('change', updateCalculator);
-            updateCalculator(); // Initial calculation
-        };
-
-        // Initialize ROI calculator when page loads
-        document.addEventListener('DOMContentLoaded', setupROICalculator);
-
-        createMobileMenu();
+                
+                .top-header {
+                    padding-left: 4rem;
+                }
+            }
+        `;
+        document.head.appendChild(mobileStyles);
     </script>
+</body>
+</html>
