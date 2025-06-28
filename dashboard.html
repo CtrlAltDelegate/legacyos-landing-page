@@ -1,1 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LegacyOS Dashboard - The Johnson Family</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(180deg, #1e293b 0%, #334155 100%);
+            color: white;
+            padding: 2rem 0;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .logo {
+            padding: 0 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo p {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-top: 0.25rem;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-title {
+            padding: 0 2rem;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 2rem;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: rgba(102, 126, 234, 0.2);
+            border-left-color: #667eea;
+            color: white;
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+            margin-right: 1rem;
+            width: 20px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            background: #f8fafc;
+        }
+
+        /* Top Header */
+        .top-header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .header-left p {
+            color: #64748b;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .legacy-score-header {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .score-number-header {
+            font-size: 2rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .score-label-header {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .user-menu:hover {
+            background: #f1f5f9;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Dashboard Content */
+        .dashboard-content {
+            padding: 2rem;
+        }
+
+        /* Quick Stats */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-card.networth { border-left-color: #22c55e; }
+        .stat-card.savings { border-left-color: #3b82f6; }
+        .stat-card.goals { border-left-color: #f59e0b; }
+        .stat-card.next-review { border-left-color: #8b5cf6; }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-title {
+            font-size: 0.9rem;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-trend {
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .trend-up { color: #22c55e; }
+        .trend-neutral { color: #64748b; }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-subtitle {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        /* Wing Progress Section */
+        .wing-progress-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .view-all-btn {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: background 0.3s ease;
+        }
+
+        .view-all-btn:hover {
+            background: #f1f5f9;
+        }
+
+        .wings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .wing-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border-left: 5px solid;
+            transition: all 0.3s ease;
+        }
+
+        .wing-card:hover {
+            background: white;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .wing-card.growth { border-left-color: #22c55e; }
+        .wing-card.preservation { border-left-color: #3b82f6; }
+        .wing-card.philanthropy { border-left-color: #ef4444; }
+        .wing-card.experiences { border-left-color: #f59e0b; }
+        .wing-card.legacy { border-left-color: #8b5cf6; }
+        .wing-card.operations { border-left-color: #6b7280; }
+
+        .wing-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .wing-title-group {
+            display: flex;
+            align-items: center;
+        }
+
+        .wing-icon {
+            font-size: 1.5rem;
+            margin-right: 0.75rem;
+        }
+
+        .wing-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .wing-level {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .wing-progress {
+            margin-bottom: 1rem;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .current-milestone {
+            font-size: 0.9rem;
+            color: #374151;
+            font-weight: 600;
+        }
+
+        .progress-percentage {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.8s ease;
+        }
+
+        .wing-card.growth .progress-fill { background: linear-gradient(90deg, #22c55e, #16a34a); }
+        .wing-card.preservation .progress-fill { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+        .wing-card.philanthropy .progress-fill { background: linear-gradient(90deg, #ef4444, #dc2626); }
+        .wing-card.experiences .progress-fill { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        .wing-card.legacy .progress-fill { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
+        .wing-card.operations .progress-fill { background: linear-gradient(90deg, #6b7280, #4b5563); }
+
+        .wing-action {
+            font-size: 0.9rem;
+            color: #64748b;
+            font-style: italic;
+        }
+
+        .action-needed {
+            color: #dc2626;
+            font-weight: 500;
+        }
+
+        .on-track {
+            color: #16a34a;
+            font-weight: 500;
+        }
+
+        /* Action Items Section */
+        .action-items-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .action-items-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .action-item {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+            transition: all 0.3s ease;
+        }
+
+        .action-item:hover {
+            background: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .action-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .action-item.high { border-left-color: #ef4444; }
+        .action-item.medium { border-left-color: #f59e0b; }
+        .action-item.low { border-left-color: #22c55e; }
+
+        .action-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .action-priority {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .action-item.medium .action-priority {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .action-item.low .action-priority {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .action-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .action-description {
+            color: #64748b;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .action-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .action-wing {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .action-time {
+            color: #64748b;
+        }
+
+        /* Quick Actions Widget */
+        .quick-actions-widget {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .widget-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .widget-description {
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .quick-action-btn {
+            background: white;
+            color: #667eea;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            margin: 0.25rem;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .quick-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Recent Activity */
+        .recent-activity {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .activity-icon.completed {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .activity-icon.progress {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .activity-icon.alert {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-description {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .activity-time {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            white-space: nowrap;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .action-items-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .wings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .top-header {
+                padding: 1rem;
+            }
+
+            .dashboard-content {
+                padding: 1rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .wing-card, .stat-card, .action-item {
+            animation: slideIn 0.6s ease-out;
+        }
+
+        .wing-card:nth-child(1) { animation-delay: 0.1s; }
+        .wing-card:nth-child(2) { animation-delay: 0.2s; }
+        .wing-card:nth-child(3) { animation-delay: 0.3s; }
+        .wing-card:nth-child(4) { animation-delay: 0.4s; }
+        .wing-card:nth-child(5) { animation-delay: 0.5s; }
+        .wing-card:nth-child(6) { animation-delay: 0.6s; }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="logo">
+            <h1>LegacyOS</h1>
+            <p>The Johnson Family</p>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-title">Dashboard</div>
+            <a href="#" class="nav-item active">
+                <span class="nav-icon">📊</span>
+                Overview
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🎯</span>
+                Action Plan
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">📈</span>
+                Progress Report
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-title">Six Wings</div>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🚀</span>
+                Growth
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🛡️</span>
+                Preservation
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">❤️</span>
+                Philanthropy
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🌟</span>
+                Experiences
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">📜</span>
+                Legacy
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                Operations
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-title">Family Office</div>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">👥</span>
+                Family Members
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">📋</span>
+                Quarterly Review
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🔗</span>
+                Integrations
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                Settings
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Header -->
+        <div class="top-header">
+            <div class="header-left">
+                <h2>Welcome back, John!</h2>
+                <p>Here's your family's wealth building progress</p>
+            </div>
+            <div class="header-right">
+                <div class="legacy-score-header">
+                    <div class="score-number-header">73</div>
+                    <div class="score-label-header">Legacy Score</div>
+                </div>
+                <div class="user-menu">
+                    <div class="user-avatar">JJ</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.9rem;">John Johnson</div>
+                        <div style="font-size: 0.8rem; color: #64748b;">Family Admin</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="dashboard-content">
+            <!-- Quick Stats -->
+            <div class="quick-stats">
+                <div class="stat-card networth">
+                    <div class="stat-header">
+                        <div class="stat-title">Net Worth</div>
+                        <div class="stat-trend trend-up">↗ +14.8%</div>
+                    </div>
+                    <div class="stat-value">$47,332</div>
+                    <div class="stat-subtitle">+$6,847 this quarter</div>
+                </div>
+
+                <div class="stat-card savings">
+                    <div class="stat-header">
+                        <div class="stat-title">Savings Rate</div>
+                        <div class="stat-trend trend-up">↗ +6%</div>
+                    </div>
+                    <div class="stat-value">34%</div>
+                    <div class="stat-subtitle">$2,650/month average</div>
+                </div>
+
+                <div class="stat-card goals">
+                    <div class="stat-header">
+                        <div class="stat-title">Active Goals</div>
+                        <div class="stat-trend trend-neutral">5 in progress</div>
+                    </div>
+                    <div class="stat-value">83%</div>
+                    <div class="stat-subtitle">completion rate</div>
+                </div>
+
+                <div class="stat-card next-review">
+                    <div class="stat-header">
+                        <div class="stat-title">Next Review</div>
+                        <div class="stat-trend trend-neutral">Q4 2025</div>
+                    </div>
+                    <div class="stat-value">45</div>
+                    <div class="stat-subtitle">days remaining</div>
+                </div>
+            </div>
+
+            <!-- Wing Progress Section -->
+            <div class="wing-progress-section">
+                <div class="section-header">
+                    <h2 class="section-title">SIXWING Progress</h2>
+                    <a href="#" class="view-all-btn">View All Wings →</a>
+                </div>
+
+                <div class="wings-grid">
+                    <div class="wing-card growth">
+                        <div class="wing-header">
+                            <div class="wing-title-group">
+                                <span class="wing-icon">🚀</span>
+                                <span class="wing-name">Growth</span>
+                            </div>
+                            <span class="wing-level">Level 2</span>
+                        </div>
+                        <div class="wing-progress">
+                            <div class="progress-info">
+                                <span class="current-milestone">Portfolio Pioneer</span>
+                                <span class="progress-percentage">65%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 65%"></div>
+                            </div>
+                        </div>
+                        <div class="wing-action action-needed">
+                            Action needed: Increase monthly contributions to $500
+                        </div>
+                    </div>
+
+                    <div class="wing-card preservation">
+                        <div class="wing-header">
+                            <div class="wing-title-group">
+                                <span class="wing-icon">🛡️</span>
+                                <span class="wing-name">Preservation</span>
+                            </div>
+                            <span class="wing-level">Level 1</span>
+                        </div>
+                        <div class="wing-progress">
+                            <div class="progress-info">
+                                <span class="current-milestone">Safety Net Starter</span>
+                                <span class="progress-percentage">30%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 30%"></div>
+                            </div>
+                        </div>
+                        <div class="wing-action action-needed">
+                            Priority: Build emergency fund to 3 months expenses
+                        </div>
+                    </div>
+
+                    <div class="wing-card philanthropy">
+                        <div class="wing-header">
+                            <div class="wing-title-group">
+                                <span class="wing-icon">❤️</span>
+                                <span class="wing-name">Philanthropy</span>
+                            </div>
+                            <span class="wing-level">Level 2</span>
+                        </div>
+                        <div class="wing-progress">
+                            <div class="progress-info">
+                                <span class="current-milestone">Strategic Giver</span>
+                                <span class="progress-percentage">45%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 45%"></div>
+                            </div>
+                        </div>
+                        <div class="wing-action on-track">
+                            ✓ On track with 3.2% giving rate
+                        </div>
+                    </div>
+
+                    <div class="wing-card experiences">
+                        <div class="wing-header">
+                            <div class="wing-title-group">
+                                <span class="wing-icon">🌟</span>
+                                <span class="wing-name">Experiences</span>
+                            </div>
+                            <span class="wing-level">Level 2</span>
+                        </div>
+                        <div class="wing-progress">
+                            <div class="progress-info">
+                                <span class="current-milestone">Adventure Planner</span>
+                                <span class="progress-percentage">80%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 80%"></div>
+                            </div>
+                        </div>
+                        <div class="wing-action on-track">
+                            ✓ Yellowstone trip completed - plan international next
+                        </div>
+                    </div>
+
+                    <div class="wing-card legacy">
+                        <div class="wing-header">
+                            <div class="wing-title-group">
+                                <span class="wing-icon">📜</span>
+                                <span class="wing-name">Legacy</span>
+                            </div>
+                            <span class="wing-level">Level 1</span>
+                        </div>
+                        <div class="wing-progress">
+                            <div class="progress-info">
+                                <span class="current-milestone">Document Creator</span>
+                                <span class="progress-percentage">90%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 90%"></div>
+                            </div>
+                        </div>
+                        <div class="wing-action action-needed">
+                            Almost done: Complete healthcare directives
+                        </div>
+                    </div>
+
+                    <div class="wing-card operations">
+                        <div class="wing-header">
+                            <div class="wing-title-group">
+                                <span class="wing-icon">⚙️</span>
+                                <span class="wing-name">Operations</span>
+                            </div>
+                            <span class="wing-level">Level 3</span>
+                        </div>
+                        <div class="wing-progress">
+                            <div class="progress-info">
+                                <span class="current-milestone">Strategist</span>
+                                <span class="progress-percentage">20%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 20%"></div>
+                            </div>
+                        </div>
+                        <div class="wing-action action-needed">
+                            Next step: Consider business entity formation
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Items & Quick Actions -->
+            <div class="action-items-section">
+                <div class="action-items-card">
+                    <div class="section-header">
+                        <h2 class="section-title">Priority Actions This Week</h2>
+                        <a href="#" class="view-all-btn">View All →</a>
+                    </div>
+
+                    <div class="action-item high">
+                        <div class="action-header">
+                            <span class="action-priority">High Priority</span>
+                        </div>
+                        <h3 class="action-title">Build Emergency Fund</h3>
+                        <p class="action-description">Your Preservation wing is lagging behind. Increase automatic savings to reach your 3-month expense goal faster.</p>
+                        <div class="action-details">
+                            <span class="action-wing">🛡️ Preservation Wing</span>
+                            <span class="action-time">Est. 2 hours setup</span>
+                        </div>
+                    </div>
+
+                    <div class="action-item high">
+                        <div class="action-header">
+                            <span class="action-priority">High Priority</span>
+                        </div>
+                        <h3 class="action-title">Complete Healthcare Directives</h3>
+                        <p class="action-description">You're 90% done with Legacy Level 1! Finish your healthcare directives to level up and unlock new milestones.</p>
+                        <div class="action-details">
+                            <span class="action-wing">📜 Legacy Wing</span>
+                            <span class="action-time">Est. 1 hour</span>
+                        </div>
+                    </div>
+
+                    <div class="action-item medium">
+                        <div class="action-header">
+                            <span class="action-priority">Medium</span>
+                        </div>
+                        <h3 class="action-title">Research Business Formation</h3>
+                        <p class="action-description">Consider LLC formation for tax optimization as your investments grow. This will help advance your Operations wing.</p>
+                        <div class="action-details">
+                            <span class="action-wing">⚙️ Operations Wing</span>
+                            <span class="action-time">Est. 3 hours research</span>
+                        </div>
+                    </div>
+
+                    <div class="action-item low">
+                        <div class="action-header">
+                            <span class="action-priority">Low Priority</span>
+                        </div>
+                        <h3 class="action-title">Plan International Trip</h3>
+                        <p class="action-description">You're ready for Level 3 Experiences! Start planning your first international family adventure for 2026.</p>
+                        <div class="action-details">
+                            <span class="action-wing">🌟 Experiences Wing</span>
+                            <span class="action-time">Est. 2 hours planning</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-actions-widget">
+                    <h3 class="widget-title">Quick Actions</h3>
+                    <p class="widget-description">Fast-track your progress with these one-click integrations and tools</p>
+                    
+                    <a href="#" class="quick-action-btn">💰 Open Fidelity Account</a>
+                    <a href="#" class="quick-action-btn">📄 Complete Trust & Will</a>
+                    <a href="#" class="quick-action-btn">🏦 Set Up Auto-Transfer</a>
+                    <a href="#" class="quick-action-btn">📊 Generate Report</a>
+                    <a href="#" class="quick-action-btn">👨‍👩‍👧‍👦 Invite Spouse</a>
+                    <a href="#" class="quick-action-btn">📅 Schedule Review</a>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="recent-activity">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Activity</h2>
+                    <a href="#" class="view-all-btn">View All Activity →</a>
+                </div>
+
+                <div class="activity-item">
+                    <div class="activity-icon completed">✓</div>
+                    <div class="activity-content">
+                        <div class="activity-title">Completed Yellowstone Family Trip</div>
+                        <div class="activity-description">Experience Wing milestone achieved - created lasting family memories</div>
+                    </div>
+                    <div class="activity-time">3 days ago</div>
+                </div>
+
+                <div class="activity-item progress">
+                    <div class="activity-icon progress">📈</div>
+                    <div class="activity-content">
+                        <div class="activity-title">Investment Contribution Increased</div>
+                        <div class="activity-description">Monthly contribution raised from $300 to $420 - Growth Wing progress</div>
+                    </div>
+                    <div class="activity-time">1 week ago</div>
+                </div>
+
+                <div class="activity-item completed">
+                    <div class="activity-icon completed">✓</div>
+                    <div class="activity-content">
+                        <div class="activity-title">Estate Planning Documents Signed</div>
+                        <div class="activity-description">Basic wills completed through Trust & Will integration</div>
+                    </div>
+                    <div class="activity-time">2 weeks ago</div>
+                </div>
+
+                <div class="activity-item alert">
+                    <div class="activity-icon alert">⚠️</div>
+                    <div class="activity-content">
+                        <div class="activity-title">Emergency Fund Below Target</div>
+                        <div class="activity-description">Currently at 1.2 months expenses - recommend increasing to 3 months</div>
+                    </div>
+                    <div class="activity-time">3 weeks ago</div>
+                </div>
+
+                <div class="activity-item progress">
+                    <div class="activity-icon progress">🎯</div>
+                    <div class="activity-content">
+                        <div class="activity-title">Quarterly Review Generated</div>
+                        <div class="activity-description">Q3 2025 Family Office Report ready for review</div>
+                    </div>
+                    <div class="activity-time">1 month ago</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Progress bar animations
+        function animateProgressBars() {
+            const progressBars = document.querySelectorAll('.progress-fill');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const width = entry.target.style.width;
+                        entry.target.style.width = '0%';
+                        setTimeout(() => {
+                            entry.target.style.transition = 'width 1.5s ease-out';
+                            entry.target.style.width = width;
+                        }, 200);
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            progressBars.forEach(bar => observer.observe(bar));
+        }
+
+        // Legacy Score counter animation
+        function animateLegacyScore() {
+            const scoreElement = document.querySelector('.score-number-header');
+            const targetScore = 73;
+            let currentScore = 0;
+            const increment = targetScore / 60;
+            
+            const timer = setInterval(() => {
+                currentScore += increment;
+                if (currentScore >= targetScore) {
+                    currentScore = targetScore;
+                    clearInterval(timer);
+                }
+                scoreElement.textContent = Math.floor(currentScore);
+            }, 30);
+        }
+
+        // Net worth counter animation
+        function animateNetWorth() {
+            const netWorthElement = document.querySelector('.stat-card.networth .stat-value');
+            const targetValue = 47332;
+            let currentValue = 0;
+            const increment = targetValue / 80;
+            
+            const timer = setInterval(() => {
+                currentValue += increment;
+                if (currentValue >= targetValue) {
+                    currentValue = targetValue;
+                    clearInterval(timer);
+                }
+                netWorthElement.textContent = ' + Math.floor(currentValue).toLocaleString();
+            }, 25);
+        }
+
+        // Mobile sidebar toggle
+        function initMobileSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const hamburger = document.createElement('div');
+            hamburger.innerHTML = '☰';
+            hamburger.className = 'mobile-hamburger';
+            hamburger.style.cssText = `
+                display: none;
+                position: fixed;
+                top: 1.5rem;
+                left: 1rem;
+                z-index: 1001;
+                font-size: 1.5rem;
+                color: #667eea;
+                cursor: pointer;
+                background: white;
+                padding: 0.5rem;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            `;
+            
+            document.body.appendChild(hamburger);
+            
+            function checkMobile() {
+                if (window.innerWidth <= 1024) {
+                    hamburger.style.display = 'block';
+                } else {
+                    hamburger.style.display = 'none';
+                    sidebar.classList.remove('open');
+                }
+            }
+            
+            hamburger.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+            });
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 1024 && 
+                    !sidebar.contains(e.target) && 
+                    !hamburger.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            });
+            
+            window.addEventListener('resize', checkMobile);
+            checkMobile();
+        }
+
+        // Simulate real-time updates
+        function simulateUpdates() {
+            // Update savings rate occasionally
+            setInterval(() => {
+                const savingsElement = document.querySelector('.stat-card.savings .stat-value');
+                const currentRate = parseInt(savingsElement.textContent);
+                const newRate = currentRate + (Math.random() > 0.5 ? 1 : -1);
+                if (newRate >= 30 && newRate <= 40) {
+                    savingsElement.textContent = newRate + '%';
+                }
+            }, 30000);
+        }
+
+        // Interactive nav items
+        function initNavigation() {
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    // Remove active class from all items
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    
+                    // Add active class to clicked item
+                    item.classList.add('active');
+                });
+            });
+        }
+
+        // Action item interactions
+        function initActionItems() {
+            const actionItems = document.querySelectorAll('.action-item');
+            
+            actionItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    item.style.transform = 'scale(0.98)';
+                    setTimeout(() => {
+                        item.style.transform = 'scale(1)';
+                    }, 150);
+                });
+            });
+        }
+
+        // Quick action buttons
+        function initQuickActions() {
+            const quickActionBtns = document.querySelectorAll('.quick-action-btn');
+            
+            quickActionBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    // Add loading state
+                    const originalText = btn.textContent;
+                    btn.textContent = '⏳ Loading...';
+                    btn.style.opacity = '0.7';
+                    
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.style.opacity = '1';
+                    }, 2000);
+                });
+            });
+        }
+
+        // Initialize everything when DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            animateProgressBars();
+            setTimeout(animateLegacyScore, 500);
+            setTimeout(animateNetWorth, 800);
+            initMobileSidebar();
+            simulateUpdates();
+            initNavigation();
+            initActionItems();
+            initQuickActions();
+        });
+
+        // Add some CSS for mobile hamburger
+        const mobileStyles = document.createElement('style');
+        mobileStyles.textContent = `
+            @media (max-width: 1024px) {
+                .main-content {
+                    padding-left: 0;
+                }
+                
+                .top-header {
+                    padding-left: 4rem;
+                }
+            }
+        `;
+        document.head.appendChild(mobileStyles);
+    </script>
+</body>
+</html>
