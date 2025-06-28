@@ -665,29 +665,66 @@
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         }
 
-        /* ROI Calculator */
+        /* Enhanced ROI Calculator */
         .roi-section {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 20px;
-            padding: 3rem;
+            padding: 4rem;
             margin: 4rem 0;
             color: white;
-            text-align: center;
+            position: relative;
+            overflow: hidden;
         }
 
-        .roi-section h3 {
-            font-size: 1.8rem;
+        .roi-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .roi-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .roi-header h3 {
+            font-size: 2.2rem;
             font-weight: 700;
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .roi-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
         }
 
         .roi-calculator {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr auto 1fr;
             gap: 3rem;
-            align-items: center;
-            max-width: 600px;
+            align-items: start;
+            max-width: 1000px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .calculator-left {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .calculator-input {
+            margin-bottom: 2rem;
         }
 
         .calculator-input label {
@@ -705,56 +742,305 @@
             font-size: 1.1rem;
             font-weight: 600;
             color: #1e293b;
+            background: white;
         }
 
-        .calculator-result {
-            text-align: left;
+        .traditional-breakdown h4 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #fbbf24;
         }
 
-        .savings-amount, .payback-time {
+        .cost-breakdown {
+            space-y: 0.5rem;
+        }
+
+        .cost-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .cost-line:last-child {
+            border-bottom: none;
+            font-weight: 600;
+            padding-top: 1rem;
+            border-top: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .cost-amount {
+            font-weight: 600;
+            color: #fbbf24;
+        }
+
+        .vs-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .arrow-content {
+            background: white;
+            color: #667eea;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .arrow-icon {
+            font-size: 1.5rem;
+            margin-top: 0.25rem;
+        }
+
+        .calculator-right {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .legacyos-offer {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .offer-badge {
+            background: #22c55e;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .offer-price {
             margin-bottom: 1.5rem;
         }
 
-        .savings-number, .payback-number {
-            display: block;
-            font-size: 2.5rem;
+        .price-large {
+            font-size: 3rem;
             font-weight: 900;
             color: #fbbf24;
         }
 
-        .savings-label, .payback-label {
-            display: block;
-            font-size: 1rem;
+        .price-period {
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+
+        .offer-features {
+            text-align: left;
+        }
+
+        .feature {
+            padding: 0.5rem 0;
             opacity: 0.9;
         }
 
-        /* Guarantee */
-        .guarantee {
-            text-align: center;
-            background: #f0f9f0;
-            border: 2px solid #22c55e;
+        .savings-highlight {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .savings-result, .payback-result {
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 15px;
-            padding: 2rem;
+            padding: 1.5rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .savings-number, .payback-number {
+            display: block;
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #22c55e;
+            margin-bottom: 0.5rem;
+        }
+
+        .savings-label, .payback-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .roi-footnote {
+            text-align: center;
+            margin-top: 2rem;
+            opacity: 0.7;
+        }
+
+        /* Enhanced Guarantee */
+        .guarantee {
+            background: linear-gradient(135deg, #f0f9f0 0%, #dcfce7 100%);
+            border: 2px solid #22c55e;
+            border-radius: 20px;
+            padding: 0;
             margin-top: 3rem;
+            overflow: hidden;
+        }
+
+        .guarantee-content {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 3rem;
+            align-items: center;
+            padding: 3rem;
         }
 
         .guarantee-badge {
-            font-size: 3rem;
-            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(34, 197, 94, 0.2);
         }
 
-        .guarantee h3 {
+        .badge-icon {
+            font-size: 3rem;
+        }
+
+        .badge-title {
+            font-size: 1.8rem;
+            font-weight: 900;
             color: #16a34a;
-            font-size: 1.5rem;
+            line-height: 1;
+        }
+
+        .badge-subtitle {
+            font-size: 1rem;
+            color: #166534;
+            font-weight: 600;
+        }
+
+        .guarantee-center h3 {
+            color: #16a34a;
+            font-size: 1.8rem;
             font-weight: 700;
             margin-bottom: 1rem;
         }
 
-        .guarantee p {
+        .guarantee-center p {
             color: #166534;
             font-size: 1.1rem;
-            max-width: 600px;
-            margin: 0 auto;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .guarantee-stats {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .guarantee-stat {
+            text-align: center;
+        }
+
+        .guarantee-stat .stat-number {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #16a34a;
+        }
+
+        .guarantee-stat .stat-label {
+            font-size: 0.8rem;
+            color: #166534;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .testimonial-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(34, 197, 94, 0.1);
+            max-width: 280px;
+        }
+
+        .testimonial-quote {
+            font-style: italic;
+            color: #374151;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .author-name {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .author-detail {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        /* Enhanced Responsive for new sections */
+        @media (max-width: 768px) {
+            .roi-calculator {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .vs-arrow {
+                order: 2;
+            }
+            
+            .calculator-right {
+                order: 3;
+            }
+
+            .savings-highlight {
+                grid-template-columns: 1fr;
+            }
+
+            .guarantee-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+                text-align: center;
+            }
+
+            .guarantee-stats {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .testimonial-card {
+                max-width: none;
+            }
         }
 
         /* Responsive Pricing */
@@ -1290,38 +1576,139 @@
                 </div>
             </div>
 
-            <!-- ROI Calculator -->
+            <!-- Enhanced ROI Calculator -->
             <div class="roi-section">
-                <h3>Calculate Your Savings</h3>
+                <div class="roi-header">
+                    <h3>See Your Personal Savings</h3>
+                    <p>Most families overpay for scattered financial advice. See how much you'll save with the integrated SIXWING System.</p>
+                </div>
+                
                 <div class="roi-calculator">
-                    <div class="calculator-input">
-                        <label>Your current net worth:</label>
-                        <select id="networth">
-                            <option value="50000">$50,000</option>
-                            <option value="100000">$100,000</option>
-                            <option value="250000">$250,000</option>
-                            <option value="500000">$500,000</option>
-                            <option value="1000000">$1,000,000+</option>
-                        </select>
-                    </div>
-                    <div class="calculator-result">
-                        <div class="savings-amount">
-                            <span class="savings-number">$3,400</span>
-                            <span class="savings-label">Annual Savings vs Traditional Advisors</span>
+                    <div class="calculator-left">
+                        <div class="calculator-input">
+                            <label>Your current net worth:</label>
+                            <select id="networth">
+                                <option value="50000">$50,000</option>
+                                <option value="100000">$100,000</option>
+                                <option value="250000">$250,000</option>
+                                <option value="500000">$500,000</option>
+                                <option value="1000000">$1,000,000+</option>
+                            </select>
                         </div>
-                        <div class="payback-time">
-                            <span class="payback-number">2 weeks</span>
-                            <span class="payback-label">Payback Period</span>
+                        
+                        <div class="traditional-breakdown">
+                            <h4>What You're Currently Paying:</h4>
+                            <div class="cost-breakdown">
+                                <div class="cost-line">
+                                    <span>Financial Advisor (1% AUM)</span>
+                                    <span class="cost-amount" id="advisor-cost">$5,000</span>
+                                </div>
+                                <div class="cost-line">
+                                    <span>Estate Planning</span>
+                                    <span class="cost-amount" id="estate-cost">$3,000</span>
+                                </div>
+                                <div class="cost-line">
+                                    <span>Tax Strategy</span>
+                                    <span class="cost-amount" id="tax-cost">$2,500</span>
+                                </div>
+                                <div class="cost-line">
+                                    <span>Wealth Tools & Apps</span>
+                                    <span class="cost-amount">$180</span>
+                                </div>
+                                <div class="cost-line">
+                                    <span>Financial Coaching</span>
+                                    <span class="cost-amount" id="coaching-cost">$3,000</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="vs-arrow">
+                        <div class="arrow-content">
+                            <span>VS</span>
+                            <div class="arrow-icon">→</div>
+                        </div>
+                    </div>
+                    
+                    <div class="calculator-right">
+                        <div class="legacyos-offer">
+                            <div class="offer-badge">SIXWING System</div>
+                            <div class="offer-price">
+                                <span class="price-large">$228</span>
+                                <span class="price-period">/year</span>
+                            </div>
+                            <div class="offer-features">
+                                <div class="feature">✓ All 6 wings covered</div>
+                                <div class="feature">✓ Family collaboration</div>
+                                <div class="feature">✓ Quarterly reviews</div>
+                                <div class="feature">✓ Expert guidance</div>
+                            </div>
+                        </div>
+                        
+                        <div class="savings-highlight">
+                            <div class="savings-result">
+                                <div class="savings-number">$11,952</div>
+                                <div class="savings-label">You Save Annually</div>
+                            </div>
+                            <div class="payback-result">
+                                <div class="payback-number">7 days</div>
+                                <div class="payback-label">Payback Period</div>
+                            </div>
                         </div>
                     </div>
                 </div>
+                
+                <div class="roi-footnote">
+                    <p><small>* Savings calculated against average advisor fees. Your actual savings may vary based on current provider costs and net worth.</small></p>
+                </div>
             </div>
 
-            <!-- Money Back Guarantee -->
+            <!-- Enhanced Money Back Guarantee -->
             <div class="guarantee">
-                <div class="guarantee-badge">💰</div>
-                <h3>60-Day Money-Back Guarantee</h3>
-                <p>Not seeing progress in your Legacy Score? Get a full refund, no questions asked. We're confident the SIXWING System will transform your family's financial future.</p>
+                <div class="guarantee-content">
+                    <div class="guarantee-left">
+                        <div class="guarantee-badge">
+                            <div class="badge-icon">💰</div>
+                            <div class="badge-text">
+                                <div class="badge-title">60-Day</div>
+                                <div class="badge-subtitle">Money-Back Guarantee</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="guarantee-center">
+                        <h3>Risk-Free Family Office Trial</h3>
+                        <p>Not seeing measurable progress in your Legacy Score within 60 days? We'll refund every penny, no questions asked. We're confident the SIXWING System will transform your family's financial trajectory.</p>
+                        
+                        <div class="guarantee-stats">
+                            <div class="guarantee-stat">
+                                <span class="stat-number">98%</span>
+                                <span class="stat-label">Keep their subscription</span>
+                            </div>
+                            <div class="guarantee-stat">
+                                <span class="stat-number">23 pts</span>
+                                <span class="stat-label">Avg Legacy Score increase</span>
+                            </div>
+                            <div class="guarantee-stat">
+                                <span class="stat-number">6 months</span>
+                                <span class="stat-label">To see major progress</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="guarantee-right">
+                        <div class="testimonial-card">
+                            <div class="testimonial-quote">"We saw our Legacy Score jump 28 points in just 4 months. LegacyOS helped us organize everything we were doing wrong."</div>
+                            <div class="testimonial-author">
+                                <div class="author-avatar">👨‍👩‍👧</div>
+                                <div class="author-info">
+                                    <div class="author-name">The Rodriguez Family</div>
+                                    <div class="author-detail">Net worth: $340K → $425K</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
