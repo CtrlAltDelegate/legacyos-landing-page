@@ -582,7 +582,21 @@
             loginBtn.textContent = 'Verifying credentials...';
             loginBtn.classList.add('loading');
             
-            // Simulate authentication
+            // Check for admin credentials
+            if (email === 'admin@legacyos.com' && password === 'admin123') {
+                // Admin login success
+                setTimeout(() => {
+                    successCheck.style.display = 'block';
+                    loginBtn.style.display = 'none';
+                    
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                }, 1500);
+                return;
+            }
+            
+            // Simulate authentication for other credentials
             setTimeout(() => {
                 if (email.includes('@') && password.length >= 6) {
                     // Show success animation
@@ -597,7 +611,7 @@
                     // Reset form on error
                     loginBtn.textContent = 'Access Your Family Office';
                     loginBtn.classList.remove('loading');
-                    alert('Invalid credentials. Try the demo accounts or use a valid email/password.');
+                    alert('Invalid credentials. Try: admin@legacyos.com / admin123 or use the demo accounts below.');
                 }
             }, 2000);
         });
