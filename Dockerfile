@@ -8,7 +8,8 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
-RUN npm ci --only=production
+# Remove --only=production to install devDependencies needed for build
+RUN npm ci
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -53,5 +54,5 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-# Run database migrations and start the application
-CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"] 
+# Start the application
+CMD ["node", "server.js"] 
