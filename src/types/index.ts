@@ -87,6 +87,19 @@ export interface DashboardStats {
   familyMembers: number;
 }
 
+// Legacy Score Types
+export interface LegacyScore {
+  total: number;
+  wingScores: {
+    [wingSlug: string]: {
+      current: number;
+      max: number;
+      percentage: number;
+    };
+  };
+  lastCalculated: Date;
+}
+
 // Wing Configuration (for static config)
 export interface WingConfig {
   name: string;
@@ -102,4 +115,7 @@ export interface WingLevelConfig {
   name: string;
   description: string;
   milestones: string[];
-} 
+}
+
+// Utility Types
+export type WingSlug = 'growth' | 'preservation' | 'philanthropy' | 'experiences' | 'legacy' | 'operations'; 
