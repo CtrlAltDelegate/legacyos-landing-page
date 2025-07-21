@@ -71,12 +71,12 @@ export function getNextMilestone(wingProgress: WingProgress): string | null {
   if (!currentLevelConfig) return null;
   
   // Find next incomplete milestone
-  const completedMilestoneIds = wingProgress.completedMilestones;
+  const completedMilestones = wingProgress.completedMilestones;
   const nextMilestone = currentLevelConfig.milestones.find(
-    milestone => !completedMilestoneIds.includes(milestone.title) // Using title as ID for now
+    milestone => !completedMilestones.includes(milestone)
   );
   
-  return nextMilestone?.title || null;
+  return nextMilestone || null;
 }
 
 export function calculateProgressPercentage(wingProgress: WingProgress): number {
