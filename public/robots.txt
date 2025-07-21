@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Host
+Host: https://legacyos.com
+
+# Sitemaps
+Sitemap: https://legacyos.com/sitemap.xml 
