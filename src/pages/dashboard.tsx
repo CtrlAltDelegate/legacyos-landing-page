@@ -21,13 +21,33 @@ interface DashboardPageProps {
   actionItems: ActionItem[];
 }
 
-export default function DashboardPage({ 
-  user, 
-  stats, 
-  wingProgress, 
-  actionItems 
-}: DashboardPageProps) {
+export default function DashboardPage() {
   const [selectedWing, setSelectedWing] = useState<string | null>(null);
+  
+  // Mock data for development - TODO: Replace with real data from API
+  const user = {
+    id: '1',
+    firstName: 'Demo',
+    lastName: 'User',
+    familyName: 'Demo Family'
+  };
+  
+  const stats = {
+    legacyScore: 73,
+    netWorth: 47332,
+    netWorthChange: 12.5,
+    savingsRate: 34,
+    savingsRateChange: 5.2,
+    totalActionItems: 5,
+    completedThisMonth: 3,
+    familyMembers: 4,
+    activeGoals: 12,
+    completionRate: 75,
+    nextReviewDays: 14
+  };
+  
+  const wingProgress: any[] = [];
+  const actionItems: any[] = [];
 
   return (
     <>
@@ -152,6 +172,9 @@ function QuickActionButton({ icon, text }: { icon: string; text: string }) {
   );
 }
 
+// Temporarily disabled to allow app startup without database
+// TODO: Re-enable after database is set up
+/*
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const session = await getSession(context);
   
@@ -224,4 +247,5 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   return {
     props: mockData,
   };
-}; 
+};
+*/ 
