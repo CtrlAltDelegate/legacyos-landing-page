@@ -1,6 +1,6 @@
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
 
 export default function HomePage() {
   const [legacyScore, setLegacyScore] = useState(0);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { GetServerSideProps } from 'next';
 import { getSession, signIn } from 'next-auth/react';
 import Head from 'next/head';

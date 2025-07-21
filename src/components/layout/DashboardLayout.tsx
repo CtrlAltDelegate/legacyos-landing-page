@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 import Head from 'next/head';
 import { useSession, signOut } from 'next-auth/react';
 import { Users, Settings, LogOut, Home } from 'lucide-react';
