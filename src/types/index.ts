@@ -81,10 +81,15 @@ export interface ActionItem {
 export interface DashboardStats {
   legacyScore: number;
   netWorth: number;
+  netWorthChange: number;
   savingsRate: number;
+  savingsRateChange: number;
   totalActionItems: number;
   completedThisMonth: number;
   familyMembers: number;
+  activeGoals: number;
+  completionRate: number;
+  nextReviewDays: number;
 }
 
 // Legacy Score Types
