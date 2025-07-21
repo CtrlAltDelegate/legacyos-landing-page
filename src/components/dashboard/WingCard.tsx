@@ -22,12 +22,12 @@ export default function WingCard({ wing, onClick }: WingCardProps) {
         <div className="flex items-center space-x-3">
           <div 
             className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-lg"
-            style={{ backgroundColor: wing.color }}
+            style={{ backgroundColor: wing.wing.color }}
           >
-            {wing.icon}
+            {wing.wing.icon}
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">{wing.name}</h3>
+            <h3 className="font-semibold text-gray-900">{wing.wing.name}</h3>
             <p className="text-sm text-gray-500">Level {wing.currentLevel}</p>
           </div>
         </div>
@@ -48,7 +48,7 @@ export default function WingCard({ wing, onClick }: WingCardProps) {
             className="h-2 rounded-full transition-all duration-300"
             style={{ 
               width: `${progressPercentage}%`,
-              backgroundColor: wing.color 
+              backgroundColor: wing.wing.color 
             }}
           />
         </div>
