@@ -1,7 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import Button from '@/components/ui/Button';
 
 export default function HomePage() {
   const [legacyScore, setLegacyScore] = useState(0);
@@ -52,9 +51,12 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <Button asChild>
-            <Link href="/register">Start Building Your Family Office</Link>
-          </Button>
+          <Link 
+            href="/register"
+            className="inline-flex items-center justify-center px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            Start Building Your Family Office
+          </Link>
         </nav>
       </header>
 
@@ -70,12 +72,18 @@ export default function HomePage() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" asChild>
-                <Link href="/register">Get My Legacy Score</Link>
-              </Button>
-              <Button variant="outline" size="lg" asChild>
-                <Link href="#demo">Watch How It Works</Link>
-              </Button>
+              <Link 
+                href="/register"
+                className="inline-flex items-center justify-center px-8 py-4 bg-purple-600 text-white font-medium text-lg rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                Get My Legacy Score
+              </Link>
+              <Link 
+                href="#demo"
+                className="inline-flex items-center justify-center px-8 py-4 border-2 border-gray-300 text-gray-700 font-medium text-lg rounded-lg hover:border-gray-400 hover:text-gray-900 transition-colors"
+              >
+                Watch How It Works
+              </Link>
             </div>
 
             <div className="flex space-x-8">
@@ -190,9 +198,12 @@ export default function HomePage() {
           <p className="text-xl mb-8 opacity-90">
             Join families who are building generational wealth with intention, balance, and purpose.
           </p>
-          <Button variant="secondary" size="lg" asChild>
-            <Link href="/register">Get My Legacy Score</Link>
-          </Button>
+          <Link 
+            href="/register"
+            className="inline-flex items-center justify-center px-8 py-4 bg-white text-purple-600 font-medium text-lg rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Get My Legacy Score
+          </Link>
         </div>
       </section>
     </>
