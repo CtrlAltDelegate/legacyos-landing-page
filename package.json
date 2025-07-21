@@ -5,10 +5,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run type-check && next build",
     "start": "node server.js",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "postinstall": "npm list typescript @types/react @types/react-dom || echo 'TypeScript dependencies check completed'"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.0",
@@ -28,6 +29,7 @@
     "recharts": "^2.8.0",
     "stripe": "^14.7.0",
     "tailwind-merge": "^2.0.0",
+    "typescript": "^5.8.3",
     "zod": "^3.22.0"
   },
   "devDependencies": {
@@ -43,8 +45,7 @@
     "postcss": "^8.4.0",
     "prisma": "^5.6.0",
     "tailwindcss": "^3.3.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "ts-node": "^10.9.2"
   },
   "engines": {
     "node": ">=18.0.0"
