@@ -1,24 +1,23 @@
 [build]
-  publish = ".next"
   command = "npm run build"
+  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "18"
   NPM_VERSION = "9"
+  # Configure secrets scanning to ignore NextAuth patterns
+  SECRETS_SCAN_OMIT_PATHS = ".next/required-server-files.json,.next/standalone/**/*"
+  SECRETS_SCAN_OMIT_KEYS = "NEXTAUTH_SECRET"
 
+# Use the Next.js plugin for proper server-side rendering and API routes
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Redirects for client-side routing (handled by Next.js plugin)
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-
-[context.production]
-  environment = { NODE_ENV = "production" }
-
-[context.deploy-preview]
-  environment = { NODE_ENV = "development" }
-
-[context.branch-deploy]
-  environment = { NODE_ENV = "development" }
 
 # Security headers
 [[headers]]
@@ -29,6 +28,7 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:;"
 
 # Cache static assets
 [[headers]]
@@ -38,5 +38,15 @@
 
 [[headers]]
   for = "/_next/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.css"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable" 

@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  output: 'standalone', // Required for Docker deployment
+  // Removed output: 'standalone' - not needed for Netlify
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client'],
   },
