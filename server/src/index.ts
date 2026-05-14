@@ -12,7 +12,7 @@ import networthRoutes from './routes/networth';
 import documentRoutes from './routes/documents';
 import floRoutes from './routes/flo';
 import goalRoutes from './routes/goals';
-// import billingRoutes from './routes/billing';     // Step 14
+import billingRoutes, { handleStripeWebhook } from './routes/billing';
 
 import { startPriceRefreshCron } from './cron/priceRefresh';
 import { startMonthlySnapshotCron } from './cron/monthlySnapshot';
@@ -26,6 +26,14 @@ app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true,
 }));
+
+// ─── Stripe webhook — MUST come before express.json() ─────────────────────────
+// Stripe requires the raw request body to verify the signature.
+app.post(
+  '/api/billing/webhook',
+  express.raw({ type: 'application/json' }),
+  handleStripeWebhook
+);
 
 // ─── Body parsing ─────────────────────────────────────────────────────────────
 app.use(express.json());
@@ -54,7 +62,7 @@ app.use('/api/networth', networthRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/flo', floRoutes);
 app.use('/api/goals', goalRoutes);
-// app.use('/api/billing', billingRoutes);     // Step 14
+app.use('/api/billing', billingRoutes);
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 app.use((_req, res) => {
