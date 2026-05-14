@@ -8,14 +8,14 @@ import authRoutes from './routes/auth';
 import userRoutes from './routes/user';
 import assetRoutes from './routes/assets';
 import liabilityRoutes from './routes/liabilities';
-// import networthRoutes from './routes/networth';   // Step 5
+import networthRoutes from './routes/networth';
 // import documentRoutes from './routes/documents';  // Step 6
 // import floRoutes from './routes/flo';             // Step 7
 // import goalRoutes from './routes/goals';          // Step 8
 // import billingRoutes from './routes/billing';     // Step 14
 
 import { startPriceRefreshCron } from './cron/priceRefresh';
-// import { startMonthlySnapshotCron } from './cron/monthlySnapshot'; // Step 5
+import { startMonthlySnapshotCron } from './cron/monthlySnapshot';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -50,7 +50,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/assets', assetRoutes);
 app.use('/api/liabilities', liabilityRoutes);
-// app.use('/api/networth', networthRoutes);   // Step 5
+app.use('/api/networth', networthRoutes);
 // app.use('/api/documents', documentRoutes);  // Step 6
 // app.use('/api/flo', floRoutes);             // Step 7
 // app.use('/api/goals', goalRoutes);          // Step 8
@@ -70,6 +70,7 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 app.listen(PORT, () => {
   console.log(`LegacyOS server running on port ${PORT}`);
   startPriceRefreshCron();
+  startMonthlySnapshotCron();
 });
 
 export default app;
