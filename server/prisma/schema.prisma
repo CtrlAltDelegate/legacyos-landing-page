@@ -1,0 +1,214 @@
+// LegacyOS — Prisma Schema
+// Run: npx prisma migrate dev --name init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Users ────────────────────────────────────────────────────────────────────
+model User {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email              String    @unique @db.VarChar(255)
+  passwordHash       String    @map("password_hash") @db.VarChar(255)
+  fullName           String?   @map("full_name") @db.VarChar(255)
+  plan               String    @default("free") @db.VarChar(20)
+  stripeCustomerId   String?   @unique @map("stripe_customer_id") @db.VarChar(255)
+  stripeSubId        String?   @unique @map("stripe_sub_id") @db.VarChar(255)
+  assumedTaxRate     Decimal   @default(25.00) @map("assumed_tax_rate") @db.Decimal(5, 2)
+  onboardingComplete Boolean   @default(false) @map("onboarding_complete")
+  refreshToken       String?   @map("refresh_token")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  assets             Asset[]
+  assetHistory       AssetHistory[]
+  goals              Goal[]
+  liabilities        Liability[]
+  documents          Document[]
+  floConversations   FloConversation[]
+  netWorthSnapshots  NetWorthSnapshot[]
+
+  @@map("users")
+}
+
+// ─── Goals (set during Flo onboarding) ───────────────────────────────────────
+model Goal {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId              String    @map("user_id") @db.Uuid
+  primaryGoal         String?   @map("primary_goal") @db.VarChar(100)
+  primaryGoalLabel    String?   @map("primary_goal_label") @db.VarChar(255)
+  targetMonthlyIncome Decimal?  @map("target_monthly_income") @db.Decimal(12, 2)
+  targetDate          DateTime? @map("target_date") @db.Date
+  riskTolerance       String?   @map("risk_tolerance") @db.VarChar(20)
+  emergencyFundMonths Decimal?  @map("emergency_fund_months") @db.Decimal(5, 1)
+  targetEquityPct     Decimal   @default(30) @map("target_equity_pct") @db.Decimal(5, 2)
+  targetRealEstatePct Decimal   @default(40) @map("target_real_estate_pct") @db.Decimal(5, 2)
+  targetCashPct       Decimal   @default(10) @map("target_cash_pct") @db.Decimal(5, 2)
+  targetBusinessPct   Decimal   @default(10) @map("target_business_pct") @db.Decimal(5, 2)
+  targetInsurancePct  Decimal   @default(5) @map("target_insurance_pct") @db.Decimal(5, 2)
+  targetOtherPct      Decimal   @default(5) @map("target_other_pct") @db.Decimal(5, 2)
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("goals")
+}
+
+// ─── Assets (unified table — all asset types) ─────────────────────────────────
+model Asset {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                String    @map("user_id") @db.Uuid
+  assetClass            String    @map("asset_class") @db.VarChar(30)
+  assetType             String    @map("asset_type") @db.VarChar(50)
+  name                  String    @db.VarChar(255)
+
+  // Equity-specific
+  ticker                String?   @db.VarChar(20)
+  sharesHeld            Decimal?  @map("shares_held") @db.Decimal(18, 8)
+  costBasisPerShare     Decimal?  @map("cost_basis_per_share") @db.Decimal(12, 4)
+  purchaseDate          DateTime? @map("purchase_date") @db.Date
+  accountLabel          String?   @map("account_label") @db.VarChar(100)
+
+  // Real estate-specific
+  propertyAddress       String?   @map("property_address")
+  purchasePrice         Decimal?  @map("purchase_price") @db.Decimal(12, 2)
+  purchaseDateProperty  DateTime? @map("purchase_date_property") @db.Date
+  estimatedValue        Decimal?  @map("estimated_value") @db.Decimal(12, 2)
+  adjustedValue         Decimal?  @map("adjusted_value") @db.Decimal(12, 2)
+  mortgageBalance       Decimal?  @map("mortgage_balance") @db.Decimal(12, 2)
+  monthlyRent           Decimal?  @map("monthly_rent") @db.Decimal(10, 2)
+  monthlyPiti           Decimal?  @map("monthly_piti") @db.Decimal(10, 2)
+
+  // Retirement account flag
+  isPretax              Boolean   @default(false) @map("is_pretax")
+
+  // Business equity-specific
+  valuationMethod       String?   @map("valuation_method") @db.VarChar(50)
+  valuationNotes        String?   @map("valuation_notes")
+
+  // Restricted asset-specific
+  vestDate              DateTime? @map("vest_date") @db.Date
+  probability           Decimal?  @db.Decimal(5, 2)
+
+  // Shared value fields
+  currentValue          Decimal?  @map("current_value") @db.Decimal(12, 2)
+  currentValueSource    String    @default("manual") @map("current_value_source") @db.VarChar(30)
+  currentValueUpdatedAt DateTime? @map("current_value_updated_at")
+
+  notes                 String?
+  isActive              Boolean   @default(true) @map("is_active")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  history               AssetHistory[]
+  documents             Document[]
+
+  @@index([userId])
+  @@index([userId, assetClass])
+  @@index([ticker])
+  @@map("assets")
+}
+
+// ─── Asset History (append-only — never update or delete) ─────────────────────
+model AssetHistory {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  assetId          String    @map("asset_id") @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  value            Decimal   @db.Decimal(12, 2)
+  valueSource      String?   @map("value_source") @db.VarChar(30)
+  sourceDocumentId String?   @map("source_document_id") @db.Uuid
+  recordedAt       DateTime  @default(now()) @map("recorded_at")
+  note             String?
+
+  asset            Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([assetId])
+  @@index([userId])
+  @@map("asset_history")
+}
+
+// ─── Net Worth Snapshots (monthly) ────────────────────────────────────────────
+model NetWorthSnapshot {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId               String   @map("user_id") @db.Uuid
+  snapshotDate         DateTime @map("snapshot_date") @db.Date
+  totalAssets          Decimal  @default(0) @map("total_assets") @db.Decimal(14, 2)
+  totalLiabilities     Decimal  @default(0) @map("total_liabilities") @db.Decimal(14, 2)
+  netWorth             Decimal  @default(0) @map("net_worth") @db.Decimal(14, 2)
+  equityValue          Decimal  @default(0) @map("equity_value") @db.Decimal(14, 2)
+  realEstateValue      Decimal  @default(0) @map("real_estate_value") @db.Decimal(14, 2)
+  otherValue           Decimal  @default(0) @map("other_value") @db.Decimal(14, 2)
+  restrictedValue      Decimal  @default(0) @map("restricted_value") @db.Decimal(14, 2)
+  totalMortgageBalance Decimal  @default(0) @map("total_mortgage_balance") @db.Decimal(14, 2)
+  totalOtherDebt       Decimal  @default(0) @map("total_other_debt") @db.Decimal(14, 2)
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, snapshotDate])
+  @@index([userId])
+  @@map("net_worth_snapshots")
+}
+
+// ─── Documents (uploaded PDFs) ────────────────────────────────────────────────
+model Document {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  filename       String    @db.VarChar(255)
+  s3Key          String    @unique @map("s3_key") @db.VarChar(500)
+  documentType   String?   @map("document_type") @db.VarChar(50)
+  parseStatus    String    @default("pending") @map("parse_status") @db.VarChar(20)
+  parsedData     Json?     @map("parsed_data")
+  confirmedData  Json?     @map("confirmed_data")
+  relatedAssetId String?   @map("related_asset_id") @db.Uuid
+  parseError     String?   @map("parse_error")
+  uploadedAt     DateTime  @default(now()) @map("uploaded_at")
+  confirmedAt    DateTime? @map("confirmed_at")
+
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  relatedAsset   Asset?    @relation(fields: [relatedAssetId], references: [id])
+
+  @@index([userId])
+  @@index([parseStatus])
+  @@map("documents")
+}
+
+// ─── Flo Conversations ────────────────────────────────────────────────────────
+model FloConversation {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @unique @map("user_id") @db.Uuid
+  messages  Json     @default("[]")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("flo_conversations")
+}
+
+// ─── Liabilities (non-mortgage debt) ─────────────────────────────────────────
+model Liability {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  name           String   @db.VarChar(255)
+  liabilityType  String?  @map("liability_type") @db.VarChar(50)
+  balance        Decimal  @db.Decimal(12, 2)
+  interestRate   Decimal? @map("interest_rate") @db.Decimal(5, 2)
+  monthlyPayment Decimal? @map("monthly_payment") @db.Decimal(10, 2)
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("liabilities")
+}
