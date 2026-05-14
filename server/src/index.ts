@@ -9,7 +9,7 @@ import userRoutes from './routes/user';
 import assetRoutes from './routes/assets';
 import liabilityRoutes from './routes/liabilities';
 import networthRoutes from './routes/networth';
-// import documentRoutes from './routes/documents';  // Step 6
+import documentRoutes from './routes/documents';
 // import floRoutes from './routes/flo';             // Step 7
 // import goalRoutes from './routes/goals';          // Step 8
 // import billingRoutes from './routes/billing';     // Step 14
@@ -51,7 +51,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/assets', assetRoutes);
 app.use('/api/liabilities', liabilityRoutes);
 app.use('/api/networth', networthRoutes);
-// app.use('/api/documents', documentRoutes);  // Step 6
+app.use('/api/documents', documentRoutes);
 // app.use('/api/flo', floRoutes);             // Step 7
 // app.use('/api/goals', goalRoutes);          // Step 8
 // app.use('/api/billing', billingRoutes);     // Step 14
