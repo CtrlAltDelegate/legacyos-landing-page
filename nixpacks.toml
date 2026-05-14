@@ -1,0 +1,15 @@
+[phases.setup]
+nixPkgs = ["nodejs_20", "nodePackages.npm"]
+
+[phases.install]
+cmds = ["cd server && npm ci"]
+
+[phases.build]
+cmds = [
+  "cd server && npx prisma generate",
+  "cd server && npx prisma migrate deploy",
+  "cd server && npm run build"
+]
+
+[start]
+cmd = "cd server && node dist/index.js"

@@ -1,7 +1,7 @@
 [build]
   base    = "client"
   command = "npm run build"
-  publish = "dist"
+  publish = "client/dist"
 
 [build.environment]
   NODE_VERSION = "20"
@@ -12,8 +12,8 @@
   to     = "/index.html"
   status = 200
 
-# Proxy /api/* to the Railway backend (set VITE_API_URL in Netlify env vars)
-# If you use the Vite proxy (dev only), this is the production equivalent.
+# Proxy /api/* to the Railway backend
+# Set VITE_API_URL in Netlify's environment variables (no trailing slash)
 [[redirects]]
   from   = "/api/*"
   to     = ":VITE_API_URL/api/:splat"
