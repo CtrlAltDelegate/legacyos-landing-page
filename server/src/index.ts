@@ -6,13 +6,13 @@ import { rateLimit } from 'express-rate-limit';
 
 import authRoutes from './routes/auth';
 import userRoutes from './routes/user';
-// import assetRoutes from './routes/assets';
-// import networthRoutes from './routes/networth';
-// import documentRoutes from './routes/documents';
-// import floRoutes from './routes/flo';
-// import goalRoutes from './routes/goals';
-// import liabilityRoutes from './routes/liabilities';
-// import billingRoutes from './routes/billing';
+import assetRoutes from './routes/assets';
+import liabilityRoutes from './routes/liabilities';
+// import networthRoutes from './routes/networth';   // Step 5
+// import documentRoutes from './routes/documents';  // Step 6
+// import floRoutes from './routes/flo';             // Step 7
+// import goalRoutes from './routes/goals';          // Step 8
+// import billingRoutes from './routes/billing';     // Step 14
 
 // Cron jobs (uncomment when built)
 // import './cron/priceRefresh';
@@ -49,12 +49,12 @@ app.get('/health', (_req, res) => {
 // ─── API routes ───────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
-// app.use('/api/assets', assetRoutes);        // Step 3
+app.use('/api/assets', assetRoutes);
+app.use('/api/liabilities', liabilityRoutes);
 // app.use('/api/networth', networthRoutes);   // Step 5
 // app.use('/api/documents', documentRoutes);  // Step 6
 // app.use('/api/flo', floRoutes);             // Step 7
 // app.use('/api/goals', goalRoutes);          // Step 8
-// app.use('/api/liabilities', liabilityRoutes); // Step 3
 // app.use('/api/billing', billingRoutes);     // Step 14
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
