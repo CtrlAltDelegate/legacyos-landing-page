@@ -14,9 +14,8 @@ import liabilityRoutes from './routes/liabilities';
 // import goalRoutes from './routes/goals';          // Step 8
 // import billingRoutes from './routes/billing';     // Step 14
 
-// Cron jobs (uncomment when built)
-// import './cron/priceRefresh';
-// import './cron/monthlySnapshot';
+import { startPriceRefreshCron } from './cron/priceRefresh';
+// import { startMonthlySnapshotCron } from './cron/monthlySnapshot'; // Step 5
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -70,6 +69,7 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 
 app.listen(PORT, () => {
   console.log(`LegacyOS server running on port ${PORT}`);
+  startPriceRefreshCron();
 });
 
 export default app;

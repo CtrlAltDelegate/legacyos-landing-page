@@ -3,6 +3,7 @@ import Joi from 'joi';
 import { prisma } from '../lib/prisma';
 import { requireAuth } from '../middleware/auth';
 import { validate } from '../middleware/validate';
+import { fetchTickerPrices, fetchSingleTicker } from '../services/polygon';
 
 const router = Router();
 router.use(requireAuth);
@@ -348,6 +349,91 @@ router.delete('/:id', async (req: Request, res: Response) => {
   } catch (err) {
     console.error('[assets DELETE /:id]', err);
     res.status(500).json({ error: 'Failed to remove asset.' });
+  }
+});
+
+// ─── POST /api/assets/refresh-prices ─────────────────────────────────────────
+// Batch refresh all equity/crypto prices for this user from Polygon.io
+
+router.post('/refresh-prices', async (req: Request, res: Response) => {
+  try {
+    const equityAssets = await prisma.asset.findMany({
+      where: {
+        userId: req.user!.userId,
+        isActive: true,
+        assetClass: 'equity',
+        ticker: { not: null },
+      },
+      select: { id: true, ticker: true, sharesHeld: true, currentValue: true, name: true },
+    });
+
+    if (equityAssets.length === 0) {
+      res.json({ message: 'No equity assets to refresh.', updated: 0 });
+      return;
+    }
+
+    const tickers = [...new Set(equityAssets.map(a => a.ticker!))];
+    const priceMap = await fetchTickerPrices(tickers);
+
+    let updated = 0;
+    const refreshed: Array<{ ticker: string; price: number; totalValue: number }> = [];
+
+    for (const asset of equityAssets) {
+      if (!asset.ticker) continue;
+      const priceData = priceMap.get(asset.ticker.toUpperCase());
+      if (!priceData) continue;
+
+      const shares = Number(asset.sharesHeld ?? 0);
+      const newValue = parseFloat((priceData.price * shares).toFixed(2));
+      const oldValue = Number(asset.currentValue ?? 0);
+
+      await prisma.asset.update({
+        where: { id: asset.id },
+        data: {
+          currentValue: newValue,
+          currentValueSource: 'ticker_api',
+          currentValueUpdatedAt: new Date(priceData.updatedAt),
+        },
+      });
+
+      if (newValue !== oldValue) {
+        await prisma.assetHistory.create({
+          data: {
+            assetId: asset.id,
+            userId: req.user!.userId,
+            value: newValue,
+            valueSource: 'ticker_api',
+            note: `${asset.ticker} @ $${priceData.price} × ${shares} shares`,
+          },
+        });
+      }
+
+      refreshed.push({ ticker: asset.ticker, price: priceData.price, totalValue: newValue });
+      updated++;
+    }
+
+    res.json({ message: `Refreshed ${updated} asset(s).`, updated, refreshed });
+  } catch (err) {
+    console.error('[assets/refresh-prices]', err);
+    res.status(500).json({ error: 'Price refresh failed.' });
+  }
+});
+
+// ─── GET /api/assets/ticker/:symbol ──────────────────────────────────────────
+// On-demand single ticker lookup — used when user adds a new equity
+
+router.get('/ticker/:symbol', async (req: Request, res: Response) => {
+  const symbol = req.params.symbol.toUpperCase();
+  try {
+    const data = await fetchSingleTicker(symbol);
+    if (!data) {
+      res.status(404).json({ error: `No price data found for ${symbol}.` });
+      return;
+    }
+    res.json(data);
+  } catch (err) {
+    console.error('[assets/ticker/:symbol]', err);
+    res.status(500).json({ error: 'Ticker lookup failed.' });
   }
 });
 
