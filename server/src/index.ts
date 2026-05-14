@@ -4,8 +4,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
 
-// Routes (imported as they are built)
-// import authRoutes from './routes/auth';
+import authRoutes from './routes/auth';
+import userRoutes from './routes/user';
 // import assetRoutes from './routes/assets';
 // import networthRoutes from './routes/networth';
 // import documentRoutes from './routes/documents';
@@ -46,15 +46,16 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ─── API routes (mounted as each is built) ────────────────────────────────────
-// app.use('/api/auth', authRoutes);
-// app.use('/api/assets', assetRoutes);
-// app.use('/api/networth', networthRoutes);
-// app.use('/api/documents', documentRoutes);
-// app.use('/api/flo', floRoutes);
-// app.use('/api/goals', goalRoutes);
-// app.use('/api/liabilities', liabilityRoutes);
-// app.use('/api/billing', billingRoutes);
+// ─── API routes ───────────────────────────────────────────────────────────────
+app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
+// app.use('/api/assets', assetRoutes);        // Step 3
+// app.use('/api/networth', networthRoutes);   // Step 5
+// app.use('/api/documents', documentRoutes);  // Step 6
+// app.use('/api/flo', floRoutes);             // Step 7
+// app.use('/api/goals', goalRoutes);          // Step 8
+// app.use('/api/liabilities', liabilityRoutes); // Step 3
+// app.use('/api/billing', billingRoutes);     // Step 14
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 app.use((_req, res) => {
