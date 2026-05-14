@@ -11,7 +11,7 @@ import liabilityRoutes from './routes/liabilities';
 import networthRoutes from './routes/networth';
 import documentRoutes from './routes/documents';
 import floRoutes from './routes/flo';
-// import goalRoutes from './routes/goals';          // Step 8
+import goalRoutes from './routes/goals';
 // import billingRoutes from './routes/billing';     // Step 14
 
 import { startPriceRefreshCron } from './cron/priceRefresh';
@@ -53,7 +53,7 @@ app.use('/api/liabilities', liabilityRoutes);
 app.use('/api/networth', networthRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/flo', floRoutes);
-// app.use('/api/goals', goalRoutes);          // Step 8
+app.use('/api/goals', goalRoutes);
 // app.use('/api/billing', billingRoutes);     // Step 14
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
