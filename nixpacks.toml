@@ -2,7 +2,7 @@
 nixPkgs = ["nodejs_20"]
 
 [phases.install]
-cmds = ["cd server && npm ci --include=dev && npx prisma generate && npx prisma db push --force-reset && npm run build"]
+cmds = ["cd server && npm ci --include=dev && npx prisma generate && npx prisma db push --accept-data-loss && npm run build"]
 
 [start]
 cmd = "cd server && node dist/index.js"
