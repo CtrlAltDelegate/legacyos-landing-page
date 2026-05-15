@@ -11,11 +11,3 @@
   from   = "/*"
   to     = "/index.html"
   status = 200
-
-# Proxy /api/* to the Railway backend
-# Set VITE_API_URL in Netlify's environment variables (no trailing slash)
-[[redirects]]
-  from   = "/api/*"
-  to     = ":VITE_API_URL/api/:splat"
-  status = 200
-  force  = true

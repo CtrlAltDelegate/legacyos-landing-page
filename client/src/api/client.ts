@@ -2,8 +2,12 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
 // ─── Axios instance ───────────────────────────────────────────────────────────
 
+const API_BASE = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : '/api';
+
 export const api = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE,
   withCredentials: false,
   headers: { 'Content-Type': 'application/json' },
 });
@@ -76,7 +80,7 @@ api.interceptors.response.use(
       const refreshToken = tokenStore.getRefresh();
       if (!refreshToken) throw new Error('No refresh token');
 
-      const { data } = await axios.post('/api/auth/refresh', { refreshToken });
+      const { data } = await axios.post(`${API_BASE}/auth/refresh`, { refreshToken });
       const { accessToken, refreshToken: newRefresh } = data;
 
       tokenStore.set(accessToken, newRefresh);
