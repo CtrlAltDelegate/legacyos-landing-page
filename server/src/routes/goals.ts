@@ -25,12 +25,10 @@ const allocationFields = {
 const createGoalSchema = Joi.object({
   primaryGoal: Joi.string()
     .valid(
-      'retirement',
-      'financial_independence',
-      'wealth_transfer',
-      'real_estate_growth',
-      'debt_freedom',
-      'education_funding',
+      'replace_spouse_income',
+      'buy_property',
+      'exit_job',
+      'retire',
       'other'
     )
     .required(),
@@ -47,12 +45,10 @@ const createGoalSchema = Joi.object({
 const updateGoalSchema = Joi.object({
   primaryGoal: Joi.string()
     .valid(
-      'retirement',
-      'financial_independence',
-      'wealth_transfer',
-      'real_estate_growth',
-      'debt_freedom',
-      'education_funding',
+      'replace_spouse_income',
+      'buy_property',
+      'exit_job',
+      'retire',
       'other'
     )
     .optional(),

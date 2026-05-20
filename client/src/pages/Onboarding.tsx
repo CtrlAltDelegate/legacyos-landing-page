@@ -5,13 +5,11 @@ import { useAuthStore } from '@/store/auth';
 import Spinner from '@/components/Spinner';
 
 const GOALS = [
-  { value: 'retirement',            label: 'Retirement',            desc: 'Build enough to stop working on my terms' },
-  { value: 'financial_independence', label: 'Financial independence', desc: 'Live off passive income without a job' },
-  { value: 'wealth_transfer',       label: 'Wealth transfer',        desc: 'Build and pass on wealth to my family' },
-  { value: 'real_estate_growth',    label: 'Real estate growth',     desc: 'Grow a portfolio of investment properties' },
-  { value: 'debt_freedom',          label: 'Debt freedom',           desc: 'Pay off all debt as fast as possible' },
-  { value: 'education_funding',     label: 'Education funding',      desc: 'Fund education for myself or family' },
-  { value: 'other',                 label: 'Something else',         desc: 'I have a different primary goal' },
+  { value: 'replace_spouse_income', label: 'Replace a spouse's income',  desc: 'Build enough passive income so a partner can stop working' },
+  { value: 'buy_property',          label: 'Buy a property',             desc: 'Save and position capital for a real estate purchase' },
+  { value: 'exit_job',              label: 'Exit my job',                desc: 'Build enough income to walk away from employment on my terms' },
+  { value: 'retire',                label: 'Retire',                     desc: 'Reach a point where I never have to work again' },
+  { value: 'other',                 label: 'Something else',             desc: 'I have a different primary goal' },
 ];
 
 const RISK = [

@@ -6,7 +6,9 @@
 [build.environment]
   NODE_VERSION = "20"
 
-# SPA fallback — all routes serve index.html so React Router handles them
+# SPA fallback — all routes serve index.html so React Router handles them.
+# API calls go directly to Railway via VITE_API_BASE_URL (baked in at build time).
+# Set VITE_API_BASE_URL in Netlify's Environment Variables (no trailing slash).
 [[redirects]]
   from   = "/*"
   to     = "/index.html"
