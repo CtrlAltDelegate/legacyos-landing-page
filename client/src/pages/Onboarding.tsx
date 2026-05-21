@@ -5,7 +5,7 @@ import { useAuthStore } from '@/store/auth';
 import Spinner from '@/components/Spinner';
 
 const GOALS = [
-  { value: 'replace_spouse_income', label: 'Replace a spouse's income',  desc: 'Build enough passive income so a partner can stop working' },
+  { value: 'replace_spouse_income', label: "Replace a spouse's income",  desc: 'Build enough passive income so a partner can stop working' },
   { value: 'buy_property',          label: 'Buy a property',             desc: 'Save and position capital for a real estate purchase' },
   { value: 'exit_job',              label: 'Exit my job',                desc: 'Build enough income to walk away from employment on my terms' },
   { value: 'retire',                label: 'Retire',                     desc: 'Reach a point where I never have to work again' },
