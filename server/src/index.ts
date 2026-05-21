@@ -20,6 +20,15 @@ import { startMonthlySnapshotCron } from './cron/monthlySnapshot';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// ─── Trust Railway's proxy (required for correct IP + rate-limit behaviour) ───
+app.set('trust proxy', 1);
+
+// ─── Request logger (temporary — remove after connectivity confirmed) ──────────
+app.use((req, _res, next) => {
+  console.log(`[req] ${req.method} ${req.path} | origin: ${req.get('Origin') ?? 'none'} | ip: ${req.ip}`);
+  next();
+});
+
 // ─── Security middleware ───────────────────────────────────────────────────────
 app.use(helmet());
 app.use(cors({
