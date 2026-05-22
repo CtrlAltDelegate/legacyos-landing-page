@@ -15,7 +15,6 @@ interface TickerData { ticker: string; price: number; name: string; }
 const fmt = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
-const fmtPct = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`;
 
 function inp(
   label: string,
