@@ -1,0 +1,22 @@
+#!/bin/sh
+# LegacyOS pre-commit hook
+# Runs TypeScript type-checking on client and server before every commit.
+# Catches unused variables, type errors, and missing imports before they
+# reach Netlify/Railway and fail the remote build.
+#
+# Installed automatically via: git config core.hooksPath .githooks
+# To skip in an emergency: git commit --no-verify
+
+set -e
+
+echo "⏳ Type-checking client..."
+cd client
+npx tsc --noEmit
+cd ..
+
+echo "⏳ Type-checking server..."
+cd server
+npx tsc --noEmit
+cd ..
+
+echo "✅ Type checks passed."
