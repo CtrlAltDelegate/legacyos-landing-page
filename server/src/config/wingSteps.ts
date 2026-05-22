@@ -83,9 +83,9 @@ export const WINGS: Record<WingId, WingConfig> = {
       },
       {
         level: 3,
-        title: 'Add farmland to your portfolio',
+        title: 'Add farmland and alternative assets to your portfolio',
         description:
-          "Farmland is one of the most uncorrelated, inflation-resistant asset classes available. AcreTrader gives accredited investors access to institutional-quality farmland deals.",
+          "Farmland is one of the most uncorrelated, inflation-resistant asset classes available — and it's now accessible to individual investors. AcreTrader gives accredited investors access to institutional-quality farmland deals. Also worth exploring: Republic for startup and private equity investing, and Empower (free) to track your full portfolio in one place.",
         actionLabel: 'Explore AcreTrader',
         actionUrl: 'https://acretrader.com',
         isAffiliate: true,
@@ -119,9 +119,9 @@ export const WINGS: Record<WingId, WingConfig> = {
       },
       {
         level: 1,
-        title: 'Get term life insurance',
+        title: 'Get life insurance and protect your identity',
         description:
-          "If anyone depends on your income, you need life insurance. Term life is inexpensive and gives your family a runway if something happens to you. Policygenius lets you compare quotes from top carriers in minutes — no sales pressure.",
+          "If anyone depends on your income, you need life insurance. Term life is inexpensive and gives your family a runway if something happens to you. Policygenius compares quotes from top carriers in minutes. Also worth pairing: Aura monitors your identity, credit, and SSN across the dark web — because protecting assets means protecting access to them too.",
         actionLabel: 'Compare rates on Policygenius',
         actionUrl: 'https://www.policygenius.com/life-insurance/',
         isAffiliate: true,
@@ -172,12 +172,12 @@ export const WINGS: Record<WingId, WingConfig> = {
       },
       {
         level: 1,
-        title: 'Set an annual giving budget',
+        title: 'Start giving intentionally with Daffy',
         description:
-          "Giving without a budget leads to reactive, guilt-driven donations. Set an annual target — even 1% of income — and give it intentionally to what you actually care about.",
-        actionLabel: 'Plan it with Flo',
-        actionUrl: '/flo',
-        isInternal: true,
+          "Daffy is a donor-advised fund built for everyday givers. For $3/month, you can set an annual giving goal, contribute automatically, and donate to any of 1.5 million charities — all with a tax deduction. It's the easiest way to make giving a habit, not a reaction.",
+        actionLabel: 'Start giving with Daffy',
+        actionUrl: 'https://www.daffy.org',
+        isAffiliate: true,
       },
       {
         level: 2,
@@ -234,21 +234,21 @@ export const WINGS: Record<WingId, WingConfig> = {
       },
       {
         level: 2,
-        title: 'Create a family traditions calendar',
+        title: 'Fund experiences with travel rewards',
         description:
-          "Traditions create identity and belonging. Document the traditions your family already has and add one new one intentionally this year.",
-        actionLabel: 'Build it with Flo',
-        actionUrl: '/flo',
-        isInternal: true,
+          "The best experiences don't have to cost what they're worth. The Chase Sapphire Preferred earns 3x points on dining and 2x on travel — meaning your everyday spending funds your family's next trip. Points transfer to 14 airlines and hotel chains.",
+        actionLabel: 'Apply for Chase Sapphire Preferred',
+        actionUrl: 'https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred',
+        isAffiliate: true,
       },
       {
         level: 3,
-        title: 'Plan a multi-generational experience',
+        title: 'Book your first multi-generational trip',
         description:
-          "Bring multiple generations together intentionally — a family reunion, a trip with grandparents, or a learning experience that bridges generations and builds family culture.",
-        actionLabel: 'Plan it with Flo',
-        actionUrl: '/flo',
-        isInternal: true,
+          "A shared trip across generations is one of the highest-ROI things a family can do. VRBO specializes in whole-home rentals with enough room for grandparents, siblings, and kids — all under one roof.",
+        actionLabel: 'Find a family home on VRBO',
+        actionUrl: 'https://www.vrbo.com',
+        isAffiliate: true,
       },
     ],
   },
@@ -287,21 +287,21 @@ export const WINGS: Record<WingId, WingConfig> = {
       },
       {
         level: 2,
-        title: 'Have your first family wealth conversation',
+        title: 'Organize your digital estate',
         description:
-          "Most families never talk about money — and pay for it across generations. Have one honest conversation about your financial goals, values, and plans. Flo can help you prepare.",
-        actionLabel: 'Prepare with Flo',
-        actionUrl: '/flo',
-        isInternal: true,
+          "Most families have no record of where their accounts, policies, passwords, and wishes actually live. Everplans creates a secure, organized digital vault your loved ones can access if something happens to you — without a lawyer.",
+        actionLabel: 'Set up your Everplans vault',
+        actionUrl: 'https://www.everplans.com',
+        isAffiliate: true,
       },
       {
         level: 3,
-        title: 'Create a succession plan',
+        title: 'Secure and pass on your digital legacy',
         description:
-          "Who gets what, when, and why? Document your wishes for each major asset and who should carry on each wing of your family office.",
-        actionLabel: 'Build your succession plan',
-        actionUrl: '/flo',
-        isInternal: true,
+          "Your digital life — accounts, crypto wallets, investment logins, business assets — needs to be accessible to the right people at the right time. 1Password's Emergency Kit and family plan lets you securely store and share credentials as part of your succession plan.",
+        actionLabel: 'Set up 1Password for your family',
+        actionUrl: 'https://1password.com/families',
+        isAffiliate: true,
       },
     ],
   },
@@ -340,12 +340,12 @@ export const WINGS: Record<WingId, WingConfig> = {
       },
       {
         level: 2,
-        title: 'Set up a monthly financial review',
+        title: 'Connect all your accounts in one dashboard',
         description:
-          "The families who win financially review their numbers regularly. Block one hour per month for a financial review. Flo will have the data ready when you show up.",
-        actionLabel: 'Plan it with Flo',
-        actionUrl: '/flo',
-        isInternal: true,
+          "You can't manage what you can't see. Monarch Money aggregates every bank, brokerage, credit card, and loan into a single dashboard — with cash flow tracking, net worth graphs, and custom reports. It's the financial command center your review needs.",
+        actionLabel: 'Try Monarch Money',
+        actionUrl: 'https://www.monarchmoney.com',
+        isAffiliate: true,
       },
       {
         level: 3,
