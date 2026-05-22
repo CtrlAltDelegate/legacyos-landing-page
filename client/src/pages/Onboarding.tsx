@@ -73,7 +73,7 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
+    <div className="flex min-h-screen items-start justify-center bg-gray-50 px-4 py-12 overflow-y-auto">
       <div className="w-full max-w-lg">
         {/* Header */}
         <div className="mb-8 text-center">
@@ -245,9 +245,15 @@ export default function Onboarding() {
                 Continue
               </button>
             ) : (
-              <button type="submit" disabled={isLoading || Math.abs(allocSum - 100) > 1} className="btn-primary flex-1">
-                {isLoading ? <Spinner className="h-4 w-4" /> : 'Finish setup'}
-              </button>
+              <div className="flex flex-col gap-2 flex-1">
+                <button type="submit" disabled={isLoading || Math.abs(allocSum - 100) > 1} className="btn-primary w-full">
+                  {isLoading ? <Spinner className="h-4 w-4" /> : 'Finish setup'}
+                </button>
+                <p className="text-center text-xs text-gray-400">
+                  You can adjust allocations any time in{' '}
+                  <span className="font-medium text-gray-600">Profile &amp; Goals</span>.
+                </p>
+              </div>
             )}
           </div>
         </form>
