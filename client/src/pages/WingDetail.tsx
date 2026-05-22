@@ -15,7 +15,6 @@ const COLOR: Record<string, { bg: string; border: string; badge: string; text: s
   slate:   { bg: 'bg-slate-50',   border: 'border-slate-200',   badge: 'bg-slate-100 text-slate-800',   text: 'text-slate-700',   btn: 'bg-slate-600 hover:bg-slate-700',   dot: 'bg-slate-500',   ring: 'ring-slate-500' },
 };
 
-const LEVEL_LABELS = ['Foundation', 'Building', 'Established', 'Advanced'];
 const MAX_LEVEL = 3;
 
 export default function WingDetail() {
