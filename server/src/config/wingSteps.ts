@@ -58,7 +58,7 @@ export const WINGS: Record<WingId, WingConfig> = {
         level: 0,
         title: 'Open a brokerage account',
         description:
-          "You can't grow what you don't invest. Open a brokerage account and start putting money to work — even $100/month compounds dramatically over time. Fidelity has no minimums, no account fees, and top-tier research tools.",
+          "You can't grow what you don't invest. Open a brokerage account and start putting money to work — even $100/month compounds dramatically over time. Fidelity has no minimums, no account fees, and top-tier research tools. Prefer a hands-off approach? Betterment automatically builds and rebalances a diversified portfolio for you — no decisions required.",
         actionLabel: 'Open an account with Fidelity',
         actionUrl: 'https://www.fidelity.com/open-account/overview',
         isAffiliate: true,
@@ -130,7 +130,7 @@ export const WINGS: Record<WingId, WingConfig> = {
         level: 2,
         title: 'Create a will and power of attorney',
         description:
-          "Without a will, courts decide what happens to your assets and your children. Trust & Will lets you create a legally valid will and POA online in under an hour — no attorney required.",
+          "Without a will, courts decide what happens to your assets and your children. Trust & Will lets you create a legally valid will and POA online in under an hour — no attorney required. LegalZoom is a solid alternative if you'd prefer a platform with optional attorney review on demand.",
         actionLabel: 'Create your will with Trust & Will',
         actionUrl: 'https://trustandwill.com',
         isAffiliate: true,
@@ -342,16 +342,16 @@ export const WINGS: Record<WingId, WingConfig> = {
         level: 2,
         title: 'Connect all your accounts in one dashboard',
         description:
-          "You can't manage what you can't see. Monarch Money aggregates every bank, brokerage, credit card, and loan into a single dashboard — with cash flow tracking, net worth graphs, and custom reports. It's the financial command center your review needs.",
+          "You can't manage what you can't see. Monarch Money aggregates every bank, brokerage, credit card, and loan into a single dashboard — with cash flow tracking, net worth graphs, and custom reports. Need tighter control over your spending first? YNAB (You Need A Budget) pairs perfectly: use YNAB to give every dollar a job, Monarch to see the full picture.",
         actionLabel: 'Try Monarch Money',
         actionUrl: 'https://www.monarchmoney.com',
         isAffiliate: true,
       },
       {
         level: 3,
-        title: 'Outsource your bookkeeping and entity management',
+        title: 'Outsource your bookkeeping and find a fiduciary advisor',
         description:
-          "If you have an LLC or S-Corp, your finances need real infrastructure. Xendoo handles outsourced bookkeeping, tax prep, and S-Corp payroll — so you run the business, not the paperwork.",
+          "If you have an LLC or S-Corp, your finances need real infrastructure. Xendoo handles outsourced bookkeeping, tax prep, and S-Corp payroll — so you run the business, not the paperwork. At this level, it's also time to work with a real financial advisor. Zoe Financial matches you with fee-only, fiduciary advisors who are legally required to act in your interest — not earn commissions.",
         actionLabel: 'Get started with Xendoo',
         actionUrl: 'https://www.xendoo.com',
         isAffiliate: true,
