@@ -1,6 +1,9 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { api, getErrorMessage } from '@/api/client';
 import Spinner from '@/components/Spinner';
+import AddAssetModal from '@/components/assets/AddAssetModal';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Asset {
   id: string;
@@ -11,49 +14,175 @@ interface Asset {
   estimatedValue: number | null;
   adjustedValue: number | null;
   ticker: string | null;
+  sharesHeld: number | null;
   isPretax: boolean;
   afterTaxValue?: number;
   accountLabel: string | null;
+  currentValueSource: string;
+  currentValueUpdatedAt: string | null;
+  // Real estate
+  mortgageBalance: number | null;
+  monthlyRent: number | null;
+  monthlyPiti: number | null;
+  monthlyInsurance: number | null;
+  monthlyHoa: number | null;
+  managementFeePercent: number | null;
+  maintenanceReserveMonthly: number | null;
+  capexReserveMonthly: number | null;
+  vacancyRatePercent: number | null;
+  // Business
+  ownershipPercent: number | null;
   isActive: boolean;
 }
 
-const fmt = (n: number | null) =>
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const fmt = (n: number | null | undefined) =>
   n != null
     ? n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
     : '—';
 
-const CLASS_LABELS: Record<string, string> = {
-  equity: 'Equity',
-  real_estate: 'Real estate',
-  other: 'Other / cash',
-  restricted: 'Restricted',
-};
+const fmtPct = (n: number) => `${n.toFixed(1)}%`;
 
-function displayValue(asset: Asset): number | null {
-  if (asset.assetClass === 'real_estate') return asset.adjustedValue ?? asset.estimatedValue;
+function getDisplayValue(asset: Asset): number | null {
+  if (asset.assetClass === 'real_estate') {
+    return asset.adjustedValue ?? asset.estimatedValue;
+  }
   return asset.currentValue;
 }
+
+function getEquity(asset: Asset): number | null {
+  if (asset.assetClass !== 'real_estate') return null;
+  const val = asset.adjustedValue ?? asset.estimatedValue;
+  if (val == null) return null;
+  return val - (asset.mortgageBalance ?? 0);
+}
+
+function calcMonthlyCashFlow(asset: Asset): number | null {
+  if (asset.assetType !== 'rental' || !asset.monthlyRent) return null;
+  const rent = asset.monthlyRent;
+  const vacancyLoss = rent * ((asset.vacancyRatePercent ?? 5) / 100);
+  const mgmt = (asset.managementFeePercent ?? 0) > 0
+    ? (rent - vacancyLoss) * ((asset.managementFeePercent!) / 100)
+    : 0;
+  const expenses =
+    (asset.monthlyPiti ?? 0) +
+    mgmt + vacancyLoss +
+    (asset.monthlyInsurance ?? 0) +
+    (asset.monthlyHoa ?? 0) +
+    (asset.maintenanceReserveMonthly ?? 0) +
+    (asset.capexReserveMonthly ?? 0);
+  return rent - expenses;
+}
+
+// ─── Asset row ────────────────────────────────────────────────────────────────
+
+function AssetRow({ asset, onDelete, onRefresh }: {
+  asset: Asset;
+  onDelete: (id: string) => void;
+  onRefresh: (id: string) => void;
+}) {
+  const displayVal = getDisplayValue(asset);
+  const equity = getEquity(asset);
+  const monthlyCF = calcMonthlyCashFlow(asset);
+  const isAuto = asset.currentValueSource === 'ticker_api';
+  const cfColor = monthlyCF != null ? (monthlyCF >= 0 ? 'text-emerald-600' : 'text-red-500') : '';
+
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 py-4 border-t border-gray-100 first:border-0">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="text-sm font-semibold text-gray-900 truncate">{asset.name}</p>
+          {asset.ticker && (
+            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[11px] font-mono font-medium text-gray-500">
+              {asset.ticker}
+            </span>
+          )}
+          {asset.isPretax && (
+            <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-700">Pre-tax</span>
+          )}
+          {isAuto && (
+            <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-600">Auto-updated</span>
+          )}
+        </div>
+
+        {/* Sub-details */}
+        <div className="mt-0.5 flex items-center gap-3 flex-wrap text-xs text-gray-400">
+          <span className="capitalize">{asset.assetType.replace(/_/g, ' ')}</span>
+
+          {asset.sharesHeld != null && (
+            <span>{Number(asset.sharesHeld).toLocaleString()} shares</span>
+          )}
+
+          {equity != null && (
+            <span className="text-blue-600 font-medium">Equity: {fmt(equity)}</span>
+          )}
+
+          {monthlyCF != null && (
+            <span className={`font-medium ${cfColor}`}>
+              {monthlyCF >= 0 ? '+' : ''}{fmt(monthlyCF)}/mo cash flow
+            </span>
+          )}
+
+          {asset.isPretax && asset.afterTaxValue != null && (
+            <span>After-tax est: {fmt(asset.afterTaxValue)}</span>
+          )}
+
+          {asset.ownershipPercent != null && (
+            <span>{fmtPct(Number(asset.ownershipPercent))} ownership</span>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-4 sm:flex-shrink-0">
+        <div className="text-right">
+          <p className="text-sm font-bold text-gray-900">{fmt(displayVal)}</p>
+          {asset.currentValueUpdatedAt && isAuto && (
+            <p className="text-[10px] text-gray-400">
+              {new Date(asset.currentValueUpdatedAt).toLocaleDateString()}
+            </p>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {asset.ticker && !isAuto && (
+            <button
+              onClick={() => onRefresh(asset.id)}
+              className="text-[11px] text-brand-600 hover:underline"
+              title="Refresh price from market data"
+            >
+              Refresh
+            </button>
+          )}
+          <button
+            onClick={() => onDelete(asset.id)}
+            className="text-xs text-gray-400 hover:text-red-500 transition"
+          >
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Group header ─────────────────────────────────────────────────────────────
+
+const GROUP_CONFIG: Record<string, { label: string; emoji: string }> = {
+  equity:      { label: 'Equities & Crypto',  emoji: '📈' },
+  real_estate: { label: 'Real Estate',         emoji: '🏠' },
+  other:       { label: 'Cash, Business & Other', emoji: '💵' },
+  restricted:  { label: 'Restricted',          emoji: '🔒' },
+};
+
+// ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function Assets() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showForm, setShowForm] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState('');
-
-  // Form fields
-  const [name, setName] = useState('');
-  const [assetClass, setAssetClass] = useState('equity');
-  const [assetType, setAssetType] = useState('stock');
-  const [currentValue, setCurrentValue] = useState('');
-  const [ticker, setTicker] = useState('');
-  const [isPretax, setIsPretax] = useState(false);
-  const [accountLabel, setAccountLabel] = useState('');
-  const [estimatedValue, setEstimatedValue] = useState('');
-  const [propertyAddress, setPropertyAddress] = useState('');
-  const [monthlyRent, setMonthlyRent] = useState('');
-  const [monthlyPiti, setMonthlyPiti] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => { load(); }, []);
 
@@ -69,48 +198,36 @@ export default function Assets() {
     }
   }
 
-  function resetForm() {
-    setName(''); setAssetClass('equity'); setAssetType('stock');
-    setCurrentValue(''); setTicker(''); setIsPretax(false);
-    setAccountLabel(''); setEstimatedValue('');
-    setPropertyAddress(''); setMonthlyRent(''); setMonthlyPiti('');
-    setFormError('');
-  }
-
-  async function handleAdd(e: FormEvent) {
-    e.preventDefault();
-    setFormError('');
-    setSubmitting(true);
+  async function handleDelete(id: string) {
+    if (!confirm('Remove this asset? The history will be preserved.')) return;
     try {
-      const body: Record<string, unknown> = { name, assetClass, assetType };
-      if (assetClass === 'equity') {
-        body.currentValue = Number(currentValue);
-        if (ticker) body.ticker = ticker.toUpperCase();
-        body.isPretax = isPretax;
-        if (accountLabel) body.accountLabel = accountLabel;
-      } else if (assetClass === 'real_estate') {
-        body.estimatedValue = Number(estimatedValue);
-        if (propertyAddress) body.propertyAddress = propertyAddress;
-        if (monthlyRent) body.monthlyRent = Number(monthlyRent);
-        if (monthlyPiti) body.monthlyPiti = Number(monthlyPiti);
-      } else {
-        body.currentValue = Number(currentValue);
-      }
-      await api.post('/assets', body);
-      resetForm();
-      setShowForm(false);
+      await api.delete(`/assets/${id}`);
       load();
     } catch (err) {
-      setFormError(getErrorMessage(err));
-    } finally {
-      setSubmitting(false);
+      alert(getErrorMessage(err));
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm('Remove this asset?')) return;
+  async function handleRefreshAll() {
+    setRefreshing(true);
     try {
-      await api.delete(`/assets/${id}`);
+      const { data } = await api.post('/assets/refresh-prices');
+      alert(`Updated ${data.updated} asset(s) with current market prices.`);
+      load();
+    } catch (err) {
+      alert(getErrorMessage(err));
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
+  async function handleRefreshOne(assetId: string) {
+    const asset = assets.find(a => a.id === assetId);
+    if (!asset?.ticker) return;
+    try {
+      const { data } = await api.get(`/assets/ticker/${asset.ticker}`);
+      const newValue = parseFloat((data.price * Number(asset.sharesHeld ?? 0)).toFixed(2));
+      await api.put(`/assets/${assetId}`, { currentValue: newValue });
       load();
     } catch (err) {
       alert(getErrorMessage(err));
@@ -121,181 +238,107 @@ export default function Assets() {
     return <div className="flex h-full items-center justify-center"><Spinner className="h-8 w-8" /></div>;
   }
 
-  const grouped = Object.entries(CLASS_LABELS).map(([cls, label]) => ({
-    cls, label,
-    items: assets.filter((a) => a.assetClass === cls),
-  })).filter((g) => g.items.length > 0);
+  const hasEquity = assets.some(a => a.assetClass === 'equity' && a.ticker);
+  const totalNetWorth = assets.reduce((sum, a) => {
+    if (a.assetClass === 'real_estate') {
+      const val = (a.adjustedValue ?? a.estimatedValue ?? 0) - (a.mortgageBalance ?? 0);
+      return sum + val;
+    }
+    return sum + (Number(a.currentValue) || 0);
+  }, 0);
+
+  const grouped = Object.entries(GROUP_CONFIG)
+    .map(([cls, meta]) => ({
+      cls, ...meta,
+      items: assets.filter(a => a.assetClass === cls),
+    }))
+    .filter(g => g.items.length > 0);
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
+
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Assets</h1>
-          <p className="mt-1 text-sm text-gray-500">Track everything you own.</p>
+          <p className="mt-0.5 text-sm text-gray-500">
+            {assets.length === 0
+              ? 'Add your first asset to start tracking net worth.'
+              : `${assets.length} asset${assets.length !== 1 ? 's' : ''} · Total: ${fmt(totalNetWorth)}`}
+          </p>
         </div>
-        <button onClick={() => setShowForm(true)} className="btn-primary">+ Add asset</button>
+        <div className="flex items-center gap-2">
+          {hasEquity && (
+            <button
+              onClick={handleRefreshAll}
+              disabled={refreshing}
+              className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition disabled:opacity-50"
+            >
+              {refreshing ? <Spinner className="h-4 w-4" /> : '↻ Refresh prices'}
+            </button>
+          )}
+          <button
+            onClick={() => setShowModal(true)}
+            className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 transition"
+          >
+            + Add asset
+          </button>
+        </div>
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       {/* Asset groups */}
       {grouped.length === 0 ? (
-        <div className="card text-center py-12">
-          <p className="text-gray-500 text-sm">No assets yet. Add your first one.</p>
+        <div className="rounded-2xl border border-dashed border-gray-300 bg-white py-16 text-center">
+          <p className="text-3xl mb-3">📊</p>
+          <p className="text-gray-600 font-semibold">No assets yet</p>
+          <p className="text-sm text-gray-400 mt-1">Add your first asset to see your net worth.</p>
+          <button
+            onClick={() => setShowModal(true)}
+            className="mt-4 rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700 transition"
+          >
+            + Add your first asset
+          </button>
         </div>
       ) : (
-        grouped.map(({ cls, label, items }) => (
-          <div key={cls} className="card">
-            <h2 className="mb-4 text-sm font-semibold text-gray-900 uppercase tracking-wide">{label}</h2>
-            <div className="divide-y divide-gray-100">
-              {items.map((asset) => (
-                <div key={asset.id} className="flex items-center justify-between py-3">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {asset.name}
-                      {asset.ticker && <span className="ml-2 text-xs text-gray-400">{asset.ticker}</span>}
-                      {asset.isPretax && (
-                        <span className="ml-2 rounded bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-700">
-                          Pre-tax
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-xs text-gray-400 capitalize">{asset.assetType.replace('_', ' ')}</p>
-                    {asset.isPretax && asset.afterTaxValue != null && (
-                      <p className="text-xs text-gray-400">After-tax: {fmt(asset.afterTaxValue)}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm font-semibold text-gray-900">{fmt(displayValue(asset))}</span>
-                    <button
-                      onClick={() => handleDelete(asset.id)}
-                      className="text-xs text-gray-400 hover:text-red-600 transition"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              ))}
+        grouped.map(({ cls, label, emoji, items }) => {
+          const groupTotal = items.reduce((sum, a) => {
+            if (a.assetClass === 'real_estate') {
+              return sum + Math.max(0, ((a.adjustedValue ?? a.estimatedValue ?? 0) - (a.mortgageBalance ?? 0)));
+            }
+            return sum + (Number(a.currentValue) || 0);
+          }, 0);
+
+          return (
+            <div key={cls} className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                  <span>{emoji}</span> {label}
+                </h2>
+                <span className="text-sm font-semibold text-gray-500">{fmt(groupTotal)}</span>
+              </div>
+              <div className="px-6">
+                {items.map(asset => (
+                  <AssetRow
+                    key={asset.id}
+                    asset={asset}
+                    onDelete={handleDelete}
+                    onRefresh={handleRefreshOne}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        ))
+          );
+        })
       )}
 
-      {/* Add asset slide-in */}
-      {showForm && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center">
-          <div className="w-full max-w-md rounded-t-2xl sm:rounded-2xl bg-white p-6 shadow-xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-base font-semibold text-gray-900">Add asset</h2>
-              <button onClick={() => { resetForm(); setShowForm(false); }} className="text-gray-400 hover:text-gray-600 text-lg">✕</button>
-            </div>
-
-            <form onSubmit={handleAdd} className="space-y-3">
-              <div>
-                <label className="label">Name</label>
-                <input required className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Vanguard brokerage" />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="label">Asset class</label>
-                  <select className="input" value={assetClass} onChange={(e) => setAssetClass(e.target.value)}>
-                    <option value="equity">Equity</option>
-                    <option value="real_estate">Real estate</option>
-                    <option value="other">Other / cash</option>
-                    <option value="restricted">Restricted</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="label">Type</label>
-                  <select className="input" value={assetType} onChange={(e) => setAssetType(e.target.value)}>
-                    {assetClass === 'equity' && <>
-                      <option value="stock">Stock</option>
-                      <option value="etf">ETF</option>
-                      <option value="mutual_fund">Mutual fund</option>
-                      <option value="brokerage">Brokerage</option>
-                      <option value="retirement_401k">401(k)</option>
-                      <option value="retirement_ira">IRA</option>
-                    </>}
-                    {assetClass === 'real_estate' && <>
-                      <option value="primary_residence">Primary residence</option>
-                      <option value="rental">Rental property</option>
-                      <option value="commercial">Commercial</option>
-                    </>}
-                    {(assetClass === 'other' || assetClass === 'restricted') && <>
-                      <option value="cash">Cash</option>
-                      <option value="whole_life">Whole life insurance</option>
-                      <option value="business_equity">Business equity</option>
-                      <option value="other">Other</option>
-                    </>}
-                  </select>
-                </div>
-              </div>
-
-              {assetClass === 'equity' && (
-                <>
-                  <div>
-                    <label className="label">Current value ($)</label>
-                    <input required type="number" min={0} className="input" value={currentValue} onChange={(e) => setCurrentValue(e.target.value)} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="label">Ticker (optional)</label>
-                      <input className="input" value={ticker} onChange={(e) => setTicker(e.target.value)} placeholder="VTSAX" />
-                    </div>
-                    <div>
-                      <label className="label">Account label</label>
-                      <input className="input" value={accountLabel} onChange={(e) => setAccountLabel(e.target.value)} placeholder="Fidelity IRA" />
-                    </div>
-                  </div>
-                  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                    <input type="checkbox" checked={isPretax} onChange={(e) => setIsPretax(e.target.checked)} className="rounded" />
-                    Pre-tax account (401k, traditional IRA)
-                  </label>
-                </>
-              )}
-
-              {assetClass === 'real_estate' && (
-                <>
-                  <div>
-                    <label className="label">Estimated value ($)</label>
-                    <input required type="number" min={0} className="input" value={estimatedValue} onChange={(e) => setEstimatedValue(e.target.value)} />
-                  </div>
-                  <div>
-                    <label className="label">Property address (optional)</label>
-                    <input className="input" value={propertyAddress} onChange={(e) => setPropertyAddress(e.target.value)} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="label">Monthly rent ($)</label>
-                      <input type="number" min={0} className="input" value={monthlyRent} onChange={(e) => setMonthlyRent(e.target.value)} />
-                    </div>
-                    <div>
-                      <label className="label">Monthly PITI ($)</label>
-                      <input type="number" min={0} className="input" value={monthlyPiti} onChange={(e) => setMonthlyPiti(e.target.value)} />
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {(assetClass === 'other' || assetClass === 'restricted') && (
-                <div>
-                  <label className="label">Current value ($)</label>
-                  <input required type="number" min={0} className="input" value={currentValue} onChange={(e) => setCurrentValue(e.target.value)} />
-                </div>
-              )}
-
-              {formError && <p className="text-sm text-red-600">{formError}</p>}
-
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => { resetForm(); setShowForm(false); }} className="btn-secondary flex-1">Cancel</button>
-                <button type="submit" disabled={submitting} className="btn-primary flex-1">
-                  {submitting ? <Spinner className="h-4 w-4" /> : 'Add asset'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {/* Add modal */}
+      {showModal && (
+        <AddAssetModal
+          onClose={() => setShowModal(false)}
+          onAdded={load}
+        />
       )}
     </div>
   );

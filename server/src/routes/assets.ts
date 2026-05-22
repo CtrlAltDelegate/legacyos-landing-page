@@ -34,11 +34,18 @@ const createAssetSchema = Joi.object({
   mortgageBalance: Joi.number().min(0).optional(),
   monthlyRent: Joi.number().min(0).optional(),
   monthlyPiti: Joi.number().min(0).optional(),
+  monthlyInsurance: Joi.number().min(0).optional(),
+  monthlyHoa: Joi.number().min(0).optional(),
+  managementFeePercent: Joi.number().min(0).max(100).optional(),
+  maintenanceReserveMonthly: Joi.number().min(0).optional(),
+  capexReserveMonthly: Joi.number().min(0).optional(),
+  vacancyRatePercent: Joi.number().min(0).max(100).optional(),
 
   // Retirement flag
   isPretax: Joi.boolean().optional(),
 
   // Business equity fields
+  ownershipPercent: Joi.number().min(0).max(100).optional(),
   valuationMethod: Joi.string()
     .valid('revenue_multiple', 'ebitda_multiple', 'book_value', 'other')
     .optional(),
@@ -226,7 +233,14 @@ router.post('/', validate(createAssetSchema), async (req: Request, res: Response
         mortgageBalance: data.mortgageBalance != null ? Number(data.mortgageBalance) : null,
         monthlyRent: data.monthlyRent != null ? Number(data.monthlyRent) : null,
         monthlyPiti: data.monthlyPiti != null ? Number(data.monthlyPiti) : null,
+        monthlyInsurance: data.monthlyInsurance != null ? Number(data.monthlyInsurance) : null,
+        monthlyHoa: data.monthlyHoa != null ? Number(data.monthlyHoa) : null,
+        managementFeePercent: data.managementFeePercent != null ? Number(data.managementFeePercent) : null,
+        maintenanceReserveMonthly: data.maintenanceReserveMonthly != null ? Number(data.maintenanceReserveMonthly) : null,
+        capexReserveMonthly: data.capexReserveMonthly != null ? Number(data.capexReserveMonthly) : null,
+        vacancyRatePercent: data.vacancyRatePercent != null ? Number(data.vacancyRatePercent) : null,
         isPretax: Boolean(data.isPretax ?? false),
+        ownershipPercent: data.ownershipPercent != null ? Number(data.ownershipPercent) : null,
         valuationMethod: (data.valuationMethod as string) ?? null,
         valuationNotes: (data.valuationNotes as string) ?? null,
         vestDate: data.vestDate ? new Date(data.vestDate as string) : null,
@@ -282,7 +296,13 @@ router.put('/:id', validate(updateAssetSchema), async (req: Request, res: Respon
       purchaseDateProperty: 'purchaseDateProperty', estimatedValue: 'estimatedValue',
       adjustedValue: 'adjustedValue', mortgageBalance: 'mortgageBalance',
       monthlyRent: 'monthlyRent', monthlyPiti: 'monthlyPiti',
-      isPretax: 'isPretax', valuationMethod: 'valuationMethod',
+      monthlyInsurance: 'monthlyInsurance', monthlyHoa: 'monthlyHoa',
+      managementFeePercent: 'managementFeePercent',
+      maintenanceReserveMonthly: 'maintenanceReserveMonthly',
+      capexReserveMonthly: 'capexReserveMonthly',
+      vacancyRatePercent: 'vacancyRatePercent',
+      isPretax: 'isPretax', ownershipPercent: 'ownershipPercent',
+      valuationMethod: 'valuationMethod',
       valuationNotes: 'valuationNotes', vestDate: 'vestDate',
       probability: 'probability', currentValue: 'currentValue', notes: 'notes',
     };

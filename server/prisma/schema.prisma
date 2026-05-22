@@ -90,7 +90,16 @@ model Asset {
   // Retirement account flag
   isPretax              Boolean   @default(false) @map("is_pretax")
 
+  // Rental property-specific
+  managementFeePercent      Decimal?  @map("management_fee_percent") @db.Decimal(5, 2)
+  maintenanceReserveMonthly Decimal?  @map("maintenance_reserve_monthly") @db.Decimal(10, 2)
+  capexReserveMonthly       Decimal?  @map("capex_reserve_monthly") @db.Decimal(10, 2)
+  vacancyRatePercent        Decimal?  @map("vacancy_rate_percent") @db.Decimal(5, 2)
+  monthlyInsurance          Decimal?  @map("monthly_insurance") @db.Decimal(10, 2)
+  monthlyHoa                Decimal?  @map("monthly_hoa") @db.Decimal(10, 2)
+
   // Business equity-specific
+  ownershipPercent      Decimal?  @map("ownership_percent") @db.Decimal(5, 2)
   valuationMethod       String?   @map("valuation_method") @db.VarChar(50)
   valuationNotes        String?   @map("valuation_notes")
 
