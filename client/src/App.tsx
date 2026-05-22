@@ -13,6 +13,7 @@ import Dashboard from '@/pages/Dashboard';
 import Assets from '@/pages/Assets';
 import Documents from '@/pages/Documents';
 import Flo from '@/pages/Flo';
+import WingDetail from '@/pages/WingDetail';
 
 export default function App() {
   const { initialize, isInitialized } = useAuthStore();
@@ -41,6 +42,7 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/wings/:wing" element={<WingDetail />} />
             <Route path="/assets" element={<Assets />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/flo" element={<Flo />} />
