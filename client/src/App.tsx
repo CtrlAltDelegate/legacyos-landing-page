@@ -14,6 +14,7 @@ import Assets from '@/pages/Assets';
 import Documents from '@/pages/Documents';
 import Flo from '@/pages/Flo';
 import WingDetail from '@/pages/WingDetail';
+import Admin from '@/pages/Admin';
 
 export default function App() {
   const { initialize, isInitialized } = useAuthStore();
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="/assets" element={<Assets />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/flo" element={<Flo />} />
+            <Route path="/admin" element={<Admin />} />
           </Route>
         </Route>
 

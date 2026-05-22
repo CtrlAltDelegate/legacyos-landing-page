@@ -14,6 +14,7 @@ import floRoutes from './routes/flo';
 import goalRoutes from './routes/goals';
 import billingRoutes, { handleStripeWebhook } from './routes/billing';
 import wingRoutes from './routes/wings';
+import adminRoutes from './routes/admin';
 
 import { startPriceRefreshCron } from './cron/priceRefresh';
 import { startMonthlySnapshotCron } from './cron/monthlySnapshot';
@@ -74,6 +75,7 @@ app.use('/api/flo', floRoutes);
 app.use('/api/goals', goalRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/wings', wingRoutes);
+app.use('/api/admin', adminRoutes);
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 app.use((_req, res) => {

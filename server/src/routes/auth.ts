@@ -26,7 +26,7 @@ function signRefreshToken(payload: AuthPayload): string {
   return jwt.sign(payload, process.env.JWT_REFRESH_SECRET!, { expiresIn: '7d' });
 }
 
-function safeUser(user: { id: string; email: string; fullName: string | null; plan: string; assumedTaxRate: unknown; onboardingComplete: boolean; createdAt: Date }) {
+function safeUser(user: { id: string; email: string; fullName: string | null; plan: string; assumedTaxRate: unknown; onboardingComplete: boolean; isAdmin: boolean; createdAt: Date }) {
   return {
     id: user.id,
     email: user.email,
@@ -34,6 +34,7 @@ function safeUser(user: { id: string; email: string; fullName: string | null; pl
     plan: user.plan,
     assumedTaxRate: user.assumedTaxRate,
     onboardingComplete: user.onboardingComplete,
+    isAdmin: user.isAdmin,
     createdAt: user.createdAt,
   };
 }
@@ -78,7 +79,7 @@ router.post('/register', authLimiter, validate(registerSchema), async (req: Requ
       },
     });
 
-    const payload: AuthPayload = { userId: user.id, email: user.email, plan: user.plan };
+    const payload: AuthPayload = { userId: user.id, email: user.email, plan: user.plan, isAdmin: user.isAdmin };
     const accessToken = signAccessToken(payload);
     const refreshToken = signRefreshToken(payload);
 
@@ -117,7 +118,7 @@ router.post('/login', authLimiter, validate(loginSchema), async (req: Request, r
       return;
     }
 
-    const payload: AuthPayload = { userId: user.id, email: user.email, plan: user.plan };
+    const payload: AuthPayload = { userId: user.id, email: user.email, plan: user.plan, isAdmin: user.isAdmin };
     const accessToken = signAccessToken(payload);
     const refreshToken = signRefreshToken(payload);
 
@@ -157,7 +158,7 @@ router.post('/refresh', validate(refreshSchema), async (req: Request, res: Respo
       return;
     }
 
-    const newPayload: AuthPayload = { userId: user.id, email: user.email, plan: user.plan };
+    const newPayload: AuthPayload = { userId: user.id, email: user.email, plan: user.plan, isAdmin: user.isAdmin };
     const newAccessToken = signAccessToken(newPayload);
     const newRefreshToken = signRefreshToken(newPayload);
 

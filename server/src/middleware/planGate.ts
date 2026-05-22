@@ -10,10 +10,17 @@ const PLAN_HIERARCHY: Record<Plan, number> = {
 
 /**
  * Middleware factory — gates a route behind a minimum plan tier.
+ * Admins (isAdmin: true in JWT) bypass all plan gates automatically.
  * Usage: router.post('/chat', requireAuth, requirePlan('core'), handler)
  */
 export function requirePlan(minimumPlan: Plan) {
   return (req: Request, res: Response, next: NextFunction): void => {
+    // Admins are never gated
+    if (req.user?.isAdmin) {
+      next();
+      return;
+    }
+
     const userPlan = (req.user?.plan ?? 'free') as Plan;
     const userLevel = PLAN_HIERARCHY[userPlan] ?? 0;
     const requiredLevel = PLAN_HIERARCHY[minimumPlan];

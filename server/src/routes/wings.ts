@@ -1,7 +1,21 @@
 import { Router, Request, Response } from 'express';
 import { requireAuth } from '../middleware/auth';
 import { prisma } from '../lib/prisma';
-import { WINGS, WING_ORDER, calculateLevel, WingId } from '../config/wingSteps';
+import { WINGS, WING_ORDER, calculateLevel, WingId, WingStep } from '../config/wingSteps';
+
+/** Apply any admin-managed affiliate link overrides to a step array. */
+async function applyAffiliateOverrides(wingId: string, steps: WingStep[]): Promise<WingStep[]> {
+  const overrides = await prisma.affiliateLink.findMany({
+    where: { wingId, isActive: true },
+  });
+  if (overrides.length === 0) return steps;
+  const overrideMap = Object.fromEntries(overrides.map((o) => [o.level, o]));
+  return steps.map((step) => {
+    const o = overrideMap[step.level];
+    if (!o) return step;
+    return { ...step, actionLabel: o.actionLabel, actionUrl: o.actionUrl };
+  });
+}
 
 const router = Router();
 router.use(requireAuth);
@@ -20,11 +34,12 @@ router.get('/', async (req: Request, res: Response) => {
       assessments.map((a) => [a.wing, { level: a.level, answers: a.answers, completedAt: a.completedAt }])
     );
 
-    const wings = WING_ORDER.map((wingId) => {
+    const wings = await Promise.all(WING_ORDER.map(async (wingId) => {
       const cfg = WINGS[wingId];
       const saved = assessmentMap[wingId];
       const level = saved?.level ?? 0;
-      const step = cfg.steps[level] ?? cfg.steps[cfg.steps.length - 1];
+      const steps = await applyAffiliateOverrides(wingId, cfg.steps);
+      const step = steps[level] ?? steps[steps.length - 1];
 
       return {
         id: cfg.id,
@@ -40,7 +55,7 @@ router.get('/', async (req: Request, res: Response) => {
         questions: cfg.questions,
         answers: (saved?.answers as Record<string, boolean>) ?? {},
       };
-    });
+    }));
 
     res.json({ wings });
   } catch (err) {
@@ -67,7 +82,8 @@ router.get('/:wing', async (req: Request, res: Response) => {
     });
 
     const level = saved?.level ?? 0;
-    const step = cfg.steps[level] ?? cfg.steps[cfg.steps.length - 1];
+    const steps = await applyAffiliateOverrides(wingId, cfg.steps);
+    const step = steps[level] ?? steps[steps.length - 1];
 
     res.json({
       id: cfg.id,
@@ -79,7 +95,7 @@ router.get('/:wing', async (req: Request, res: Response) => {
       level,
       levelLabel: ['Foundation', 'Building', 'Established', 'Advanced'][level] ?? 'Advanced',
       assessed: !!saved?.completedAt,
-      steps: cfg.steps,
+      steps,
       nextStep: step,
       questions: cfg.questions,
       answers: (saved?.answers as Record<string, boolean>) ?? {},

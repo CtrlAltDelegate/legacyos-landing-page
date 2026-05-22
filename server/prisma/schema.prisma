@@ -21,6 +21,7 @@ model User {
   stripeSubId        String?   @unique @map("stripe_sub_id") @db.VarChar(255)
   assumedTaxRate     Decimal   @default(25.00) @map("assumed_tax_rate") @db.Decimal(5, 2)
   onboardingComplete Boolean   @default(false) @map("onboarding_complete")
+  isAdmin            Boolean   @default(false) @map("is_admin")
   refreshToken       String?   @map("refresh_token")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
@@ -211,6 +212,21 @@ model WingAssessment {
   @@unique([userId, wing])
   @@index([userId])
   @@map("wing_assessments")
+}
+
+// ─── Affiliate Links (admin-managed overrides for wing step URLs) ─────────────
+model AffiliateLink {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  wingId      String   @map("wing_id") @db.VarChar(30)
+  level       Int
+  productName String   @map("product_name") @db.VarChar(100)
+  actionLabel String   @map("action_label") @db.VarChar(150)
+  actionUrl   String   @map("action_url") @db.VarChar(500)
+  isActive    Boolean  @default(true) @map("is_active")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([wingId, level])
+  @@map("affiliate_links")
 }
 
 // ─── Liabilities (non-mortgage debt) ─────────────────────────────────────────

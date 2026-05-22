@@ -4,11 +4,12 @@ import { api, tokenStore } from '@/api/client';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface AuthUser {
-  userId: string;
+  id: string;
   email: string;
   fullName: string;
   plan: 'free' | 'core' | 'premium';
   onboardingComplete: boolean;
+  isAdmin: boolean;
 }
 
 interface AuthState {

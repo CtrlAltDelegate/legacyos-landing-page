@@ -5,6 +5,7 @@ export interface AuthPayload {
   userId: string;
   email: string;
   plan: string;
+  isAdmin: boolean;
 }
 
 // Extend Express Request to carry the authenticated user
@@ -37,4 +38,12 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
       res.status(401).json({ error: 'Invalid token.' });
     }
   }
+}
+
+export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
+  if (!req.user?.isAdmin) {
+    res.status(403).json({ error: 'Admin access required.' });
+    return;
+  }
+  next();
 }
