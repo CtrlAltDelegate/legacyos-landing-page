@@ -153,13 +153,38 @@ async function fetchFromCoinGecko(symbol: string): Promise<TickerPrice | null> {
   }
 }
 
-// ─── Source 4: Binance (crypto fallback for short/ambiguous symbols) ─────────
-// Free public API, no key required. Tries USDT and BUSD trading pairs.
-// Catches coins that CoinGecko's search endpoint misses for short tickers
-// like "W" (Wormhole) which trades as WUSDT on Binance/Coinbase.
+// ─── Source 4: Coinbase (crypto — best coverage for US retail coins) ─────────
+// Free public API, no key required. Covers every coin listed on Coinbase
+// including Wormhole (W), which CoinGecko search and Binance both miss.
+
+async function fetchFromCoinbase(symbol: string): Promise<TickerPrice | null> {
+  try {
+    const res = await axios.get(
+      `https://api.coinbase.com/v2/prices/${symbol.toUpperCase()}-USD/spot`,
+      { timeout: 8_000, headers: { 'Accept': 'application/json' } }
+    );
+    const price = parseFloat(res.data?.data?.amount ?? '0');
+    if (!price || price <= 0) return null;
+    return {
+      ticker: symbol.toUpperCase(),
+      price,
+      updatedAt: new Date().toISOString(),
+    };
+  } catch (err) {
+    if (axios.isAxiosError(err) && err.response?.status === 404) {
+      return null; // Not listed on Coinbase — silent
+    }
+    console.warn(`[coinbase] ${symbol}:`, err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
+// ─── Source 5: Binance (broader crypto fallback) ──────────────────────────────
+// Free public API, no key required. Tries USDT and FDUSD pairs.
+// Note: BUSD pairs removed — Binance killed BUSD in 2024 (returns 451).
 
 async function fetchFromBinance(symbol: string): Promise<TickerPrice | null> {
-  const pairs = [`${symbol}USDT`, `${symbol}BUSD`];
+  const pairs = [`${symbol}USDT`, `${symbol}FDUSD`];
   for (const pair of pairs) {
     try {
       const res = await axios.get('https://api.binance.com/api/v3/ticker/price', {
@@ -175,8 +200,8 @@ async function fetchFromBinance(symbol: string): Promise<TickerPrice | null> {
         updatedAt: new Date().toISOString(),
       };
     } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 400) {
-        continue; // 400 = invalid trading pair — try next
+      if (axios.isAxiosError(err) && (err.response?.status === 400 || err.response?.status === 451)) {
+        continue; // 400 = bad pair, 451 = legal restriction — try next
       }
       console.warn(`[binance] ${pair}:`, err instanceof Error ? err.message : err);
     }
@@ -188,10 +213,12 @@ async function fetchFromBinance(symbol: string): Promise<TickerPrice | null> {
 
 /**
  * Fetch one ticker price.
- * Chain: cache → Polygon → Yahoo Finance → CoinGecko
+ * Chain: cache → Polygon → Yahoo Finance → CoinGecko → Coinbase → Binance
  *
  * Polygon + Yahoo cover every US stock/ETF.
- * CoinGecko covers crypto tokens that neither exchange handles.
+ * CoinGecko covers most crypto by symbol search.
+ * Coinbase covers US retail crypto that CoinGecko search misses (e.g. W = Wormhole).
+ * Binance covers broader global crypto not listed on Coinbase.
  */
 export async function fetchSingleTicker(ticker: string): Promise<TickerPrice | null> {
   const key = ticker.toUpperCase();
@@ -212,9 +239,13 @@ export async function fetchSingleTicker(ticker: string): Promise<TickerPrice | n
   const crypto = await fetchFromCoinGecko(key);
   if (crypto) { cacheSet(key, crypto); return crypto; }
 
-  // 4. Binance — fallback for short/ambiguous symbols CoinGecko search misses
-  // (e.g. "W" = Wormhole trades as WUSDT; CoinGecko search returns no match)
-  console.log(`[ticker] ${key} not on CoinGecko — trying Binance...`);
+  // 4. Coinbase — best coverage for US retail crypto (Wormhole W, etc.)
+  console.log(`[ticker] ${key} not on CoinGecko — trying Coinbase...`);
+  const coinbase = await fetchFromCoinbase(key);
+  if (coinbase) { cacheSet(key, coinbase); return coinbase; }
+
+  // 5. Binance — broader global crypto fallback
+  console.log(`[ticker] ${key} not on Coinbase — trying Binance...`);
   const binance = await fetchFromBinance(key);
   if (binance) { cacheSet(key, binance); }
   return binance;
