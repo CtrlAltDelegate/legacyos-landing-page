@@ -153,42 +153,35 @@ async function fetchFromCoinGecko(symbol: string): Promise<TickerPrice | null> {
   }
 }
 
-// ─── Source 4: CoinCap (crypto fallback for short/ambiguous symbols) ──────────
-// Free, no API key, searches by name+symbol. Catches coins that CoinGecko's
-// search endpoint misses for short tickers (e.g. "W" = Wormhole).
+// ─── Source 4: Binance (crypto fallback for short/ambiguous symbols) ─────────
+// Free public API, no key required. Tries USDT and BUSD trading pairs.
+// Catches coins that CoinGecko's search endpoint misses for short tickers
+// like "W" (Wormhole) which trades as WUSDT on Binance/Coinbase.
 
-async function fetchFromCoinCap(symbol: string): Promise<TickerPrice | null> {
-  try {
-    const res = await axios.get('https://api.coincap.io/v2/assets', {
-      params: { search: symbol, limit: 50 },
-      timeout: 10_000,
-      headers: { 'Accept': 'application/json' },
-    });
-
-    const assets: Array<{
-      id: string; symbol: string; name: string; priceUsd: string | null; rank: string;
-    }> = res.data?.data ?? [];
-
-    // Exact symbol match, prefer lower rank (= larger market cap)
-    const matches = assets
-      .filter(a => a.symbol.toUpperCase() === symbol.toUpperCase() && a.priceUsd)
-      .sort((a, b) => Number(a.rank) - Number(b.rank));
-
-    if (!matches.length) return null;
-    const best = matches[0];
-    const price = parseFloat(best.priceUsd!);
-    if (!price || price <= 0) return null;
-
-    return {
-      ticker: symbol.toUpperCase(),
-      name: best.name,
-      price,
-      updatedAt: new Date().toISOString(),
-    };
-  } catch (err) {
-    console.warn(`[coincap] ${symbol}:`, err instanceof Error ? err.message : err);
-    return null;
+async function fetchFromBinance(symbol: string): Promise<TickerPrice | null> {
+  const pairs = [`${symbol}USDT`, `${symbol}BUSD`];
+  for (const pair of pairs) {
+    try {
+      const res = await axios.get('https://api.binance.com/api/v3/ticker/price', {
+        params: { symbol: pair },
+        timeout: 8_000,
+        headers: { 'Accept': 'application/json' },
+      });
+      const price = parseFloat(res.data?.price ?? '0');
+      if (!price || price <= 0) continue;
+      return {
+        ticker: symbol.toUpperCase(),
+        price,
+        updatedAt: new Date().toISOString(),
+      };
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 400) {
+        continue; // 400 = invalid trading pair — try next
+      }
+      console.warn(`[binance] ${pair}:`, err instanceof Error ? err.message : err);
+    }
   }
+  return null;
 }
 
 // ─── Public: single ticker lookup ────────────────────────────────────────────
@@ -219,11 +212,12 @@ export async function fetchSingleTicker(ticker: string): Promise<TickerPrice | n
   const crypto = await fetchFromCoinGecko(key);
   if (crypto) { cacheSet(key, crypto); return crypto; }
 
-  // 4. CoinCap — fallback for short/ambiguous symbols CoinGecko search misses
-  console.log(`[ticker] ${key} not on CoinGecko — trying CoinCap...`);
-  const cap = await fetchFromCoinCap(key);
-  if (cap) { cacheSet(key, cap); }
-  return cap;
+  // 4. Binance — fallback for short/ambiguous symbols CoinGecko search misses
+  // (e.g. "W" = Wormhole trades as WUSDT; CoinGecko search returns no match)
+  console.log(`[ticker] ${key} not on CoinGecko — trying Binance...`);
+  const binance = await fetchFromBinance(key);
+  if (binance) { cacheSet(key, binance); }
+  return binance;
 }
 
 // ─── Public: batch stock/ETF prices ──────────────────────────────────────────
