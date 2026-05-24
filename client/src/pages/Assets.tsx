@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, getErrorMessage } from '@/api/client';
 import Spinner from '@/components/Spinner';
 import AddAssetModal from '@/components/assets/AddAssetModal';
+import EditPositionModal, { type EditableAsset } from '@/components/assets/EditPositionModal';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -253,10 +254,11 @@ function applyAccountOrder(accounts: EquityAccountGroup[], order: string[]): Equ
 
 // ─── Equity position row (within an account) ──────────────────────────────────
 
-function PositionRow({ asset, onDelete, onRefresh }: {
+function PositionRow({ asset, onDelete, onRefresh, onEdit }: {
   asset: Asset;
   onDelete: (id: string) => void;
   onRefresh: (id: string) => void;
+  onEdit: (asset: Asset) => void;
 }) {
   const isAuto = asset.currentValueSource === 'ticker_api';
   const isCash = asset.currentValueSource === 'manual' && !asset.sharesHeld;
@@ -315,6 +317,13 @@ function PositionRow({ asset, onDelete, onRefresh }: {
       <div className="flex items-center gap-3 flex-shrink-0 pt-0.5">
         <p className="text-sm font-semibold text-gray-900">{fmtMoney(asset.currentValue)}</p>
         <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => onEdit(asset)}
+            className="text-[11px] text-gray-400 hover:text-brand-600 transition"
+            title="Edit position"
+          >
+            ✎
+          </button>
           {asset.ticker && !isAuto && (
             <button onClick={() => onRefresh(asset.id)} className="text-[11px] text-brand-600 hover:underline">
               Refresh
@@ -346,6 +355,7 @@ export default function Assets() {
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [editingAsset, setEditingAsset] = useState<EditableAsset | null>(null);
   // Persisted account display order (largest-first by default; user can reorder)
   const [accountOrder, setAccountOrder] = useState<string[]>(loadAccountOrder);
 
@@ -551,6 +561,7 @@ export default function Assets() {
                           asset={asset}
                           onDelete={handleDelete}
                           onRefresh={handleRefreshOne}
+                          onEdit={setEditingAsset}
                         />
                       ))}
                     </div>
@@ -589,6 +600,15 @@ export default function Assets() {
         <AddAssetModal
           onClose={() => setShowModal(false)}
           onAdded={load}
+        />
+      )}
+
+      {/* Edit position modal */}
+      {editingAsset && (
+        <EditPositionModal
+          asset={editingAsset}
+          onClose={() => setEditingAsset(null)}
+          onSaved={load}
         />
       )}
     </div>
