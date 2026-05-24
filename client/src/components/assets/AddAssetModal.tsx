@@ -170,6 +170,8 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
   const [tickerData, setTickerData] = useState<TickerData | null>(null);
   const [tickerLoading, setTickerLoading] = useState(false);
   const [tickerError, setTickerError] = useState('');
+  const [isCashPosition, setIsCashPosition] = useState(false);
+  const [cashPositionValue, setCashPositionValue] = useState('');
   const tickerTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Real estate form state ─────────────────────────────────────────────────
@@ -242,6 +244,8 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
       setTickerError('');
       return;
     }
+    setIsCashPosition(false);
+    setCashPositionValue('');
     if (tickerTimeout.current) clearTimeout(tickerTimeout.current);
     tickerTimeout.current = setTimeout(async () => {
       setTickerLoading(true);
@@ -314,26 +318,41 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
 
       if (category === 'equity') {
         const isPretax = eqIsPretax || eqAccountType === '401k' || eqAccountType === 'ira';
-        const shares = Number(eqShares);
-        const price = tickerData?.price ?? 0;
         const isCrypto = eqAccountType === 'crypto';
-        // Position name = ticker company name (not account label)
-        const positionName = tickerData?.name ?? (eqTicker ? eqTicker.toUpperCase() : eqLabel);
-        body = {
-          assetClass: 'equity',
-          assetType: eqAccountType === '401k'    ? 'retirement_401k'
-                   : eqAccountType === 'ira'      ? 'retirement_ira'
-                   : eqAccountType === 'roth_ira' ? 'retirement_ira'
-                   : isCrypto ? 'crypto'
-                   : 'stock',
-          name: positionName,
-          ticker: eqTicker ? eqTicker.toUpperCase() : undefined,
-          sharesHeld: shares,
-          costBasisPerShare: eqCostBasis ? Number(eqCostBasis) : undefined,
-          accountLabel: eqLabel || undefined,
-          isPretax,
-          currentValue: shares > 0 && price > 0 ? parseFloat((shares * price).toFixed(2)) : undefined,
-        };
+        const assetType = eqAccountType === '401k'    ? 'retirement_401k'
+                        : eqAccountType === 'ira'      ? 'retirement_ira'
+                        : eqAccountType === 'roth_ira' ? 'retirement_ira'
+                        : isCrypto ? 'crypto'
+                        : 'stock';
+
+        if (isCashPosition) {
+          // Cash / money market position (FCASH, SPAXX, etc.) — no shares, just a dollar value
+          body = {
+            assetClass: 'equity',
+            assetType,
+            name: eqTicker ? `${eqTicker.toUpperCase()} (Cash)` : 'Uninvested Cash',
+            ticker: eqTicker ? eqTicker.toUpperCase() : undefined,
+            accountLabel: eqLabel || undefined,
+            isPretax,
+            currentValue: Number(cashPositionValue),
+            currentValueSource: 'manual',
+          };
+        } else {
+          const shares = Number(eqShares);
+          const price = tickerData?.price ?? 0;
+          const positionName = tickerData?.name ?? (eqTicker ? eqTicker.toUpperCase() : eqLabel);
+          body = {
+            assetClass: 'equity',
+            assetType,
+            name: positionName,
+            ticker: eqTicker ? eqTicker.toUpperCase() : undefined,
+            sharesHeld: shares,
+            costBasisPerShare: eqCostBasis ? Number(eqCostBasis) : undefined,
+            accountLabel: eqLabel || undefined,
+            isPretax,
+            currentValue: shares > 0 && price > 0 ? parseFloat((shares * price).toFixed(2)) : undefined,
+          };
+        }
       }
 
       else if (category === 'real_estate') {
@@ -580,7 +599,18 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
                       />
                       {tickerLoading && <Spinner className="absolute right-3 top-2.5 h-4 w-4" />}
                     </div>
-                    {tickerError && <p className="mt-1 text-xs text-red-500">{tickerError}</p>}
+                    {tickerError && !isCashPosition && (
+                      <div className="mt-2 space-y-1">
+                        <p className="text-xs text-red-500">{tickerError}</p>
+                        <button
+                          type="button"
+                          onClick={() => { setIsCashPosition(true); setTickerError(''); }}
+                          className="text-xs text-brand-600 hover:underline font-medium"
+                        >
+                          💵 This is uninvested cash or a money market fund — enter value directly
+                        </button>
+                      </div>
+                    )}
                     {tickerData && (
                       <div className="mt-1.5 flex items-center gap-2 text-xs text-gray-600">
                         <span className="font-semibold text-emerald-700">${tickerData.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -591,57 +621,98 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
                     )}
                   </div>
 
-                  {/* Shares — allow up to 9 decimal places for crypto fractions */}
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1">
-                      Shares / units held<span className="text-red-500 ml-0.5">*</span>
-                    </label>
-                    <input
-                      required
-                      type="number"
-                      step="0.000000001"
-                      min="0"
-                      value={eqShares}
-                      onChange={e => setEqShares(e.target.value)}
-                      placeholder="0.00"
-                      className="w-full rounded-lg border border-gray-200 py-2 pl-3 pr-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-200"
-                    />
-                  </div>
-
-                  {/* Live value preview */}
-                  {estimatedEquityValue !== null && estimatedEquityValue > 0 && (
-                    <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3">
-                      <p className="text-xs text-emerald-600">Estimated position value</p>
-                      <p className="text-lg font-bold text-emerald-700">{fmt(estimatedEquityValue)}</p>
-                      <p className="text-[11px] text-emerald-500 mt-0.5">
-                        {Number(eqShares).toLocaleString()} shares × ${tickerData!.price.toFixed(2)} · Updated automatically by price feed
-                      </p>
+                  {/* Cash position mode — replaces shares + cost basis */}
+                  {isCashPosition ? (
+                    <div className="space-y-3">
+                      <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 flex items-center justify-between">
+                        <p className="text-xs text-emerald-700">
+                          💵 Tracked as cash — value updated manually, not by price feed
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => { setIsCashPosition(false); setCashPositionValue(''); }}
+                          className="text-[11px] text-gray-400 hover:text-gray-600 ml-2 flex-shrink-0"
+                        >
+                          ✕ Undo
+                        </button>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1">
+                          Cash balance ($)<span className="text-red-500 ml-0.5">*</span>
+                        </label>
+                        <div className="relative flex items-center">
+                          <span className="absolute left-2.5 text-gray-400 text-sm">$</span>
+                          <input
+                            required
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={cashPositionValue}
+                            onChange={e => setCashPositionValue(e.target.value)}
+                            placeholder="0.00"
+                            className="w-full rounded-lg border border-gray-200 py-2 pl-7 pr-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-200"
+                          />
+                        </div>
+                        <p className="text-[11px] text-gray-400 mt-1">
+                          Counts toward this account's total. Update manually when it changes.
+                        </p>
+                      </div>
                     </div>
+                  ) : (
+                    <>
+                      {/* Shares — allow up to 9 decimal places for crypto fractions */}
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1">
+                          Shares / units held<span className="text-red-500 ml-0.5">*</span>
+                        </label>
+                        <input
+                          required
+                          type="number"
+                          step="0.000000001"
+                          min="0"
+                          value={eqShares}
+                          onChange={e => setEqShares(e.target.value)}
+                          placeholder="0.00"
+                          className="w-full rounded-lg border border-gray-200 py-2 pl-3 pr-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-200"
+                        />
+                      </div>
+
+                      {/* Live value preview */}
+                      {estimatedEquityValue !== null && estimatedEquityValue > 0 && (
+                        <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3">
+                          <p className="text-xs text-emerald-600">Estimated position value</p>
+                          <p className="text-lg font-bold text-emerald-700">{fmt(estimatedEquityValue)}</p>
+                          <p className="text-[11px] text-emerald-500 mt-0.5">
+                            {Number(eqShares).toLocaleString()} shares × ${tickerData!.price.toFixed(2)} · Updated automatically by price feed
+                          </p>
+                        </div>
+                      )}
+
+                      {!tickerData && !eqTicker && (
+                        <div className="rounded-lg bg-blue-50 border border-blue-200 px-3 py-2">
+                          <p className="text-xs text-blue-600">💡 Enter a ticker to look up the live price. Your position value will be calculated and updated on a regular schedule.</p>
+                        </div>
+                      )}
+
+                      {/* Cost basis — 5 decimal places for low-priced crypto */}
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1">Cost basis per share ($)</label>
+                        <p className="text-[11px] text-gray-400 mb-1">Optional — used for unrealized gain/loss tracking</p>
+                        <div className="relative flex items-center">
+                          <span className="absolute left-2.5 text-gray-400 text-sm">$</span>
+                          <input
+                            type="number"
+                            step="0.00001"
+                            min="0"
+                            value={eqCostBasis}
+                            onChange={e => setEqCostBasis(e.target.value)}
+                            placeholder="0.00000"
+                            className="w-full rounded-lg border border-gray-200 py-2 pl-7 pr-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-200"
+                          />
+                        </div>
+                      </div>
+                    </>
                   )}
-
-                  {!tickerData && !eqTicker && (
-                    <div className="rounded-lg bg-blue-50 border border-blue-200 px-3 py-2">
-                      <p className="text-xs text-blue-600">💡 Enter a ticker to look up the live price. Your position value will be calculated and updated on a regular schedule.</p>
-                    </div>
-                  )}
-
-                  {/* Cost basis — 5 decimal places for low-priced crypto */}
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1">Cost basis per share ($)</label>
-                    <p className="text-[11px] text-gray-400 mb-1">Optional — used for unrealized gain/loss tracking</p>
-                    <div className="relative flex items-center">
-                      <span className="absolute left-2.5 text-gray-400 text-sm">$</span>
-                      <input
-                        type="number"
-                        step="0.00001"
-                        min="0"
-                        value={eqCostBasis}
-                        onChange={e => setEqCostBasis(e.target.value)}
-                        placeholder="0.00000"
-                        className="w-full rounded-lg border border-gray-200 py-2 pl-7 pr-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-200"
-                      />
-                    </div>
-                  </div>
                 </>
               )}
 

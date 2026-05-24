@@ -223,7 +223,8 @@ function PositionRow({ asset, onDelete, onRefresh }: {
   onDelete: (id: string) => void;
   onRefresh: (id: string) => void;
 }) {
-  const isAuto = asset.currentValueSource === 'ticker_api';
+  const isAuto   = asset.currentValueSource === 'ticker_api';
+  const isCash   = asset.currentValueSource === 'manual' && !asset.sharesHeld;
   return (
     <div className="flex items-center gap-3 py-2.5 border-t border-gray-50 first:border-0">
       <div className="flex-1 min-w-0">
@@ -233,6 +234,9 @@ function PositionRow({ asset, onDelete, onRefresh }: {
             <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[11px] font-mono font-medium text-gray-500">
               {asset.ticker}
             </span>
+          )}
+          {isCash && (
+            <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-700">💵 Cash</span>
           )}
           {isAuto && (
             <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-600">Auto</span>
