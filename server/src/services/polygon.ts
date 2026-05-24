@@ -1,9 +1,11 @@
 import axios from 'axios';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const YahooFinanceLib = require('yahoo-finance2').default;
+const yahooFinance = new YahooFinanceLib({ suppressNotices: ['yahooSurvey'] });
 
-const POLYGON_BASE  = 'https://api.polygon.io/v2';
+const POLYGON_BASE   = 'https://api.polygon.io/v2';
 const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
-const YAHOO_BASE    = 'https://query1.finance.yahoo.com/v8/finance/chart';
-const POLYGON_KEY   = process.env.POLYGON_API_KEY!;
+const POLYGON_KEY    = process.env.POLYGON_API_KEY!;
 
 export interface TickerPrice {
   ticker: string;
@@ -65,34 +67,25 @@ async function fetchFromPolygon(ticker: string): Promise<TickerPrice | null> {
 }
 
 // ─── Source 2: Yahoo Finance (stocks / ETFs / indices) ───────────────────────
-// Unofficial but stable API — free, no key, covers every US stock and ETF.
-// Used as fallback when Polygon fails or rate-limits.
+// Uses the yahoo-finance2 npm package — free, no API key, covers every US
+// stock and ETF reliably. Falls back to previousClose when market is closed.
 
 async function fetchFromYahoo(ticker: string): Promise<TickerPrice | null> {
   try {
-    const res = await axios.get(`${YAHOO_BASE}/${ticker}`, {
-      params: { interval: '1d', range: '2d' },
-      timeout: 8_000,
-      headers: { 'User-Agent': 'Mozilla/5.0' },
-    });
+    const quote = await yahooFinance.quote(ticker, {}, { validateResult: false });
+    if (!quote) return null;
 
-    const meta = res.data?.chart?.result?.[0]?.meta;
-    if (!meta) return null;
-
-    // regularMarketPrice is the current/last price; previousClose is always available
-    const price = meta.regularMarketPrice || meta.previousClose;
+    const price = quote.regularMarketPrice ?? quote.previousClose;
     if (!price || price <= 0) return null;
 
     return {
       ticker,
-      name: meta.longName || meta.shortName,
+      name: (quote.longName || quote.shortName) ?? undefined,
       price: parseFloat(price.toFixed(6)),
       updatedAt: new Date().toISOString(),
     };
   } catch (err) {
-    if (axios.isAxiosError(err)) {
-      console.warn(`[yahoo] ${ticker}: ${err.response?.status ?? err.message}`);
-    }
+    console.warn(`[yahoo] ${ticker}:`, err instanceof Error ? err.message : err);
     return null;
   }
 }
