@@ -17,8 +17,10 @@ export interface TickerPrice {
 export interface PolygonSnapshotResponse {
   tickers: Array<{
     ticker: string;
+    name?: string;
     day: { c: number };
     lastTrade: { p: number };
+    prevDay: { c: number };   // previous trading day close — reliable on weekends/pre-market
     updated: number;
   }>;
   status: string;
@@ -187,7 +189,10 @@ export async function fetchTickerPrices(tickers: string[]): Promise<Map<string, 
 
       if (response.data?.tickers) {
         for (const t of response.data.tickers) {
-          const price = t.day?.c ?? t.lastTrade?.p;
+          // day.c = today's close (0 before market opens / on weekends)
+          // lastTrade.p = last trade price
+          // prevDay.c = previous trading day's close — most reliable fallback
+          const price = t.day?.c || t.lastTrade?.p || t.prevDay?.c;
           if (price && price > 0) {
             results.set(t.ticker, {
               ticker: t.ticker,
@@ -244,7 +249,8 @@ export async function fetchSingleTicker(ticker: string): Promise<TickerPrice | n
 
     const t = response.data?.ticker;
     if (t) {
-      const price = t.day?.c ?? t.lastTrade?.p;
+      // Use today's close → last trade → previous day's close (handles weekends/pre-market)
+      const price = t.day?.c || t.lastTrade?.p || t.prevDay?.c;
       if (price && price > 0) {
         return {
           ticker: t.ticker,
