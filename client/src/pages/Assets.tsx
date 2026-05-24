@@ -15,6 +15,7 @@ interface Asset {
   adjustedValue: number | null;
   ticker: string | null;
   sharesHeld: number | null;
+  costBasisPerShare: number | null;
   isPretax: boolean;
   afterTaxValue?: number;
   accountLabel: string | null;
@@ -37,9 +38,16 @@ interface Asset {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+/** Whole-dollar format: $1,234  (no cents) — used for totals / summaries */
 const fmt = (n: number | null | undefined) =>
   n != null
-    ? n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+    ? Number(n).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+    : '—';
+
+/** Full currency format: $1,234.56  — used for individual position values */
+const fmtMoney = (n: number | null | undefined) =>
+  n != null
+    ? Number(n).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 })
     : '—';
 
 /** Format share/unit quantities — show enough decimals for crypto fractions */
@@ -128,17 +136,17 @@ function AssetRow({ asset, onDelete, onRefresh }: {
           )}
 
           {equity != null && (
-            <span className="text-blue-600 font-medium">Equity: {fmt(equity)}</span>
+            <span className="text-blue-600 font-medium">Equity: {fmtMoney(equity)}</span>
           )}
 
           {monthlyCF != null && (
             <span className={`font-medium ${cfColor}`}>
-              {monthlyCF >= 0 ? '+' : ''}{fmt(monthlyCF)}/mo cash flow
+              {monthlyCF >= 0 ? '+' : ''}{fmtMoney(monthlyCF)}/mo cash flow
             </span>
           )}
 
           {asset.isPretax && asset.afterTaxValue != null && (
-            <span>After-tax est: {fmt(asset.afterTaxValue)}</span>
+            <span>After-tax est: {fmtMoney(asset.afterTaxValue)}</span>
           )}
 
           {asset.ownershipPercent != null && (
@@ -149,7 +157,7 @@ function AssetRow({ asset, onDelete, onRefresh }: {
 
       <div className="flex items-center gap-4 sm:flex-shrink-0">
         <div className="text-right">
-          <p className="text-sm font-bold text-gray-900">{fmt(displayVal)}</p>
+          <p className="text-sm font-bold text-gray-900">{fmtMoney(displayVal)}</p>
           {asset.currentValueUpdatedAt && isAuto && (
             <p className="text-[10px] text-gray-400">
               {new Date(asset.currentValueUpdatedAt).toLocaleDateString()}
@@ -223,14 +231,27 @@ function PositionRow({ asset, onDelete, onRefresh }: {
   onDelete: (id: string) => void;
   onRefresh: (id: string) => void;
 }) {
-  const isAuto   = asset.currentValueSource === 'ticker_api';
-  const isCash   = asset.currentValueSource === 'manual' && !asset.sharesHeld;
+  const isAuto = asset.currentValueSource === 'ticker_api';
+  const isCash = asset.currentValueSource === 'manual' && !asset.sharesHeld;
+
+  // Gain / loss — only when we have cost basis and shares
+  const costBasis =
+    asset.costBasisPerShare != null && asset.sharesHeld != null && !isCash
+      ? Number(asset.costBasisPerShare) * Number(asset.sharesHeld)
+      : null;
+  const gainLoss = costBasis != null ? Number(asset.currentValue) - costBasis : null;
+  const gainLossPct = gainLoss != null && costBasis && costBasis !== 0
+    ? (gainLoss / costBasis) * 100
+    : null;
+
   return (
-    <div className="flex items-center gap-3 py-2.5 border-t border-gray-50 first:border-0">
+    <div className="flex items-start gap-3 py-3 border-t border-gray-50 first:border-0">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="text-sm font-medium text-gray-900 truncate">{asset.name}</p>
-          {asset.ticker && (
+          {/* Only show ticker badge when the name doesn't already contain the ticker (avoids "XOP XOP") */}
+          {asset.ticker && !isCash &&
+            !asset.name.toUpperCase().includes(asset.ticker.toUpperCase()) && (
             <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[11px] font-mono font-medium text-gray-500">
               {asset.ticker}
             </span>
@@ -242,6 +263,8 @@ function PositionRow({ asset, onDelete, onRefresh }: {
             <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-600">Auto</span>
           )}
         </div>
+
+        {/* Shares row */}
         {asset.sharesHeld != null && (
           <p className="text-xs text-gray-400 mt-0.5">
             {fmtShares(asset.sharesHeld)} shares
@@ -250,9 +273,20 @@ function PositionRow({ asset, onDelete, onRefresh }: {
             )}
           </p>
         )}
+
+        {/* Gain / loss badge */}
+        {gainLoss != null && gainLossPct != null && (
+          <p className={`text-xs font-semibold mt-0.5 ${gainLoss >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+            {gainLoss >= 0 ? '▲' : '▼'}{' '}
+            {fmtMoney(Math.abs(gainLoss))}
+            {' '}
+            <span className="font-normal opacity-75">({Math.abs(gainLossPct).toFixed(1)}%)</span>
+          </p>
+        )}
       </div>
-      <div className="flex items-center gap-3 flex-shrink-0">
-        <p className="text-sm font-semibold text-gray-900">{fmt(asset.currentValue)}</p>
+
+      <div className="flex items-center gap-3 flex-shrink-0 pt-0.5">
+        <p className="text-sm font-semibold text-gray-900">{fmtMoney(asset.currentValue)}</p>
         <div className="flex items-center gap-1.5">
           {asset.ticker && !isAuto && (
             <button onClick={() => onRefresh(asset.id)} className="text-[11px] text-brand-600 hover:underline">

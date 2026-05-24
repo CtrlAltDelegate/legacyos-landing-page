@@ -91,8 +91,9 @@ async function fetchFromYahoo(ticker: string): Promise<TickerPrice | null> {
 }
 
 // ─── Source 3: CoinGecko (crypto tokens) ────────────────────────────────────
-// Free tier: ~30 req/min. Used only after Polygon + Yahoo both fail,
-// which realistically means the ticker is a crypto token.
+// Free tier: ~30 req/min. Used only after Polygon + Yahoo both fail.
+// Short/ambiguous symbols (e.g. "W" for Wormhole) can slip through the search
+// filter — CoinCap is used as a fallback in that case.
 
 async function fetchFromCoinGecko(symbol: string): Promise<TickerPrice | null> {
   try {
@@ -115,7 +116,10 @@ async function fetchFromCoinGecko(symbol: string): Promise<TickerPrice | null> {
         return a.market_cap_rank - b.market_cap_rank;
       });
 
-    if (!matches.length) return null;
+    if (!matches.length) {
+      console.warn(`[coingecko] No symbol match for "${symbol}" in search results`);
+      return null;
+    }
     const best = matches[0];
 
     // Fetch USD price
@@ -149,6 +153,44 @@ async function fetchFromCoinGecko(symbol: string): Promise<TickerPrice | null> {
   }
 }
 
+// ─── Source 4: CoinCap (crypto fallback for short/ambiguous symbols) ──────────
+// Free, no API key, searches by name+symbol. Catches coins that CoinGecko's
+// search endpoint misses for short tickers (e.g. "W" = Wormhole).
+
+async function fetchFromCoinCap(symbol: string): Promise<TickerPrice | null> {
+  try {
+    const res = await axios.get('https://api.coincap.io/v2/assets', {
+      params: { search: symbol, limit: 50 },
+      timeout: 10_000,
+      headers: { 'Accept': 'application/json' },
+    });
+
+    const assets: Array<{
+      id: string; symbol: string; name: string; priceUsd: string | null; rank: string;
+    }> = res.data?.data ?? [];
+
+    // Exact symbol match, prefer lower rank (= larger market cap)
+    const matches = assets
+      .filter(a => a.symbol.toUpperCase() === symbol.toUpperCase() && a.priceUsd)
+      .sort((a, b) => Number(a.rank) - Number(b.rank));
+
+    if (!matches.length) return null;
+    const best = matches[0];
+    const price = parseFloat(best.priceUsd!);
+    if (!price || price <= 0) return null;
+
+    return {
+      ticker: symbol.toUpperCase(),
+      name: best.name,
+      price,
+      updatedAt: new Date().toISOString(),
+    };
+  } catch (err) {
+    console.warn(`[coincap] ${symbol}:`, err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
 // ─── Public: single ticker lookup ────────────────────────────────────────────
 
 /**
@@ -175,8 +217,13 @@ export async function fetchSingleTicker(ticker: string): Promise<TickerPrice | n
   // 3. CoinGecko (crypto only at this point)
   console.log(`[ticker] ${key} not on Polygon or Yahoo — trying CoinGecko (crypto)...`);
   const crypto = await fetchFromCoinGecko(key);
-  if (crypto) { cacheSet(key, crypto); }
-  return crypto;
+  if (crypto) { cacheSet(key, crypto); return crypto; }
+
+  // 4. CoinCap — fallback for short/ambiguous symbols CoinGecko search misses
+  console.log(`[ticker] ${key} not on CoinGecko — trying CoinCap...`);
+  const cap = await fetchFromCoinCap(key);
+  if (cap) { cacheSet(key, cap); }
+  return cap;
 }
 
 // ─── Public: batch stock/ETF prices ──────────────────────────────────────────

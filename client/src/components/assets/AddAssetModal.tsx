@@ -164,6 +164,7 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
   const [eqAccountType, setEqAccountType] = useState<EquityAccountType>('taxable');
   const [eqLabel, setEqLabel]       = useState('');
   const [eqTicker, setEqTicker]     = useState('');
+  const [eqPositionName, setEqPositionName] = useState(''); // manual fund/position name (401k etc.)
   const [eqShares, setEqShares]     = useState('');
   const [eqCostBasis, setEqCostBasis] = useState('');
   const [eqIsPretax, setEqIsPretax] = useState(false);
@@ -172,6 +173,8 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
   const [tickerError, setTickerError] = useState('');
   const [isCashPosition, setIsCashPosition] = useState(false);
   const [cashPositionValue, setCashPositionValue] = useState('');
+  const [isManualEntry, setIsManualEntry] = useState(false); // manual investment (not cash)
+  const [manualPositionValue, setManualPositionValue] = useState('');
   const tickerTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Real estate form state ─────────────────────────────────────────────────
@@ -246,6 +249,8 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
     }
     setIsCashPosition(false);
     setCashPositionValue('');
+    setIsManualEntry(false);
+    setManualPositionValue('');
     if (tickerTimeout.current) clearTimeout(tickerTimeout.current);
     tickerTimeout.current = setTimeout(async () => {
       setTickerLoading(true);
@@ -330,17 +335,36 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
           body = {
             assetClass: 'equity',
             assetType,
-            name: eqTicker ? `${eqTicker.toUpperCase()} (Cash)` : 'Uninvested Cash',
+            name: eqTicker ? eqTicker.toUpperCase() : 'Uninvested Cash',
             ticker: eqTicker ? eqTicker.toUpperCase() : undefined,
             accountLabel: eqLabel || undefined,
             isPretax,
             currentValue: Number(cashPositionValue),
             currentValueSource: 'manual',
           };
+        } else if (isManualEntry) {
+          // Manual investment position — 401k fund, mutual fund, or any position without auto-pricing
+          const positionName = eqPositionName.trim()
+            || (eqTicker ? eqTicker.toUpperCase() : 'Investment Position');
+          body = {
+            assetClass: 'equity',
+            assetType,
+            name: positionName,
+            ticker: eqTicker ? eqTicker.toUpperCase() : undefined,
+            sharesHeld: eqShares ? Number(eqShares) : undefined,
+            costBasisPerShare: eqCostBasis ? Number(eqCostBasis) : undefined,
+            accountLabel: eqLabel || undefined,
+            isPretax,
+            currentValue: Number(manualPositionValue),
+            currentValueSource: 'manual',
+          };
         } else {
           const shares = Number(eqShares);
           const price = tickerData?.price ?? 0;
-          const positionName = tickerData?.name ?? (eqTicker ? eqTicker.toUpperCase() : eqLabel);
+          // Fund name takes priority over auto-fetched name (important for 401k)
+          const positionName = eqPositionName.trim()
+            || tickerData?.name
+            || (eqTicker ? eqTicker.toUpperCase() : eqLabel);
           body = {
             assetClass: 'equity',
             assetType,
@@ -584,45 +608,170 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
                     </div>
                   )}
 
+                  {/* Fund name — always shown for 401k; also shown in manual-entry mode */}
+                  {(eqAccountType === '401k' || isManualEntry) && (
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">
+                        Fund / position name{isManualEntry && !eqPositionName && <span className="text-red-500 ml-0.5">*</span>}
+                      </label>
+                      <input
+                        value={eqPositionName}
+                        onChange={e => setEqPositionName(e.target.value)}
+                        placeholder="e.g. JP Morgan Large Growth R6, Retirement 2060 Fund"
+                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-200"
+                      />
+                      {eqAccountType === '401k' && (
+                        <p className="text-[11px] text-gray-400 mt-1">
+                          Enter the name exactly as it appears in your plan portal.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   {/* Ticker lookup */}
+                  {!isManualEntry && (
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1">
-                      {eqAccountType === 'crypto' ? 'Coin symbol' : 'Ticker symbol'}
-                      <span className="ml-1 font-normal text-gray-400">(optional for broad funds)</span>
+                      {eqAccountType === 'crypto' ? 'Coin symbol' :
+                       eqAccountType === '401k'   ? 'Fund ticker' :
+                       'Ticker symbol'}
+                      {eqAccountType !== '401k' && (
+                        <span className="ml-1 font-normal text-gray-400">(optional for broad funds)</span>
+                      )}
                     </label>
+                    {eqAccountType === '401k' && (
+                      <p className="text-[11px] text-gray-400 mb-1">
+                        Optional — check your plan portal or search <span className="underline">finance.yahoo.com</span>. Examples: JLGMX, FXAIX, TRRLX.
+                      </p>
+                    )}
                     <div className="relative">
                       <input
                         value={eqTicker}
                         onChange={e => setEqTicker(e.target.value.toUpperCase())}
-                        placeholder={eqAccountType === 'crypto' ? 'BTC, ETH, SOL...' : 'AAPL, VTSAX, VOO...'}
+                        placeholder={
+                          eqAccountType === 'crypto' ? 'BTC, ETH, SOL...' :
+                          eqAccountType === '401k'   ? 'e.g. JLGMX (optional)' :
+                          'AAPL, VTSAX, VOO...'
+                        }
                         className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm uppercase focus:border-brand-500 focus:outline-none"
                       />
                       {tickerLoading && <Spinner className="absolute right-3 top-2.5 h-4 w-4" />}
                     </div>
                     {tickerError && !isCashPosition && (
-                      <div className="mt-2 space-y-1">
-                        <p className="text-xs text-red-500">{tickerError}</p>
-                        <button
-                          type="button"
-                          onClick={() => { setIsCashPosition(true); setTickerError(''); }}
-                          className="text-xs text-brand-600 hover:underline font-medium"
-                        >
-                          💵 This is uninvested cash or a money market fund — enter value directly
-                        </button>
+                      <div className="mt-2 rounded-lg bg-red-50 border border-red-100 px-3 py-2.5 space-y-2">
+                        <p className="text-xs text-red-600">{tickerError}</p>
+                        <div className="flex flex-col gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => { setIsManualEntry(true); setTickerError(''); }}
+                            className="text-xs text-brand-600 hover:underline font-medium text-left"
+                          >
+                            📊 Track as investment position (enter value manually)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setIsCashPosition(true); setTickerError(''); }}
+                            className="text-xs text-brand-600 hover:underline font-medium text-left"
+                          >
+                            💵 This is uninvested cash or a money market fund
+                          </button>
+                        </div>
                       </div>
+                    )}
+                    {/* Also let them skip ticker and go manual directly (401k) */}
+                    {eqAccountType === '401k' && !eqTicker && !tickerError && (
+                      <button
+                        type="button"
+                        onClick={() => { setIsManualEntry(true); }}
+                        className="mt-1.5 text-[11px] text-brand-600 hover:underline font-medium"
+                      >
+                        Don't have the ticker? Enter value manually →
+                      </button>
                     )}
                     {tickerData && (
                       <div className="mt-1.5 flex items-center gap-2 text-xs text-gray-600">
                         <span className="font-semibold text-emerald-700">${tickerData.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        <span className="text-gray-400">per share</span>
+                        <span className="text-gray-400">per share · NAV</span>
                         <span className="text-gray-400">·</span>
                         <span>{tickerData.name}</span>
                       </div>
                     )}
                   </div>
+                  )}
 
-                  {/* Cash position mode — replaces shares + cost basis */}
-                  {isCashPosition ? (
+                  {/* Manual investment entry mode */}
+                  {isManualEntry ? (
+                    <div className="space-y-3">
+                      <div className="rounded-lg bg-blue-50 border border-blue-200 px-3 py-2 flex items-center justify-between">
+                        <p className="text-xs text-blue-700">
+                          📊 Manual entry — update the value when your statement refreshes
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => { setIsManualEntry(false); setManualPositionValue(''); }}
+                          className="text-[11px] text-gray-400 hover:text-gray-600 ml-2 flex-shrink-0"
+                        >
+                          ✕ Undo
+                        </button>
+                      </div>
+                      {/* Current total value */}
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1">
+                          Current position value ($)<span className="text-red-500 ml-0.5">*</span>
+                        </label>
+                        <div className="relative flex items-center">
+                          <span className="absolute left-2.5 text-gray-400 text-sm">$</span>
+                          <input
+                            required
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={manualPositionValue}
+                            onChange={e => setManualPositionValue(e.target.value)}
+                            placeholder="0.00"
+                            className="w-full rounded-lg border border-gray-200 py-2 pl-7 pr-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-200"
+                          />
+                        </div>
+                      </div>
+                      {/* Optional shares */}
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1">
+                          Shares / units held <span className="font-normal text-gray-400">(optional)</span>
+                        </label>
+                        <input
+                          type="number"
+                          step="0.000000001"
+                          min="0"
+                          value={eqShares}
+                          onChange={e => setEqShares(e.target.value)}
+                          placeholder="0.000"
+                          className="w-full rounded-lg border border-gray-200 py-2 pl-3 pr-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-200"
+                        />
+                      </div>
+                      {/* Optional cost basis */}
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1">
+                          Cost basis per share ($) <span className="font-normal text-gray-400">(optional)</span>
+                        </label>
+                        <p className="text-[11px] text-gray-400 mb-1">Used for unrealized gain/loss tracking</p>
+                        <div className="relative flex items-center">
+                          <span className="absolute left-2.5 text-gray-400 text-sm">$</span>
+                          <input
+                            type="number"
+                            step="0.00001"
+                            min="0"
+                            value={eqCostBasis}
+                            onChange={e => setEqCostBasis(e.target.value)}
+                            placeholder="0.00000"
+                            className="w-full rounded-lg border border-gray-200 py-2 pl-7 pr-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-200"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {/* Cash position mode */}
+                  {!isManualEntry && isCashPosition && (
                     <div className="space-y-3">
                       <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 flex items-center justify-between">
                         <p className="text-xs text-emerald-700">
@@ -658,7 +807,10 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
                         </p>
                       </div>
                     </div>
-                  ) : (
+                  )}
+
+                  {/* Auto-price mode — ticker + shares */}
+                  {!isManualEntry && !isCashPosition && (
                     <>
                       {/* Shares — allow up to 9 decimal places for crypto fractions */}
                       <div>
