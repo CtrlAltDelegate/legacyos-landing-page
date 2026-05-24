@@ -7,14 +7,48 @@ import Spinner from '@/components/Spinner';
 type Category = 'equity' | 'real_estate' | 'cash' | 'business' | 'other';
 type RESubtype = 'primary' | 'secondary' | 'rental' | 'commercial';
 type EquityAccountType = 'taxable' | 'ira' | 'roth_ira' | '401k' | 'crypto';
+type Step = 'category' | 'account' | 'details';
+type AccountMode = 'existing' | 'new' | null;
 
 interface TickerData { ticker: string; price: number; name: string; }
+
+interface EquityAccount {
+  label: string;
+  type: EquityAccountType;
+  isPretax: boolean;
+  totalValue: number;
+  count: number;
+}
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const ACCOUNT_TYPE_LABELS: Record<EquityAccountType, string> = {
+  taxable:  'Brokerage',
+  ira:      'IRA',
+  roth_ira: 'Roth IRA',
+  '401k':   '401(k)',
+  crypto:   'Crypto',
+};
+
+const ACCOUNT_TYPES: { id: EquityAccountType; label: string }[] = [
+  { id: 'taxable',  label: 'Brokerage' },
+  { id: 'ira',      label: 'IRA' },
+  { id: 'roth_ira', label: 'Roth IRA' },
+  { id: '401k',     label: '401(k)' },
+  { id: 'crypto',   label: 'Crypto' },
+];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const fmt = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
+function dbTypeToAccountType(assetType: string): EquityAccountType {
+  if (assetType === 'retirement_401k') return '401k';
+  if (assetType === 'retirement_ira')  return 'ira';
+  if (assetType === 'crypto')          return 'crypto';
+  return 'taxable';
+}
 
 function inp(
   label: string,
@@ -64,69 +98,32 @@ function RentalROIPanel({
   const capRate = estimatedValue > 0 ? (noi / estimatedValue) * 100 : 0;
   const cashOnCash = downPayment > 0 ? (annualCF / downPayment) * 100 : 0;
   const roe = equity > 0 ? (annualCF / equity) * 100 : 0;
-
   const cfColor = monthlyCF >= 0 ? 'text-emerald-700' : 'text-red-600';
 
   return (
     <div className="mt-4 rounded-xl bg-gray-50 border border-gray-200 p-4 space-y-3">
       <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Live ROI Calculator</p>
-
-      {/* Monthly breakdown */}
       <div className="space-y-1 text-xs">
-        <div className="flex justify-between text-gray-700">
-          <span>Gross rent</span><span className="font-medium">{fmt(grossRent)}</span>
-        </div>
-        {isManaged && mgmt > 0 && (
-          <div className="flex justify-between text-gray-500">
-            <span>Management ({managementFee}%)</span><span>−{fmt(mgmt)}</span>
-          </div>
-        )}
-        {vacancy > 0 && (
-          <div className="flex justify-between text-gray-500">
-            <span>Vacancy ({vacancyRate}%)</span><span>−{fmt(vacancy)}</span>
-          </div>
-        )}
-        {piti > 0 && (
-          <div className="flex justify-between text-gray-500">
-            <span>Mortgage (PITI)</span><span>−{fmt(piti)}</span>
-          </div>
-        )}
-        {insurance > 0 && (
-          <div className="flex justify-between text-gray-500">
-            <span>Insurance</span><span>−{fmt(insurance)}</span>
-          </div>
-        )}
-        {hoa > 0 && (
-          <div className="flex justify-between text-gray-500">
-            <span>HOA</span><span>−{fmt(hoa)}</span>
-          </div>
-        )}
-        {maintenanceMonthly > 0 && (
-          <div className="flex justify-between text-gray-500">
-            <span>Maintenance reserve</span><span>−{fmt(maintenanceMonthly)}</span>
-          </div>
-        )}
-        {capexMonthly > 0 && (
-          <div className="flex justify-between text-gray-500">
-            <span>CapEx reserve</span><span>−{fmt(capexMonthly)}</span>
-          </div>
-        )}
+        <div className="flex justify-between text-gray-700"><span>Gross rent</span><span className="font-medium">{fmt(grossRent)}</span></div>
+        {isManaged && mgmt > 0 && <div className="flex justify-between text-gray-500"><span>Management ({managementFee}%)</span><span>−{fmt(mgmt)}</span></div>}
+        {vacancy > 0 && <div className="flex justify-between text-gray-500"><span>Vacancy ({vacancyRate}%)</span><span>−{fmt(vacancy)}</span></div>}
+        {piti > 0 && <div className="flex justify-between text-gray-500"><span>Mortgage (PITI)</span><span>−{fmt(piti)}</span></div>}
+        {insurance > 0 && <div className="flex justify-between text-gray-500"><span>Insurance</span><span>−{fmt(insurance)}</span></div>}
+        {hoa > 0 && <div className="flex justify-between text-gray-500"><span>HOA</span><span>−{fmt(hoa)}</span></div>}
+        {maintenanceMonthly > 0 && <div className="flex justify-between text-gray-500"><span>Maintenance reserve</span><span>−{fmt(maintenanceMonthly)}</span></div>}
+        {capexMonthly > 0 && <div className="flex justify-between text-gray-500"><span>CapEx reserve</span><span>−{fmt(capexMonthly)}</span></div>}
         <div className={`flex justify-between border-t border-gray-200 pt-1.5 font-bold text-sm ${cfColor}`}>
           <span>Monthly cash flow</span><span>{fmt(monthlyCF)}</span>
         </div>
       </div>
-
-      {/* Key metrics */}
       <div className="grid grid-cols-3 gap-2 pt-1">
         {[
           { label: 'Cash-on-cash', value: cashOnCash, tip: 'Annual CF ÷ down payment' },
-          { label: 'Cap rate', value: capRate, tip: 'NOI ÷ property value' },
-          { label: 'Return on equity', value: roe, tip: 'Annual CF ÷ equity' },
+          { label: 'Cap rate',     value: capRate,    tip: 'NOI ÷ property value' },
+          { label: 'Return on equity', value: roe,    tip: 'Annual CF ÷ equity' },
         ].map(m => (
           <div key={m.label} className="rounded-lg bg-white border border-gray-200 p-2 text-center" title={m.tip}>
-            <p className={`text-base font-bold ${m.value >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
-              {m.value.toFixed(1)}%
-            </p>
+            <p className={`text-base font-bold ${m.value >= 0 ? 'text-gray-900' : 'text-red-600'}`}>{m.value.toFixed(1)}%</p>
             <p className="text-[10px] text-gray-400 leading-tight">{m.label}</p>
           </div>
         ))}
@@ -153,10 +150,15 @@ interface Props {
 }
 
 export default function AddAssetModal({ onClose, onAdded }: Props) {
-  const [step, setStep] = useState<'category' | 'details'>('category');
+  const [step, setStep] = useState<Step>('category');
   const [category, setCategory] = useState<Category | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
+
+  // ── Account picker state ───────────────────────────────────────────────────
+  const [accountMode, setAccountMode] = useState<AccountMode>(null);
+  const [equityAccounts, setEquityAccounts] = useState<EquityAccount[]>([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(false);
 
   // ── Equity form state ──────────────────────────────────────────────────────
   const [eqAccountType, setEqAccountType] = useState<EquityAccountType>('taxable');
@@ -180,14 +182,13 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
   const [rePiti, setRePiti]         = useState('');
   const [reInsurance, setReInsurance] = useState('');
   const [reHoa, setReHoa]           = useState('');
-  // Rental-specific
   const [reRent, setReRent]         = useState('');
   const [reIsManaged, setReIsManaged] = useState(false);
   const [reMgmtFee, setReMgmtFee]   = useState('10');
   const [reMaintenance, setReMaintenance] = useState('');
   const [reCapex, setReCapex]       = useState('');
   const [reVacancy, setReVacancy]   = useState('5');
-  const [reMaintenancePct, setReMaintenancePct] = useState('1'); // % of value / year
+  const [reMaintenancePct, setReMaintenancePct] = useState('1');
 
   // ── Cash form state ────────────────────────────────────────────────────────
   const [cashName, setCashName]     = useState('');
@@ -206,6 +207,33 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
   const [otherType, setOtherType]   = useState('other');
   const [otherValue, setOtherValue] = useState('');
   const [otherNotes, setOtherNotes] = useState('');
+
+  // ── Fetch existing equity accounts ─────────────────────────────────────────
+  async function fetchEquityAccounts() {
+    setLoadingAccounts(true);
+    try {
+      const { data } = await api.get('/assets');
+      const assets: Array<{ assetClass: string; assetType: string; accountLabel: string | null; currentValue: number | null; isPretax: boolean }> = data.assets;
+      const map = new Map<string, EquityAccount>();
+      for (const a of assets.filter(x => x.assetClass === 'equity' && x.accountLabel)) {
+        const key = a.accountLabel!;
+        if (!map.has(key)) {
+          map.set(key, {
+            label: key,
+            type: dbTypeToAccountType(a.assetType),
+            isPretax: a.isPretax,
+            totalValue: 0,
+            count: 0,
+          });
+        }
+        const acct = map.get(key)!;
+        acct.totalValue += Number(a.currentValue) || 0;
+        acct.count++;
+      }
+      setEquityAccounts(Array.from(map.values()));
+    } catch { /* ignore */ }
+    finally { setLoadingAccounts(false); }
+  }
 
   // ── Ticker lookup ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -230,17 +258,49 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
     }, 800);
   }, [eqTicker]);
 
-  // ── Auto-calculate maintenance reserve from % of value ──────────────────
+  // ── Auto-calculate maintenance reserve ────────────────────────────────────
   const autoMaintenance = reEstValue && reMaintenancePct
     ? ((Number(reEstValue) * Number(reMaintenancePct)) / 100 / 12).toFixed(0)
     : '';
 
+  // ── Navigation ────────────────────────────────────────────────────────────
   function selectCategory(cat: Category) {
     setCategory(cat);
     setFormError('');
-    // Auto-set pretax for retirement account types
-    if (cat === 'equity') setEqIsPretax(false);
+    if (cat === 'equity') {
+      setStep('account');
+      fetchEquityAccounts();
+    } else {
+      setStep('details');
+    }
+  }
+
+  function selectExistingAccount(acct: EquityAccount) {
+    setEqLabel(acct.label);
+    setEqAccountType(acct.type);
+    setEqIsPretax(acct.isPretax);
+    setAccountMode('existing');
     setStep('details');
+  }
+
+  function selectNewAccount() {
+    setAccountMode('new');
+    setEqLabel('');
+    setEqAccountType('taxable');
+    setEqIsPretax(false);
+    setStep('details');
+  }
+
+  function goBack() {
+    if (step === 'details' && category === 'equity') {
+      setStep('account');
+      setFormError('');
+    } else if (step === 'details' || step === 'account') {
+      setStep('category');
+      setCategory(null);
+      setAccountMode(null);
+      setFormError('');
+    }
   }
 
   // ── Submit ─────────────────────────────────────────────────────────────────
@@ -257,20 +317,21 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
         const shares = Number(eqShares);
         const price = tickerData?.price ?? 0;
         const isCrypto = eqAccountType === 'crypto';
+        // Position name = ticker company name (not account label)
+        const positionName = tickerData?.name ?? (eqTicker ? eqTicker.toUpperCase() : eqLabel);
         body = {
           assetClass: 'equity',
-          assetType: eqAccountType === '401k' ? 'retirement_401k'
-                   : eqAccountType === 'ira'  ? 'retirement_ira'
+          assetType: eqAccountType === '401k'    ? 'retirement_401k'
+                   : eqAccountType === 'ira'      ? 'retirement_ira'
                    : eqAccountType === 'roth_ira' ? 'retirement_ira'
                    : isCrypto ? 'crypto'
                    : 'stock',
-          name: eqLabel || (tickerData?.name ?? eqTicker.toUpperCase()),
+          name: positionName,
           ticker: eqTicker ? eqTicker.toUpperCase() : undefined,
           sharesHeld: shares,
           costBasisPerShare: eqCostBasis ? Number(eqCostBasis) : undefined,
           accountLabel: eqLabel || undefined,
           isPretax,
-          // Set initial value from price lookup so it's not blank until cron runs
           currentValue: shares > 0 && price > 0 ? parseFloat((shares * price).toFixed(2)) : undefined,
         };
       }
@@ -282,9 +343,9 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
           : (autoMaintenance ? Number(autoMaintenance) : undefined);
         body = {
           assetClass: 'real_estate',
-          assetType: reSubtype === 'primary' ? 'primary_residence'
+          assetType: reSubtype === 'primary'   ? 'primary_residence'
                    : reSubtype === 'secondary' ? 'secondary_residence'
-                   : reSubtype === 'rental' ? 'rental'
+                   : reSubtype === 'rental'    ? 'rental'
                    : 'commercial',
           name: reName,
           propertyAddress: reAddress || undefined,
@@ -349,20 +410,25 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
     ? tickerData.price * Number(eqShares)
     : null;
 
+  const headerTitle =
+    step === 'category' ? 'Add asset' :
+    step === 'account'  ? 'Choose account' :
+    accountMode === 'existing' ? `Add position to ${eqLabel}` :
+    CATEGORIES.find(c => c.id === category)?.label ?? 'Add asset';
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center p-4">
       <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl max-h-[90vh] flex flex-col">
+
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
           <div className="flex items-center gap-3">
-            {step === 'details' && (
-              <button onClick={() => setStep('category')} className="text-gray-400 hover:text-gray-700 text-sm">
+            {step !== 'category' && (
+              <button onClick={goBack} className="text-gray-400 hover:text-gray-700 text-sm">
                 ← Back
               </button>
             )}
-            <h2 className="text-base font-bold text-gray-900">
-              {step === 'category' ? 'Add asset' : CATEGORIES.find(c => c.id === category)?.label}
-            </h2>
+            <h2 className="text-base font-bold text-gray-900 truncate max-w-[260px]">{headerTitle}</h2>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-xl leading-none">✕</button>
         </div>
@@ -391,40 +457,113 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
             </div>
           )}
 
-          {/* ── Step 2: Details forms ─────────────────────────────────────── */}
+          {/* ── Step 2: Account picker (equity only) ──────────────────────── */}
+          {step === 'account' && (
+            <div className="space-y-3">
+              <p className="text-sm text-gray-500">Which account is this position for?</p>
+
+              {loadingAccounts ? (
+                <div className="flex justify-center py-6"><Spinner className="h-5 w-5" /></div>
+              ) : (
+                <>
+                  {/* Existing accounts */}
+                  {equityAccounts.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Existing accounts</p>
+                      {equityAccounts.map(acct => (
+                        <button
+                          key={acct.label}
+                          type="button"
+                          onClick={() => selectExistingAccount(acct)}
+                          className="w-full flex items-center justify-between rounded-xl border border-gray-200 p-4 text-left hover:border-brand-400 hover:bg-brand-50 transition group"
+                        >
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900 group-hover:text-brand-700">{acct.label}</p>
+                            <p className="text-xs text-gray-500">
+                              {ACCOUNT_TYPE_LABELS[acct.type]}
+                              {acct.isPretax && ' · Pre-tax'}
+                              {' · '}{acct.count} position{acct.count !== 1 ? 's' : ''}
+                              {acct.totalValue > 0 && ` · ${fmt(acct.totalValue)}`}
+                            </p>
+                          </div>
+                          <span className="text-gray-300 group-hover:text-brand-400 text-lg">→</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* New account */}
+                  <button
+                    type="button"
+                    onClick={selectNewAccount}
+                    className="w-full flex items-center gap-4 rounded-xl border-2 border-dashed border-gray-300 p-4 text-left hover:border-brand-400 hover:bg-brand-50 transition group"
+                  >
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-lg group-hover:bg-brand-100 group-hover:text-brand-700">+</span>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700 group-hover:text-brand-700">New account</p>
+                      <p className="text-xs text-gray-400">Create a new brokerage, IRA, crypto, or retirement account</p>
+                    </div>
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ── Step 3: Details forms ─────────────────────────────────────── */}
           {step === 'details' && (
             <form id="asset-form" onSubmit={handleSubmit} className="space-y-4">
 
               {/* ── Equities & Crypto ──────────────────────────────────────── */}
               {category === 'equity' && (
                 <>
-                  {/* Account type */}
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-2">Account type</label>
-                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-                      {([
-                        { id: 'taxable', label: 'Brokerage' },
-                        { id: 'ira',     label: 'IRA' },
-                        { id: 'roth_ira',label: 'Roth IRA' },
-                        { id: '401k',    label: '401(k)' },
-                        { id: 'crypto',  label: 'Crypto' },
-                      ] as { id: EquityAccountType; label: string }[]).map(opt => (
-                        <button
-                          key={opt.id} type="button"
-                          onClick={() => {
-                            setEqAccountType(opt.id);
-                            setEqIsPretax(opt.id === '401k' || opt.id === 'ira');
-                            if (opt.id === 'crypto') { setEqTicker(''); setTickerData(null); }
-                          }}
-                          className={`rounded-lg border py-2 text-xs font-semibold transition ${eqAccountType === opt.id ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
+                  {/* Existing account — show badge */}
+                  {accountMode === 'existing' && (
+                    <div className="flex items-center gap-2 rounded-lg bg-brand-50 border border-brand-200 px-4 py-3">
+                      <span className="text-brand-700 font-semibold text-sm">{eqLabel}</span>
+                      <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[11px] font-semibold text-brand-600">
+                        {ACCOUNT_TYPE_LABELS[eqAccountType]}
+                      </span>
+                      {eqIsPretax && (
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">Pre-tax</span>
+                      )}
                     </div>
-                  </div>
+                  )}
 
-                  {inp('Account / Position label', eqLabel, setEqLabel, { placeholder: 'e.g. Fidelity Roth IRA', required: true })}
+                  {/* New account — show name + type fields */}
+                  {accountMode === 'new' && (
+                    <>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-2">Account type</label>
+                        <div className="grid grid-cols-5 gap-2">
+                          {ACCOUNT_TYPES.map(opt => (
+                            <button
+                              key={opt.id} type="button"
+                              onClick={() => {
+                                setEqAccountType(opt.id);
+                                setEqIsPretax(opt.id === '401k' || opt.id === 'ira');
+                              }}
+                              className={`rounded-lg border py-2 text-xs font-semibold transition ${eqAccountType === opt.id ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {inp('Account name', eqLabel, setEqLabel, { placeholder: 'e.g. Fidelity Brokerage, Schwab IRA', required: true })}
+                      {(eqAccountType === '401k' || eqAccountType === 'ira') && (
+                        <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+                          <p className="text-xs text-amber-700">⚠ Pre-tax account — LegacyOS will show an estimated after-tax value based on your assumed tax rate.</p>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Divider */}
+                  {accountMode === 'new' && (
+                    <div className="border-t border-gray-100 pt-2">
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-3">Position details</p>
+                    </div>
+                  )}
 
                   {/* Ticker lookup */}
                   <div>
@@ -467,32 +606,25 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
 
                   {!tickerData && !eqTicker && (
                     <div className="rounded-lg bg-blue-50 border border-blue-200 px-3 py-2">
-                      <p className="text-xs text-blue-600">💡 Enter a ticker to look up the live price. Your position value will be calculated automatically and updated on a regular schedule.</p>
+                      <p className="text-xs text-blue-600">💡 Enter a ticker to look up the live price. Your position value will be calculated and updated on a regular schedule.</p>
                     </div>
                   )}
 
                   {inp('Cost basis per share ($)', eqCostBasis, setEqCostBasis, { type: 'number', placeholder: '0.00', prefix: '$', hint: 'Optional — used for unrealized gain/loss tracking' })}
-
-                  {(eqAccountType === '401k' || eqAccountType === 'ira') && (
-                    <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
-                      <p className="text-xs text-amber-700">⚠ This is a pre-tax account. LegacyOS will show an estimated after-tax value based on your assumed tax rate.</p>
-                    </div>
-                  )}
                 </>
               )}
 
               {/* ── Real Estate ────────────────────────────────────────────── */}
               {category === 'real_estate' && (
                 <>
-                  {/* Sub-type */}
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-2">Property type</label>
                     <div className="grid grid-cols-2 gap-2">
                       {([
-                        { id: 'primary',   label: '🏡 Primary Home',    desc: 'Where you live' },
-                        { id: 'secondary', label: '🏖 Secondary Home',  desc: 'Vacation / second home' },
-                        { id: 'rental',    label: '🏘 Rental Property', desc: 'Income-generating residential' },
-                        { id: 'commercial',label: '🏢 Commercial',      desc: 'Office, retail, industrial, 5+ units' },
+                        { id: 'primary',    label: '🏡 Primary Home',    desc: 'Where you live' },
+                        { id: 'secondary',  label: '🏖 Secondary Home',  desc: 'Vacation / second home' },
+                        { id: 'rental',     label: '🏘 Rental Property', desc: 'Income-generating residential' },
+                        { id: 'commercial', label: '🏢 Commercial',      desc: 'Office, retail, industrial, 5+ units' },
                       ] as { id: RESubtype; label: string; desc: string }[]).map(opt => (
                         <button
                           key={opt.id} type="button"
@@ -505,26 +637,20 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
                       ))}
                     </div>
                   </div>
-
                   {inp('Property name / nickname', reName, setReName, { placeholder: 'e.g. Main Street Duplex', required: true })}
                   {inp('Property address', reAddress, setReAddress, { placeholder: '123 Main St, Austin TX' })}
-
                   <div className="grid grid-cols-2 gap-3">
                     {inp('Purchase price ($)', rePurchasePrice, setRePurchasePrice, { type: 'number', prefix: '$' })}
                     {inp('Current estimated value ($)', reEstValue, setReEstValue, { type: 'number', prefix: '$', required: true })}
                   </div>
-
                   <div className="grid grid-cols-2 gap-3">
                     {inp('Mortgage balance ($)', reMortgage, setReMortgage, { type: 'number', prefix: '$' })}
                     {inp('Monthly PITI ($)', rePiti, setRePiti, { type: 'number', prefix: '$', hint: 'Principal + Interest + Tax + Insurance' })}
                   </div>
-
                   <div className="grid grid-cols-2 gap-3">
                     {inp('Monthly insurance ($)', reInsurance, setReInsurance, { type: 'number', prefix: '$' })}
                     {inp('Monthly HOA ($)', reHoa, setReHoa, { type: 'number', prefix: '$' })}
                   </div>
-
-                  {/* Equity preview for primary/secondary */}
                   {(reSubtype === 'primary' || reSubtype === 'secondary') && reEstValue && (
                     <div className="rounded-lg bg-blue-50 border border-blue-200 px-4 py-3">
                       <p className="text-xs text-blue-600">Estimated equity</p>
@@ -534,16 +660,12 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
                       <p className="text-[11px] text-blue-500 mt-0.5">91% of estimated value (net of selling costs) minus mortgage balance</p>
                     </div>
                   )}
-
-                  {/* Rental-specific fields */}
                   {reSubtype === 'rental' && (
                     <>
                       <div className="border-t border-gray-100 pt-4">
                         <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-3">Rental income & expenses</p>
                       </div>
-
                       {inp('Monthly gross rent ($)', reRent, setReRent, { type: 'number', prefix: '$', required: true })}
-
                       <div>
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input type="checkbox" checked={reIsManaged} onChange={e => setReIsManaged(e.target.checked)} className="rounded" />
@@ -555,7 +677,6 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
                           </div>
                         )}
                       </div>
-
                       <div className="grid grid-cols-2 gap-3">
                         {inp('Vacancy rate (%)', reVacancy, setReVacancy, { type: 'number', suffix: '%', placeholder: '5', hint: 'Months vacant per year ÷ 12' })}
                         <div>
@@ -584,10 +705,7 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
                           </div>
                         </div>
                       </div>
-
                       {inp('Monthly CapEx reserve ($)', reCapex, setReCapex, { type: 'number', prefix: '$', hint: 'HVAC, roof, appliances — typically $100–300/mo' })}
-
-                      {/* Live ROI calculator */}
                       {reRent && (
                         <RentalROIPanel
                           grossRent={Number(reRent)}
@@ -606,8 +724,6 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
                       )}
                     </>
                   )}
-
-                  {/* Commercial note */}
                   {reSubtype === 'commercial' && (
                     <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
                       <p className="text-xs text-amber-700">💡 For commercial RE, enter your estimated value and any known debt. Full NOI/DSCR analysis coming soon. Ask Flo in the meantime.</p>
@@ -717,7 +833,7 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
               disabled={submitting}
               className="flex-1 rounded-xl bg-brand-600 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 transition flex items-center justify-center"
             >
-              {submitting ? <Spinner className="h-4 w-4" /> : 'Add asset'}
+              {submitting ? <Spinner className="h-4 w-4" /> : 'Add position'}
             </button>
           </div>
         )}

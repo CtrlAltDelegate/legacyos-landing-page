@@ -166,13 +166,98 @@ function AssetRow({ asset, onDelete, onRefresh }: {
   );
 }
 
+// ─── Equity account grouping ──────────────────────────────────────────────────
+
+const ACCOUNT_TYPE_LABELS: Record<string, string> = {
+  stock:           'Brokerage',
+  retirement_ira:  'IRA / Roth IRA',
+  retirement_401k: '401(k)',
+  crypto:          'Crypto',
+};
+
+interface EquityAccountGroup {
+  label: string;
+  assetType: string;
+  isPretax: boolean;
+  totalValue: number;
+  positions: Asset[];
+}
+
+function groupEquityByAccount(equityAssets: Asset[]): EquityAccountGroup[] {
+  const map = new Map<string, EquityAccountGroup>();
+  for (const a of equityAssets) {
+    const key = a.accountLabel ?? a.name;
+    if (!map.has(key)) {
+      map.set(key, {
+        label: key,
+        assetType: a.assetType,
+        isPretax: a.isPretax,
+        totalValue: 0,
+        positions: [],
+      });
+    }
+    const grp = map.get(key)!;
+    grp.totalValue += Number(a.currentValue) || 0;
+    grp.positions.push(a);
+  }
+  return Array.from(map.values());
+}
+
+// ─── Equity position row (within an account) ──────────────────────────────────
+
+function PositionRow({ asset, onDelete, onRefresh }: {
+  asset: Asset;
+  onDelete: (id: string) => void;
+  onRefresh: (id: string) => void;
+}) {
+  const isAuto = asset.currentValueSource === 'ticker_api';
+  return (
+    <div className="flex items-center gap-3 py-2.5 border-t border-gray-50 first:border-0">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="text-sm font-medium text-gray-900 truncate">{asset.name}</p>
+          {asset.ticker && (
+            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[11px] font-mono font-medium text-gray-500">
+              {asset.ticker}
+            </span>
+          )}
+          {isAuto && (
+            <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-600">Auto</span>
+          )}
+        </div>
+        {asset.sharesHeld != null && (
+          <p className="text-xs text-gray-400 mt-0.5">
+            {Number(asset.sharesHeld).toLocaleString()} shares
+            {asset.currentValueUpdatedAt && isAuto && (
+              <span className="ml-2">· {new Date(asset.currentValueUpdatedAt).toLocaleDateString()}</span>
+            )}
+          </p>
+        )}
+      </div>
+      <div className="flex items-center gap-3 flex-shrink-0">
+        <p className="text-sm font-semibold text-gray-900">{fmt(asset.currentValue)}</p>
+        <div className="flex items-center gap-1.5">
+          {asset.ticker && !isAuto && (
+            <button onClick={() => onRefresh(asset.id)} className="text-[11px] text-brand-600 hover:underline">
+              Refresh
+            </button>
+          )}
+          <button onClick={() => onDelete(asset.id)} className="text-xs text-gray-300 hover:text-red-500 transition">
+            ✕
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Group header ─────────────────────────────────────────────────────────────
 
 const GROUP_CONFIG: Record<string, { label: string; emoji: string }> = {
-  equity:      { label: 'Equities & Crypto',  emoji: '📈' },
-  real_estate: { label: 'Real Estate',         emoji: '🏠' },
+  equity:      { label: 'Equities & Crypto',     emoji: '📈' },
+  real_estate: { label: 'Real Estate',            emoji: '🏠' },
   other:       { label: 'Cash, Business & Other', emoji: '💵' },
-  restricted:  { label: 'Restricted',          emoji: '🔒' },
+  restricted:  { label: 'Restricted',             emoji: '🔒' },
 };
 
 // ─── Main page ────────────────────────────────────────────────────────────────
@@ -310,6 +395,61 @@ export default function Assets() {
             return sum + (Number(a.currentValue) || 0);
           }, 0);
 
+          // ── Equity: render grouped by account ───────────────────────────
+          if (cls === 'equity') {
+            const accounts = groupEquityByAccount(items);
+            return (
+              <div key={cls} className="space-y-3">
+                {/* Section header */}
+                <div className="flex items-center justify-between px-1">
+                  <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                    <span>{emoji}</span> {label}
+                  </h2>
+                  <span className="text-sm font-semibold text-gray-500">{fmt(groupTotal)}</span>
+                </div>
+                {/* Account cards */}
+                {accounts.map(acct => (
+                  <div key={acct.label} className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+                    {/* Account header */}
+                    <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-100">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold text-gray-900">{acct.label}</p>
+                        <span className="rounded-full bg-white border border-gray-200 px-2 py-0.5 text-[11px] font-medium text-gray-500">
+                          {ACCOUNT_TYPE_LABELS[acct.assetType] ?? acct.assetType}
+                        </span>
+                        {acct.isPretax && (
+                          <span className="rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-medium text-amber-700">Pre-tax</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-bold text-gray-900">{fmt(acct.totalValue)}</span>
+                        <button
+                          onClick={() => setShowModal(true)}
+                          className="text-[11px] font-semibold text-brand-600 hover:underline"
+                          title="Add position to this account"
+                        >
+                          + Add
+                        </button>
+                      </div>
+                    </div>
+                    {/* Positions */}
+                    <div className="px-5">
+                      {acct.positions.map(asset => (
+                        <PositionRow
+                          key={asset.id}
+                          asset={asset}
+                          onDelete={handleDelete}
+                          onRefresh={handleRefreshOne}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          }
+
+          // ── Non-equity: flat list ────────────────────────────────────────
           return (
             <div key={cls} className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">

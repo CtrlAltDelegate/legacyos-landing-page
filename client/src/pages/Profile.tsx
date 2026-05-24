@@ -146,7 +146,7 @@ export default function Profile() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-xs text-gray-400 mb-1">Name</p>
-            <p className="text-sm font-medium text-gray-900">{user?.name ?? '—'}</p>
+            <p className="text-sm font-medium text-gray-900">{user?.fullName ?? '—'}</p>
           </div>
           <div>
             <p className="text-xs text-gray-400 mb-1">Email</p>
