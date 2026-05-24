@@ -221,7 +221,34 @@ function groupEquityByAccount(equityAssets: Asset[]): EquityAccountGroup[] {
     grp.totalValue += Number(a.currentValue) || 0;
     grp.positions.push(a);
   }
-  return Array.from(map.values());
+  const groups = Array.from(map.values());
+  // Sort positions within each account largest → smallest
+  for (const grp of groups) {
+    grp.positions.sort((a, b) => (Number(b.currentValue) || 0) - (Number(a.currentValue) || 0));
+  }
+  return groups;
+}
+
+// ─── Account order helpers ────────────────────────────────────────────────────
+
+const ACCOUNT_ORDER_KEY = 'lo_account_order';
+
+function loadAccountOrder(): string[] {
+  try { return JSON.parse(localStorage.getItem(ACCOUNT_ORDER_KEY) ?? '[]'); }
+  catch { return []; }
+}
+
+function applyAccountOrder(accounts: EquityAccountGroup[], order: string[]): EquityAccountGroup[] {
+  if (!order.length) return accounts;
+  return [...accounts].sort((a, b) => {
+    const ai = order.indexOf(a.label);
+    const bi = order.indexOf(b.label);
+    // New accounts (not yet in saved order) float to the bottom
+    if (ai === -1 && bi === -1) return 0;
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  });
 }
 
 // ─── Equity position row (within an account) ──────────────────────────────────
@@ -319,6 +346,17 @@ export default function Assets() {
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  // Persisted account display order (largest-first by default; user can reorder)
+  const [accountOrder, setAccountOrder] = useState<string[]>(loadAccountOrder);
+
+  function moveAccount(label: string, dir: 'up' | 'down', sortedAccounts: EquityAccountGroup[]) {
+    const labels = sortedAccounts.map(a => a.label);
+    const idx = labels.indexOf(label);
+    if (dir === 'up' && idx > 0) [labels[idx - 1], labels[idx]] = [labels[idx], labels[idx - 1]];
+    if (dir === 'down' && idx < labels.length - 1) [labels[idx], labels[idx + 1]] = [labels[idx + 1], labels[idx]];
+    setAccountOrder(labels);
+    localStorage.setItem(ACCOUNT_ORDER_KEY, JSON.stringify(labels));
+  }
 
   useEffect(() => { load(); }, []);
 
@@ -448,7 +486,12 @@ export default function Assets() {
 
           // ── Equity: render grouped by account ───────────────────────────
           if (cls === 'equity') {
-            const accounts = groupEquityByAccount(items);
+            const rawAccounts = groupEquityByAccount(items);
+            // Default order: largest account first (before user has set a preference)
+            const defaultSorted = accountOrder.length
+              ? rawAccounts
+              : [...rawAccounts].sort((a, b) => b.totalValue - a.totalValue);
+            const accounts = applyAccountOrder(defaultSorted, accountOrder);
             return (
               <div key={cls} className="space-y-3">
                 {/* Section header */}
@@ -459,11 +502,28 @@ export default function Assets() {
                   <span className="text-sm font-semibold text-gray-500">{fmt(groupTotal)}</span>
                 </div>
                 {/* Account cards */}
-                {accounts.map(acct => (
+                {accounts.map((acct, idx) => (
                   <div key={acct.label} className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
                     {/* Account header */}
                     <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-100">
                       <div className="flex items-center gap-2">
+                        {/* Up / down reorder buttons */}
+                        {accounts.length > 1 && (
+                          <div className="flex flex-col gap-0 mr-0.5">
+                            <button
+                              onClick={() => moveAccount(acct.label, 'up', accounts)}
+                              disabled={idx === 0}
+                              className="text-gray-300 hover:text-gray-600 disabled:opacity-0 leading-none transition text-[10px] px-0.5"
+                              title="Move account up"
+                            >▲</button>
+                            <button
+                              onClick={() => moveAccount(acct.label, 'down', accounts)}
+                              disabled={idx === accounts.length - 1}
+                              className="text-gray-300 hover:text-gray-600 disabled:opacity-0 leading-none transition text-[10px] px-0.5"
+                              title="Move account down"
+                            >▼</button>
+                          </div>
+                        )}
                         <p className="text-sm font-bold text-gray-900">{acct.label}</p>
                         <span className="rounded-full bg-white border border-gray-200 px-2 py-0.5 text-[11px] font-medium text-gray-500">
                           {ACCOUNT_TYPE_LABELS[acct.assetType] ?? acct.assetType}
@@ -483,7 +543,7 @@ export default function Assets() {
                         </button>
                       </div>
                     </div>
-                    {/* Positions */}
+                    {/* Positions — already sorted largest → smallest by groupEquityByAccount */}
                     <div className="px-5">
                       {acct.positions.map(asset => (
                         <PositionRow
