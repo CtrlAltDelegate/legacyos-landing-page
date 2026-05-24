@@ -1,8 +1,9 @@
 import axios from 'axios';
 
-const POLYGON_BASE = 'https://api.polygon.io/v2';
+const POLYGON_BASE  = 'https://api.polygon.io/v2';
 const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
-const POLYGON_KEY = process.env.POLYGON_API_KEY!;
+const YAHOO_BASE    = 'https://query1.finance.yahoo.com/v8/finance/chart';
+const POLYGON_KEY   = process.env.POLYGON_API_KEY!;
 
 export interface TickerPrice {
   ticker: string;
@@ -15,12 +16,12 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// ─── In-memory price cache (5-minute TTL) ────────────────────────────────────
-// Prevents hammering external APIs when multiple positions refresh simultaneously.
+// ─── In-memory price cache (30-min TTL) ───────────────────────────────────────
+// Prevents hammering external APIs when multiple positions refresh at once.
 
 interface CacheEntry { data: TickerPrice; expiresAt: number; }
 const priceCache = new Map<string, CacheEntry>();
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 function cacheGet(key: string): TickerPrice | null {
   const entry = priceCache.get(key);
@@ -28,46 +29,81 @@ function cacheGet(key: string): TickerPrice | null {
   if (Date.now() > entry.expiresAt) { priceCache.delete(key); return null; }
   return entry.data;
 }
-
 function cacheSet(key: string, data: TickerPrice): void {
   priceCache.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS });
 }
 
-// ─── Polygon (stocks / ETFs) ──────────────────────────────────────────────────
-// Uses /v2/aggs/ticker/{ticker}/prev — the "previous day close" endpoint.
-// This is available on Polygon's free tier and always returns data regardless
-// of whether the market is currently open.
+// ─── Source 1: Polygon (stocks / ETFs) ───────────────────────────────────────
+// Uses /aggs/ticker/{ticker}/prev — previous trading day close.
+// Available on Polygon free tier. Works regardless of market hours.
 
 async function fetchFromPolygon(ticker: string): Promise<TickerPrice | null> {
   try {
-    const url = `${POLYGON_BASE}/aggs/ticker/${ticker.toUpperCase()}/prev`;
-    const response = await axios.get(url, {
+    const url = `${POLYGON_BASE}/aggs/ticker/${ticker}/prev`;
+    const res = await axios.get(url, {
       params: { apiKey: POLYGON_KEY, adjusted: 'true' },
-      timeout: 10_000,
+      timeout: 8_000,
     });
 
-    const results = response.data?.results;
-    if (!results || results.length === 0) return null;
+    const results = res.data?.results;
+    if (!results?.length) return null;
 
-    const price = results[0].c; // previous day close
+    const price = results[0].c;
     if (!price || price <= 0) return null;
 
     return {
-      ticker: ticker.toUpperCase(),
+      ticker,
       price: parseFloat(price.toFixed(6)),
       updatedAt: new Date().toISOString(),
     };
-  } catch {
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      console.warn(`[polygon] ${ticker}: ${err.response?.status ?? err.message}`);
+    }
     return null;
   }
 }
 
-// ─── CoinGecko (crypto tokens) ────────────────────────────────────────────────
-// Free tier: ~30 req/min. We use search to resolve symbol → ID, then price.
+// ─── Source 2: Yahoo Finance (stocks / ETFs / indices) ───────────────────────
+// Unofficial but stable API — free, no key, covers every US stock and ETF.
+// Used as fallback when Polygon fails or rate-limits.
+
+async function fetchFromYahoo(ticker: string): Promise<TickerPrice | null> {
+  try {
+    const res = await axios.get(`${YAHOO_BASE}/${ticker}`, {
+      params: { interval: '1d', range: '2d' },
+      timeout: 8_000,
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+    });
+
+    const meta = res.data?.chart?.result?.[0]?.meta;
+    if (!meta) return null;
+
+    // regularMarketPrice is the current/last price; previousClose is always available
+    const price = meta.regularMarketPrice || meta.previousClose;
+    if (!price || price <= 0) return null;
+
+    return {
+      ticker,
+      name: meta.longName || meta.shortName,
+      price: parseFloat(price.toFixed(6)),
+      updatedAt: new Date().toISOString(),
+    };
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      console.warn(`[yahoo] ${ticker}: ${err.response?.status ?? err.message}`);
+    }
+    return null;
+  }
+}
+
+// ─── Source 3: CoinGecko (crypto tokens) ────────────────────────────────────
+// Free tier: ~30 req/min. Used only after Polygon + Yahoo both fail,
+// which realistically means the ticker is a crypto token.
 
 async function fetchFromCoinGecko(symbol: string): Promise<TickerPrice | null> {
   try {
-    // Step 1: resolve symbol → CoinGecko ID
+    // Resolve symbol → CoinGecko ID
     const searchRes = await axios.get(`${COINGECKO_BASE}/search`, {
       params: { query: symbol },
       timeout: 10_000,
@@ -75,10 +111,7 @@ async function fetchFromCoinGecko(symbol: string): Promise<TickerPrice | null> {
     });
 
     const coins: Array<{
-      id: string;
-      symbol: string;
-      name: string;
-      market_cap_rank: number | null;
+      id: string; symbol: string; name: string; market_cap_rank: number | null;
     }> = searchRes.data?.coins ?? [];
 
     const matches = coins
@@ -89,10 +122,10 @@ async function fetchFromCoinGecko(symbol: string): Promise<TickerPrice | null> {
         return a.market_cap_rank - b.market_cap_rank;
       });
 
-    if (matches.length === 0) return null;
+    if (!matches.length) return null;
     const best = matches[0];
 
-    // Step 2: get current USD price
+    // Fetch USD price
     const priceRes = await axios.get(`${COINGECKO_BASE}/simple/price`, {
       params: { ids: best.id, vs_currencies: 'usd', include_last_updated_at: 'true' },
       timeout: 10_000,
@@ -114,86 +147,90 @@ async function fetchFromCoinGecko(symbol: string): Promise<TickerPrice | null> {
     if (axios.isAxiosError(err)) {
       const status = err.response?.status;
       if (status === 429) {
-        console.warn(`[coingecko] Rate limited for ${symbol} — try again shortly`);
+        console.warn(`[coingecko] Rate limited for ${symbol} — try again in a minute`);
       } else {
-        console.error(`[coingecko] ${symbol} failed:`, err.response?.data ?? err.message);
+        console.warn(`[coingecko] ${symbol}: ${err.response?.status ?? err.message}`);
       }
     }
     return null;
   }
 }
 
-// ─── Public API ───────────────────────────────────────────────────────────────
+// ─── Public: single ticker lookup ────────────────────────────────────────────
 
 /**
- * Fetch a single ticker price.
- * - Checks cache first (5-min TTL)
- * - Tries Polygon /aggs/prev (stocks, ETFs, mutual funds)
- * - Falls back to CoinGecko (crypto tokens)
+ * Fetch one ticker price.
+ * Chain: cache → Polygon → Yahoo Finance → CoinGecko
+ *
+ * Polygon + Yahoo cover every US stock/ETF.
+ * CoinGecko covers crypto tokens that neither exchange handles.
  */
 export async function fetchSingleTicker(ticker: string): Promise<TickerPrice | null> {
   const key = ticker.toUpperCase();
 
-  // Cache hit
   const cached = cacheGet(key);
   if (cached) return cached;
 
-  // Try Polygon first (stocks/ETFs)
-  const polygonResult = await fetchFromPolygon(key);
-  if (polygonResult) {
-    cacheSet(key, polygonResult);
-    return polygonResult;
-  }
+  // 1. Polygon
+  const polygon = await fetchFromPolygon(key);
+  if (polygon) { cacheSet(key, polygon); return polygon; }
 
-  // Fall back to CoinGecko (crypto)
-  console.log(`[ticker] ${key} not on Polygon, trying CoinGecko...`);
-  const cryptoResult = await fetchFromCoinGecko(key);
-  if (cryptoResult) {
-    cacheSet(key, cryptoResult);
-  }
-  return cryptoResult;
+  // 2. Yahoo Finance (catches ETFs, indices, anything Polygon misses)
+  const yahoo = await fetchFromYahoo(key);
+  if (yahoo) { cacheSet(key, yahoo); return yahoo; }
+
+  // 3. CoinGecko (crypto only at this point)
+  console.log(`[ticker] ${key} not on Polygon or Yahoo — trying CoinGecko (crypto)...`);
+  const crypto = await fetchFromCoinGecko(key);
+  if (crypto) { cacheSet(key, crypto); }
+  return crypto;
 }
 
+// ─── Public: batch stock/ETF prices ──────────────────────────────────────────
+
 /**
- * Batch fetch for stock/ETF tickers via Polygon.
- * Used by the weekly price-refresh cron.
+ * Batch fetch for stock/ETF tickers — Polygon with Yahoo fallback per ticker.
+ * Used by the weekly price-refresh cron for non-crypto assets.
  */
 export async function fetchTickerPrices(tickers: string[]): Promise<Map<string, TickerPrice>> {
   const results = new Map<string, TickerPrice>();
-  if (tickers.length === 0) return results;
+  if (!tickers.length) return results;
 
   const unique = [...new Set(tickers.map(t => t.toUpperCase()))];
 
-  // Polygon free tier: 5 req/min → space calls 13s apart to stay safe
   for (let i = 0; i < unique.length; i++) {
     const ticker = unique[i];
 
     const cached = cacheGet(ticker);
     if (cached) { results.set(ticker, cached); continue; }
 
-    const result = await fetchFromPolygon(ticker);
-    if (result) {
-      results.set(ticker, result);
-      cacheSet(ticker, result);
+    let result = await fetchFromPolygon(ticker);
+    if (!result) {
+      await sleep(300); // small gap before Yahoo
+      result = await fetchFromYahoo(ticker);
     }
+    if (result) { results.set(ticker, result); cacheSet(ticker, result); }
 
+    // Polygon free tier: 5 req/min — wait between tickers
     if (i < unique.length - 1) await sleep(13_000);
   }
 
   return results;
 }
 
+// ─── Public: batch crypto prices ─────────────────────────────────────────────
+
 /**
  * Batch fetch crypto prices via CoinGecko.
- * Resolves symbols → IDs then fetches in one batch call.
+ * Resolves symbols → IDs sequentially (to avoid rate limits), then
+ * fetches all prices in a single batched request.
  */
 export async function fetchCryptoPrices(symbols: string[]): Promise<Map<string, TickerPrice>> {
   const results = new Map<string, TickerPrice>();
-  if (symbols.length === 0) return results;
+  if (!symbols.length) return results;
 
   const symbolToMeta = new Map<string, { id: string; name: string }>();
 
-  // Resolve each symbol (sequential to avoid CoinGecko rate limits)
   for (const sym of symbols) {
     const key = sym.toUpperCase();
 
@@ -214,18 +251,18 @@ export async function fetchCryptoPrices(symbols: string[]): Promise<Map<string, 
           if (b.market_cap_rank === null) return -1;
           return a.market_cap_rank - b.market_cap_rank;
         });
-      if (matches.length > 0) symbolToMeta.set(key, { id: matches[0].id, name: matches[0].name });
+      if (matches.length) symbolToMeta.set(key, { id: matches[0].id, name: matches[0].name });
     } catch {
-      console.warn(`[coingecko] Could not resolve: ${sym}`);
+      console.warn(`[coingecko] Could not resolve symbol: ${sym}`);
     }
-    await sleep(500); // ~2 req/s — safe under free tier
+    await sleep(500); // ~2 req/s — well within the 30/min free limit
   }
 
-  if (symbolToMeta.size === 0) return results;
+  if (!symbolToMeta.size) return results;
 
-  // Batch price fetch
-  const ids = Array.from(symbolToMeta.values()).map(v => v.id);
+  // Single batch price call
   try {
+    const ids = Array.from(symbolToMeta.values()).map(v => v.id);
     const priceRes = await axios.get(`${COINGECKO_BASE}/simple/price`, {
       params: { ids: ids.join(','), vs_currencies: 'usd', include_last_updated_at: 'true' },
       timeout: 15_000,
@@ -253,18 +290,17 @@ export async function fetchCryptoPrices(symbols: string[]): Promise<Map<string, 
   return results;
 }
 
-/**
- * Fetch all equity prices — stocks/ETFs via Polygon, crypto via CoinGecko.
- */
+// ─── Public: combined stock + crypto batch ────────────────────────────────────
+
 export async function fetchAllEquityPrices(
   assets: Array<{ ticker: string; assetType: string }>
 ): Promise<Map<string, TickerPrice>> {
-  const stockAssets = assets.filter(a => a.assetType !== 'crypto');
-  const cryptoAssets = assets.filter(a => a.assetType === 'crypto');
+  const stocks = assets.filter(a => a.assetType !== 'crypto').map(a => a.ticker);
+  const crypto = assets.filter(a => a.assetType === 'crypto').map(a => a.ticker);
 
   const [stockPrices, cryptoPrices] = await Promise.all([
-    fetchTickerPrices(stockAssets.map(a => a.ticker)),
-    fetchCryptoPrices(cryptoAssets.map(a => a.ticker)),
+    fetchTickerPrices(stocks),
+    fetchCryptoPrices(crypto),
   ]);
 
   const merged = new Map<string, TickerPrice>();
