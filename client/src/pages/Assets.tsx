@@ -3,6 +3,7 @@ import { api, getErrorMessage } from '@/api/client';
 import Spinner from '@/components/Spinner';
 import AddAssetModal from '@/components/assets/AddAssetModal';
 import EditPositionModal, { type EditableAsset } from '@/components/assets/EditPositionModal';
+import EditAssetModal, { type EditableNonEquityAsset } from '@/components/assets/EditAssetModal';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -99,10 +100,11 @@ function calcMonthlyCashFlow(asset: Asset): number | null {
 
 // ─── Asset row ────────────────────────────────────────────────────────────────
 
-function AssetRow({ asset, onDelete, onRefresh }: {
+function AssetRow({ asset, onDelete, onRefresh, onEdit }: {
   asset: Asset;
   onDelete: (id: string) => void;
   onRefresh: (id: string) => void;
+  onEdit: (asset: Asset) => void;
 }) {
   const displayVal = getDisplayValue(asset);
   const equity = getEquity(asset);
@@ -167,6 +169,13 @@ function AssetRow({ asset, onDelete, onRefresh }: {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => onEdit(asset)}
+            className="text-[11px] text-gray-400 hover:text-brand-600 transition"
+            title="Edit asset"
+          >
+            ✎
+          </button>
           {asset.ticker && !isAuto && (
             <button
               onClick={() => onRefresh(asset.id)}
@@ -356,6 +365,7 @@ export default function Assets() {
   const [showModal, setShowModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [editingAsset, setEditingAsset] = useState<EditableAsset | null>(null);
+  const [editingNonEquity, setEditingNonEquity] = useState<EditableNonEquityAsset | null>(null);
   // Persisted account display order (largest-first by default; user can reorder)
   const [accountOrder, setAccountOrder] = useState<string[]>(loadAccountOrder);
 
@@ -587,6 +597,7 @@ export default function Assets() {
                     asset={asset}
                     onDelete={handleDelete}
                     onRefresh={handleRefreshOne}
+                    onEdit={setEditingNonEquity}
                   />
                 ))}
               </div>
@@ -603,11 +614,20 @@ export default function Assets() {
         />
       )}
 
-      {/* Edit position modal */}
+      {/* Edit equity position modal */}
       {editingAsset && (
         <EditPositionModal
           asset={editingAsset}
           onClose={() => setEditingAsset(null)}
+          onSaved={load}
+        />
+      )}
+
+      {/* Edit non-equity asset modal (real estate, cash, business, other) */}
+      {editingNonEquity && (
+        <EditAssetModal
+          asset={editingNonEquity}
+          onClose={() => setEditingNonEquity(null)}
           onSaved={load}
         />
       )}

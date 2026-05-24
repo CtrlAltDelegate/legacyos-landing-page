@@ -54,10 +54,11 @@ export interface NetWorthResult {
  * Follows the spec exactly:
  *
  * total_assets = SUM(currentValue) for equity + other (non-restricted, active)
- *              + SUM(adjustedValue - mortgageBalance) for real_estate
+ *              + SUM(adjustedValue - mortgageBalance) for real_estate  [equity already nets mortgage]
  *
- * total_liabilities = SUM(mortgageBalance) from real_estate
- *                   + SUM(balance) from liabilities table
+ * total_liabilities = SUM(balance) from liabilities table ONLY
+ *   NOTE: mortgage is NOT added here — it is already deducted inside realEstateValue.
+ *   Adding it again would double-count the debt and produce a negative net worth.
  *
  * net_worth = total_assets - total_liabilities
  *
@@ -140,7 +141,9 @@ export async function calculateNetWorth(userId: string): Promise<NetWorthResult>
   // ─── Liabilities ──────────────────────────────────────────────────────────
 
   const totalOtherDebt = liabilities.reduce((sum, l) => sum + Number(l.balance), 0);
-  const totalLiabilities = parseFloat((totalMortgageBalance + totalOtherDebt).toFixed(2));
+  // Mortgage is already baked into realEstateValue (adjustedValue - mortgageBalance),
+  // so only non-mortgage debts go in totalLiabilities to avoid double-counting.
+  const totalLiabilities = parseFloat(totalOtherDebt.toFixed(2));
 
   // ─── Totals ───────────────────────────────────────────────────────────────
 
