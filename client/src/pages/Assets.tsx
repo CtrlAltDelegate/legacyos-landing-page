@@ -42,6 +42,19 @@ const fmt = (n: number | null | undefined) =>
     ? n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
     : '—';
 
+/** Format share/unit quantities — show enough decimals for crypto fractions */
+function fmtShares(n: number | null | undefined): string {
+  if (n == null) return '—';
+  const num = Number(n);
+  if (num === 0) return '0';
+  // For very small numbers (< 0.001) show up to 9 decimal places
+  if (Math.abs(num) < 0.001) return num.toLocaleString('en-US', { maximumFractionDigits: 9 });
+  // For small numbers (< 1) show up to 6 decimal places
+  if (Math.abs(num) < 1) return num.toLocaleString('en-US', { maximumFractionDigits: 6 });
+  // For normal numbers show up to 4 decimal places
+  return num.toLocaleString('en-US', { maximumFractionDigits: 4 });
+}
+
 const fmtPct = (n: number) => `${n.toFixed(1)}%`;
 
 function getDisplayValue(asset: Asset): number | null {
@@ -111,7 +124,7 @@ function AssetRow({ asset, onDelete, onRefresh }: {
           <span className="capitalize">{asset.assetType.replace(/_/g, ' ')}</span>
 
           {asset.sharesHeld != null && (
-            <span>{Number(asset.sharesHeld).toLocaleString()} shares</span>
+            <span>{fmtShares(asset.sharesHeld)} shares</span>
           )}
 
           {equity != null && (
@@ -227,7 +240,7 @@ function PositionRow({ asset, onDelete, onRefresh }: {
         </div>
         {asset.sharesHeld != null && (
           <p className="text-xs text-gray-400 mt-0.5">
-            {Number(asset.sharesHeld).toLocaleString()} shares
+            {fmtShares(asset.sharesHeld)} shares
             {asset.currentValueUpdatedAt && isAuto && (
               <span className="ml-2">· {new Date(asset.currentValueUpdatedAt).toLocaleDateString()}</span>
             )}

@@ -591,7 +591,22 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
                     )}
                   </div>
 
-                  {inp('Shares / units held', eqShares, setEqShares, { type: 'number', placeholder: '0.00', required: true })}
+                  {/* Shares — allow up to 9 decimal places for crypto fractions */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">
+                      Shares / units held<span className="text-red-500 ml-0.5">*</span>
+                    </label>
+                    <input
+                      required
+                      type="number"
+                      step="0.000000001"
+                      min="0"
+                      value={eqShares}
+                      onChange={e => setEqShares(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full rounded-lg border border-gray-200 py-2 pl-3 pr-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-200"
+                    />
+                  </div>
 
                   {/* Live value preview */}
                   {estimatedEquityValue !== null && estimatedEquityValue > 0 && (
@@ -610,7 +625,23 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
                     </div>
                   )}
 
-                  {inp('Cost basis per share ($)', eqCostBasis, setEqCostBasis, { type: 'number', placeholder: '0.00', prefix: '$', hint: 'Optional — used for unrealized gain/loss tracking' })}
+                  {/* Cost basis — 5 decimal places for low-priced crypto */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Cost basis per share ($)</label>
+                    <p className="text-[11px] text-gray-400 mb-1">Optional — used for unrealized gain/loss tracking</p>
+                    <div className="relative flex items-center">
+                      <span className="absolute left-2.5 text-gray-400 text-sm">$</span>
+                      <input
+                        type="number"
+                        step="0.00001"
+                        min="0"
+                        value={eqCostBasis}
+                        onChange={e => setEqCostBasis(e.target.value)}
+                        placeholder="0.00000"
+                        className="w-full rounded-lg border border-gray-200 py-2 pl-7 pr-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-200"
+                      />
+                    </div>
+                  </div>
                 </>
               )}
 
