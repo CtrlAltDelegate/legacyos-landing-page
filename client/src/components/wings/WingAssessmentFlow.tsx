@@ -24,8 +24,6 @@ const COLOR: Record<string, {
   slate:   { bg: 'bg-slate-50',   border: 'border-slate-200',   text: 'text-slate-700',   btn: 'bg-slate-600 hover:bg-slate-700',   badge: 'bg-slate-100 text-slate-700',   dot: 'bg-slate-500',   ring: 'ring-slate-400' },
 };
 
-const LEVEL_LABELS = ['Foundation', 'Building', 'Established', 'Advanced'];
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function WingAssessmentFlow({ wings, onComplete, onClose }: Props) {
