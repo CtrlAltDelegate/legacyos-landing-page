@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, type FormEvent } from 'react';
+import { Sparkles, ChevronRight, Send } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
 import Spinner from '@/components/Spinner';
 
@@ -102,10 +103,15 @@ export default function Flo() {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-gray-200 bg-white px-8 py-4">
-        <div>
-          <h1 className="text-lg font-bold text-gray-900">Flo</h1>
-          <p className="text-xs text-gray-400">Your AI financial companion — powered by your live portfolio</p>
+      <div className="flex items-center justify-between border-b border-gray-100 bg-white px-8 py-4 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600">
+            <Sparkles className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-gray-900 leading-tight">Flo</h1>
+            <p className="text-xs text-gray-400 leading-tight">Your AI financial companion — powered by your live portfolio</p>
+          </div>
         </div>
         {messages.length > 0 && (
           <button onClick={handleClear} className="text-xs text-gray-400 hover:text-gray-600 transition">
@@ -115,11 +121,11 @@ export default function Flo() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-8 py-6 space-y-4">
+      <div className="flex-1 overflow-y-auto bg-surface-1 px-8 py-6 space-y-4">
         {/* Priority signals — shown when no messages yet */}
         {messages.length === 0 && signals.length > 0 && (
           <div className="space-y-2 mb-6">
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">On your radar</p>
+            <p className="section-label">On your radar</p>
             {signals.map((s, i) => (
               <div key={i} className={`rounded-lg border px-4 py-3 text-sm ${SIGNAL_COLORS[s.priority]}`}>
                 {s.message}
@@ -131,15 +137,16 @@ export default function Flo() {
         {/* Starter prompts */}
         {messages.length === 0 && (
           <div>
-            <p className="mb-3 text-xs font-medium uppercase tracking-wide text-gray-400">Ask Flo</p>
+            <p className="mb-3 section-label">Ask Flo</p>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {STARTER_PROMPTS.map((p) => (
                 <button
                   key={p}
                   onClick={() => send(p)}
-                  className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-left text-sm text-gray-700 hover:border-brand-300 hover:bg-brand-50 transition"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-left text-sm font-medium text-gray-700 shadow-sm hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 hover:shadow-md transition-all duration-150 group"
                 >
-                  {p}
+                  <span>{p}</span>
+                  <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-brand-400 flex-shrink-0 transition-colors" />
                 </button>
               ))}
             </div>
@@ -153,15 +160,15 @@ export default function Flo() {
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             {msg.role === 'assistant' && (
-              <div className="mr-2 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-brand-100 text-sm text-brand-700 font-bold">
-                F
+              <div className="mr-2 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-brand-600">
+                <Sparkles className="h-3.5 w-3.5 text-white" />
               </div>
             )}
             <div
-              className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+              className={`max-w-[75%] px-4 py-3 text-sm leading-relaxed ${
                 msg.role === 'user'
-                  ? 'bg-brand-600 text-white rounded-br-sm'
-                  : 'bg-white ring-1 ring-gray-200 text-gray-800 rounded-bl-sm'
+                  ? 'bg-brand-600 text-white rounded-xl rounded-tr-sm shadow-sm'
+                  : 'bg-white border border-gray-100 text-gray-800 rounded-xl rounded-tl-sm shadow-sm'
               }`}
             >
               {msg.content.split('\n').map((line, j) => (
@@ -176,7 +183,7 @@ export default function Flo() {
             <div className="mr-2 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-brand-100 text-sm text-brand-700 font-bold">
               F
             </div>
-            <div className="rounded-2xl rounded-bl-sm bg-white px-4 py-3 ring-1 ring-gray-200">
+            <div className="rounded-xl rounded-tl-sm bg-white border border-gray-100 px-4 py-3 shadow-sm">
               <Spinner className="h-4 w-4" />
             </div>
           </div>
@@ -190,10 +197,7 @@ export default function Flo() {
       </div>
 
       {/* Input */}
-      <div className="border-t border-gray-200 bg-white px-8 py-4">
-        <p className="mb-2 text-center text-xs text-gray-400">
-          Flo provides financial information, not personalized investment advice.
-        </p>
+      <div className="border-t border-gray-100 bg-white px-8 py-4 shadow-[0_-2px_8px_rgba(0,0,0,0.04)]">
         <form onSubmit={handleSubmit} className="flex items-end gap-3">
           <textarea
             ref={inputRef}
@@ -203,16 +207,19 @@ export default function Flo() {
             onKeyDown={handleKeyDown}
             placeholder="Ask Flo anything about your finances…"
             className="input flex-1 resize-none"
-            style={{ minHeight: '42px', maxHeight: '120px' }}
+            style={{ minHeight: '44px', maxHeight: '120px' }}
           />
           <button
             type="submit"
             disabled={!input.trim() || sending}
-            className="btn-primary flex-shrink-0"
+            className="btn-primary flex-shrink-0 h-11 w-11 p-0 justify-center"
           >
-            Send
+            {sending ? <Spinner className="h-4 w-4" /> : <Send className="h-4 w-4" />}
           </button>
         </form>
+        <p className="mt-2 text-center text-xs text-gray-400">
+          Flo provides financial information, not personalized investment advice.
+        </p>
       </div>
     </div>
   );

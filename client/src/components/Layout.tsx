@@ -1,11 +1,21 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth';
+import {
+  Gem,
+  LayoutDashboard,
+  Briefcase,
+  FileText,
+  Sparkles,
+  User,
+  ShieldCheck,
+  LogOut,
+} from 'lucide-react';
 
 const nav = [
-  { to: '/dashboard', label: 'Dashboard', icon: '◈' },
-  { to: '/assets',    label: 'Assets',    icon: '◇' },
-  { to: '/documents', label: 'Documents', icon: '◻' },
-  { to: '/flo',       label: 'Flo',       icon: '✦' },
+  { to: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
+  { to: '/assets',    label: 'Assets',    Icon: Briefcase       },
+  { to: '/documents', label: 'Documents', Icon: FileText        },
+  { to: '/flo',       label: 'Flo',       Icon: Sparkles        },
 ];
 
 export default function Layout() {
@@ -18,73 +28,96 @@ export default function Layout() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-surface-1">
       {/* ── Sidebar ─────────────────────────────────────────────────────── */}
-      <aside className="flex w-56 flex-col border-r border-gray-200 bg-white">
+      <aside className="flex w-56 flex-col bg-surface-1 border-r border-gray-100 shadow-sidebar flex-shrink-0">
+
         {/* Logo */}
-        <div className="flex h-16 items-center px-5 border-b border-gray-200">
-          <span className="text-lg font-bold tracking-tight text-brand-700">LegacyOS</span>
+        <div className="flex h-16 items-center gap-2.5 px-5 border-b border-gray-100">
+          <Gem className="h-5 w-5 text-brand-600 flex-shrink-0" />
+          <span className="text-xl font-bold tracking-tight text-gray-900">LegacyOS</span>
         </div>
 
         {/* Nav links */}
-        <nav className="flex-1 space-y-1 px-3 py-4">
-          {nav.map((item) => (
+        <nav className="flex-1 space-y-0.5 px-3 py-4">
+          {nav.map(({ to, label, Icon }) => (
             <NavLink
-              key={item.to}
-              to={item.to}
+              key={to}
+              to={to}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150 ${
                   isActive
                     ? 'bg-brand-50 text-brand-700'
                     : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`
               }
             >
-              <span className="text-base leading-none">{item.icon}</span>
-              {item.label}
+              {({ isActive }) => (
+                <>
+                  <Icon className={`h-4 w-4 flex-shrink-0 ${isActive ? 'text-brand-600' : 'text-gray-400'}`} />
+                  {label}
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
 
         {/* User footer */}
-        <div className="border-t border-gray-200 p-4">
-          <div className="mb-2 truncate text-xs font-medium text-gray-500">{user?.email}</div>
-          <div className="mb-3 inline-flex items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700 capitalize">
-            {user?.plan}
+        <div className="border-t border-gray-100 p-3 space-y-0.5">
+          {/* Email + plan badge */}
+          <div className="px-3 py-2 mb-1">
+            <p className="truncate text-xs font-medium text-gray-500 mb-1.5">{user?.email}</p>
+            <span className="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-semibold text-brand-700 capitalize">
+              {user?.plan}
+            </span>
           </div>
+
           <NavLink
             to="/profile"
             className={({ isActive }) =>
-              `mb-1 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
+              `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 ${
                 isActive ? 'bg-brand-50 text-brand-700' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
               }`
             }
           >
-            <span className="text-xs">◎</span> Profile & Goals
+            {({ isActive }) => (
+              <>
+                <User className={`h-4 w-4 flex-shrink-0 ${isActive ? 'text-brand-600' : 'text-gray-400'}`} />
+                Profile &amp; Goals
+              </>
+            )}
           </NavLink>
+
           {user?.isAdmin && (
             <NavLink
               to="/admin"
               className={({ isActive }) =>
-                `mb-1 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 ${
                   isActive ? 'bg-brand-50 text-brand-700' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
                 }`
               }
             >
-              <span className="text-xs">⚙</span> Admin Panel
+              {({ isActive }) => (
+                <>
+                  <ShieldCheck className={`h-4 w-4 flex-shrink-0 ${isActive ? 'text-brand-600' : 'text-gray-400'}`} />
+                  Admin Panel
+                </>
+              )}
             </NavLink>
           )}
+
           <button
             onClick={handleLogout}
-            className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-500 transition-colors duration-150 hover:bg-gray-100 hover:text-gray-700"
           >
+            <LogOut className="h-4 w-4 flex-shrink-0 text-gray-400" />
             Sign out
           </button>
         </div>
       </aside>
 
       {/* ── Main content ────────────────────────────────────────────────── */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto bg-surface-1">
         <Outlet />
       </main>
     </div>

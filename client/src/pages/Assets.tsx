@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { RefreshCw, Plus } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
 import Spinner from '@/components/Spinner';
 import AddAssetModal from '@/components/assets/AddAssetModal';
@@ -113,7 +114,7 @@ function AssetRow({ asset, onDelete, onRefresh, onEdit }: {
   const cfColor = monthlyCF != null ? (monthlyCF >= 0 ? 'text-emerald-600' : 'text-red-500') : '';
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-2 py-4 border-t border-gray-100 first:border-0">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 py-4 border-t border-gray-100 first:border-0 hover:bg-gray-50 -mx-6 px-6 transition-colors duration-150">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="text-sm font-semibold text-gray-900 truncate">{asset.name}</p>
@@ -283,7 +284,7 @@ function PositionRow({ asset, onDelete, onRefresh, onEdit }: {
     : null;
 
   return (
-    <div className="flex items-start gap-3 py-3 border-t border-gray-50 first:border-0">
+    <div className="flex items-start gap-3 py-3 px-0 border-t border-gray-50 first:border-0 hover:bg-gray-50 -mx-5 px-5 transition-colors duration-150">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="text-sm font-medium text-gray-900 truncate">{asset.name}</p>
@@ -454,11 +455,11 @@ export default function Assets() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Assets</h1>
-          <p className="mt-0.5 text-sm text-gray-500">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Assets</h1>
+          <p className="mt-1 text-sm text-gray-500">
             {assets.length === 0
               ? 'Add your first asset to start tracking net worth.'
-              : `${assets.length} asset${assets.length !== 1 ? 's' : ''} · Total: ${fmt(totalNetWorth)}`}
+              : `${assets.length} asset${assets.length !== 1 ? 's' : ''} tracked across all classes`}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -466,33 +467,46 @@ export default function Assets() {
             <button
               onClick={handleRefreshAll}
               disabled={refreshing}
-              className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition disabled:opacity-50"
+              className="btn-secondary"
             >
-              {refreshing ? <Spinner className="h-4 w-4" /> : '↻ Refresh prices'}
+              {refreshing ? <Spinner className="h-4 w-4" /> : <RefreshCw className="h-4 w-4" />}
+              Refresh prices
             </button>
           )}
           <button
             onClick={() => setShowModal(true)}
-            className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 transition"
+            className="btn-primary"
           >
-            + Add asset
+            <Plus className="h-4 w-4" />
+            Add asset
           </button>
         </div>
       </div>
+
+      {/* Net worth summary card */}
+      {assets.length > 0 && (
+        <div className="rounded-xl bg-white shadow-md border border-gray-100 px-6 py-5">
+          <p className="section-label mb-2">Total net worth</p>
+          <p className={`text-3xl font-bold tabular font-mono tracking-tight ${totalNetWorth >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
+            {fmt(totalNetWorth)}
+          </p>
+          {totalNetWorth > 0 && (
+            <p className="mt-1 text-xs font-medium text-green-600">↑ positive net worth</p>
+          )}
+        </div>
+      )}
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       {/* Asset groups */}
       {grouped.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 bg-white py-16 text-center">
-          <p className="text-3xl mb-3">📊</p>
-          <p className="text-gray-600 font-semibold">No assets yet</p>
-          <p className="text-sm text-gray-400 mt-1">Add your first asset to see your net worth.</p>
-          <button
-            onClick={() => setShowModal(true)}
-            className="mt-4 rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700 transition"
-          >
-            + Add your first asset
+        <div className="rounded-xl border border-dashed border-gray-300 bg-white py-16 text-center shadow-sm">
+          <p className="text-4xl mb-3">📊</p>
+          <p className="text-base font-semibold text-gray-700">No assets yet</p>
+          <p className="text-sm text-gray-400 mt-1 mb-5">Add your first asset to start tracking net worth.</p>
+          <button onClick={() => setShowModal(true)} className="btn-primary">
+            <Plus className="h-4 w-4" />
+            Add your first asset
           </button>
         </div>
       ) : (
@@ -515,15 +529,15 @@ export default function Assets() {
             return (
               <div key={cls} className="space-y-3">
                 {/* Section header */}
-                <div className="flex items-center justify-between px-1">
-                  <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                <div className="flex items-center justify-between px-1 pb-1">
+                  <h2 className="section-label flex items-center gap-2">
                     <span>{emoji}</span> {label}
                   </h2>
-                  <span className="text-sm font-semibold text-gray-500">{fmt(groupTotal)}</span>
+                  <span className="text-sm font-bold tabular font-mono text-gray-700">{fmt(groupTotal)}</span>
                 </div>
                 {/* Account cards */}
                 {accounts.map((acct, idx) => (
-                  <div key={acct.label} className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+                  <div key={acct.label} className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
                     {/* Account header */}
                     <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-100">
                       <div className="flex items-center gap-2">
@@ -583,12 +597,12 @@ export default function Assets() {
 
           // ── Non-equity: flat list ────────────────────────────────────────
           return (
-            <div key={cls} className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+            <div key={cls} className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/60">
+                <h2 className="section-label flex items-center gap-2">
                   <span>{emoji}</span> {label}
                 </h2>
-                <span className="text-sm font-semibold text-gray-500">{fmt(groupTotal)}</span>
+                <span className="text-sm font-bold tabular font-mono text-gray-700">{fmt(groupTotal)}</span>
               </div>
               <div className="px-6">
                 {items.map(asset => (

@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { FileText, FileUp, AlertTriangle } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
 import Spinner from '@/components/Spinner';
 
@@ -152,45 +153,68 @@ export default function Documents() {
   if (loading) return <div className="flex h-full items-center justify-center"><Spinner className="h-8 w-8" /></div>;
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-6 lg:p-8 max-w-3xl mx-auto space-y-6">
+
+      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Documents</h1>
-        <p className="mt-1 text-sm text-gray-500">Upload financial statements — Flo extracts the data for you.</p>
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Documents</h1>
+        <p className="mt-1 text-sm text-gray-500">Upload financial statements — Flo extracts the data automatically.</p>
       </div>
 
       {/* Upload card */}
-      <div className="card space-y-3">
-        <h2 className="text-sm font-semibold text-gray-900">Upload a document</h2>
-        <div className="flex flex-wrap gap-3 items-end">
-          <div>
-            <label className="label">Document type</label>
-            <select className="input w-48" value={docType} onChange={(e) => setDocType(e.target.value)}>
-              {DOC_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="label">PDF file</label>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="application/pdf"
-              className="block text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-brand-700 hover:file:bg-brand-100"
-            />
-          </div>
-          <button onClick={handleUpload} disabled={uploading} className="btn-primary">
-            {uploading ? <Spinner className="h-4 w-4" /> : 'Upload'}
-          </button>
+      <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6 space-y-4">
+        <h2 className="text-sm font-bold text-gray-900">Upload a document</h2>
+
+        {/* Document type selector */}
+        <div>
+          <label className="label">Document type</label>
+          <select className="input" value={docType} onChange={(e) => setDocType(e.target.value)}>
+            {DOC_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
         </div>
+
+        {/* Dashed drop zone */}
+        <div
+          onClick={() => fileRef.current?.click()}
+          className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 px-6 py-8 cursor-pointer hover:border-brand-400 hover:bg-brand-50 transition-colors duration-150 group"
+        >
+          <FileUp className="h-7 w-7 text-gray-300 group-hover:text-brand-500 transition-colors" />
+          <div className="text-center">
+            <p className="text-sm font-semibold text-gray-600 group-hover:text-brand-700">Click to choose a PDF</p>
+            <p className="text-xs text-gray-400 mt-0.5">or drag and drop · PDF only, max 10 MB</p>
+          </div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            onChange={() => {/* file selected */}}
+          />
+          {fileRef.current?.files?.[0] && (
+            <span className="text-xs font-medium text-brand-600 bg-brand-50 rounded-full px-3 py-1 border border-brand-200">
+              {fileRef.current.files[0].name}
+            </span>
+          )}
+        </div>
+
+        <button onClick={handleUpload} disabled={uploading} className="btn-primary w-full justify-center">
+          {uploading ? <Spinner className="h-4 w-4" /> : <FileUp className="h-4 w-4" />}
+          {uploading ? 'Uploading…' : 'Upload document'}
+        </button>
+
         {uploadError && <p className="text-sm text-red-600">{uploadError}</p>}
-        <p className="text-xs text-gray-400">PDF only, max 10 MB. Requires Core plan.</p>
+        <p className="text-xs text-gray-400 text-center">Requires Core plan. Your documents are encrypted and private.</p>
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       {/* Anomaly flags from last confirm */}
       {anomalyFlags.length > 0 && (
-        <div className="card border-l-4 border-amber-400">
-          <h2 className="mb-2 text-sm font-semibold text-amber-800">Heads up</h2>
+        <div className="rounded-xl bg-white shadow-sm border-l-4 border-amber-400 border border-amber-200 p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0" />
+            <h2 className="text-sm font-bold text-amber-800">Heads up</h2>
+          </div>
           {anomalyFlags.map((f, i) => (
             <p key={i} className="text-sm text-amber-700">{f.message}</p>
           ))}
@@ -199,13 +223,15 @@ export default function Documents() {
 
       {/* Document list */}
       {docs.length === 0 ? (
-        <div className="card text-center py-12">
-          <p className="text-sm text-gray-500">No documents uploaded yet.</p>
+        <div className="rounded-xl bg-white shadow-sm border border-gray-100 py-16 text-center">
+          <FileText className="h-10 w-10 text-gray-200 mx-auto mb-3" />
+          <p className="text-base font-semibold text-gray-600">No documents yet</p>
+          <p className="text-sm text-gray-400 mt-1">Upload your first statement to let Flo extract the data.</p>
         </div>
       ) : (
-        <div className="card divide-y divide-gray-100">
+        <div className="rounded-xl bg-white shadow-sm border border-gray-100 divide-y divide-gray-100">
           {docs.map((doc) => (
-            <div key={doc.id} className="py-4 space-y-3">
+            <div key={doc.id} className="px-6 py-4 space-y-3">
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-gray-900">{doc.filename}</p>

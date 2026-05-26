@@ -136,13 +136,13 @@ export default function Profile() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Profile & Goals</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Profile &amp; Goals</h1>
         <p className="mt-1 text-sm text-gray-500">Update your financial profile at any time. Flo uses this to personalize your experience.</p>
       </div>
 
       {/* Account info */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
-        <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Account</h2>
+      <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6 space-y-4">
+        <h2 className="section-label">Account</h2>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-xs text-gray-400 mb-1">Name</p>
@@ -162,8 +162,8 @@ export default function Profile() {
       </div>
 
       {/* Primary goal */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
-        <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Primary Goal</h2>
+      <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6 space-y-4">
+        <h2 className="section-label">Primary Goal</h2>
         <div className="grid gap-2">
           {GOALS.map((g) => (
             <button
@@ -189,8 +189,8 @@ export default function Profile() {
       </div>
 
       {/* Income target */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
-        <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Monthly Income Target</h2>
+      <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6 space-y-4">
+        <h2 className="section-label">Monthly Income Target</h2>
         <p className="text-sm text-gray-500">The monthly passive / total income you're working toward.</p>
         <div>
           <label className="label" htmlFor="income">Amount ($)</label>
@@ -207,8 +207,8 @@ export default function Profile() {
       </div>
 
       {/* Risk tolerance */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
-        <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Risk Tolerance</h2>
+      <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6 space-y-4">
+        <h2 className="section-label">Risk Tolerance</h2>
         <div className="grid gap-2">
           {RISK.map((r) => (
             <button
@@ -234,9 +234,9 @@ export default function Profile() {
       </div>
 
       {/* Asset allocations */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
+      <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6 space-y-4">
         <div className="flex items-baseline justify-between">
-          <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Target Allocations</h2>
+          <h2 className="section-label">Target Allocations</h2>
           <span className={`text-sm font-semibold ${Math.abs(allocSum - 100) > 1 ? 'text-red-600' : 'text-emerald-600'}`}>
             {allocSum}% / 100%
           </span>
