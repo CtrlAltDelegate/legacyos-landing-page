@@ -31,7 +31,12 @@ router.get('/', async (req: Request, res: Response) => {
     });
 
     const assessmentMap = Object.fromEntries(
-      assessments.map((a) => [a.wing, { level: a.level, answers: a.answers, completedAt: a.completedAt }])
+      assessments.map((a) => [a.wing, {
+        level: a.level,
+        answers: a.answers,
+        completedAt: a.completedAt,
+        stepCompletedAt: a.stepCompletedAt ?? null,
+      }])
     );
 
     const wings = await Promise.all(WING_ORDER.map(async (wingId) => {
@@ -51,6 +56,7 @@ router.get('/', async (req: Request, res: Response) => {
         level,
         levelLabel: ['Foundation', 'Building', 'Established', 'Advanced'][level] ?? 'Advanced',
         assessed: !!saved?.completedAt,
+        stepCompletedAt: saved?.stepCompletedAt ?? null,
         nextStep: step,
         questions: cfg.questions,
         answers: (saved?.answers as Record<string, boolean>) ?? {},
@@ -95,6 +101,7 @@ router.get('/:wing', async (req: Request, res: Response) => {
       level,
       levelLabel: ['Foundation', 'Building', 'Established', 'Advanced'][level] ?? 'Advanced',
       assessed: !!saved?.completedAt,
+      stepCompletedAt: saved?.stepCompletedAt ?? null,
       steps,
       nextStep: step,
       questions: cfg.questions,
@@ -161,6 +168,66 @@ router.post('/:wing/assess', async (req: Request, res: Response) => {
   } catch (err) {
     console.error('[wings POST /:wing/assess]', err);
     res.status(500).json({ error: 'Failed to save assessment.' });
+  }
+});
+
+// ─── POST /api/wings/:wing/complete-step ──────────────────────────────────────
+// Mark the current next step as completed. Upserts to ensure the record exists.
+
+router.post('/:wing/complete-step', async (req: Request, res: Response) => {
+  const wingId = req.params.wing as WingId;
+
+  if (!WINGS[wingId]) {
+    res.status(404).json({ error: 'Wing not found.' });
+    return;
+  }
+
+  const now = new Date();
+
+  try {
+    await prisma.wingAssessment.upsert({
+      where: { userId_wing: { userId: req.user!.userId, wing: wingId } },
+      create: {
+        userId: req.user!.userId,
+        wing: wingId,
+        level: 0,
+        answers: {},
+        completedAt: now,
+        stepCompletedAt: now,
+      },
+      update: {
+        stepCompletedAt: now,
+      },
+    });
+
+    res.json({ message: 'Step marked as complete.', stepCompletedAt: now.toISOString() });
+  } catch (err) {
+    console.error('[wings POST /:wing/complete-step]', err);
+    res.status(500).json({ error: 'Failed to mark step complete.' });
+  }
+});
+
+// ─── DELETE /api/wings/:wing/complete-step ────────────────────────────────────
+// Unmark a step completion (undo).
+
+router.delete('/:wing/complete-step', async (req: Request, res: Response) => {
+  const wingId = req.params.wing as WingId;
+
+  if (!WINGS[wingId]) {
+    res.status(404).json({ error: 'Wing not found.' });
+    return;
+  }
+
+  try {
+    await prisma.wingAssessment.updateMany({
+      where: { userId: req.user!.userId, wing: wingId },
+      data: { stepCompletedAt: null },
+    });
+
+    res.json({ message: 'Step completion cleared.' });
+  } catch (err) {
+    console.error('[wings DELETE /:wing/complete-step]', err);
+    res.status(500).json({ error: 'Failed to clear step completion.' });
   }
 });
 

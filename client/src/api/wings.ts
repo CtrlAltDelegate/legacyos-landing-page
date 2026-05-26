@@ -33,6 +33,7 @@ export interface WingSummary {
   level: number;
   levelLabel: string;
   assessed: boolean;
+  stepCompletedAt: string | null; // ISO date when current step was marked done
   nextStep: WingStep;
   questions: WingQuestion[];
   answers: Record<string, boolean>;
@@ -58,4 +59,15 @@ export async function submitAssessment(
 ): Promise<{ level: number; levelLabel: string; nextStep: WingStep }> {
   const { data } = await api.post(`/wings/${wingId}/assess`, { answers });
   return data;
+}
+
+export async function completeStep(
+  wingId: WingId
+): Promise<{ stepCompletedAt: string }> {
+  const { data } = await api.post(`/wings/${wingId}/complete-step`);
+  return data;
+}
+
+export async function uncompleteStep(wingId: WingId): Promise<void> {
+  await api.delete(`/wings/${wingId}/complete-step`);
 }

@@ -207,14 +207,15 @@ model FloConversation {
 
 // ─── Wing Assessments ─────────────────────────────────────────────────────────
 model WingAssessment {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId      String    @map("user_id") @db.Uuid
-  wing        String    @db.VarChar(30) // 'growth'|'preservation'|'philanthropy'|'experiences'|'legacy'|'operations'
-  level       Int       @default(0)    // 0=Foundation 1=Building 2=Established 3=Advanced
-  answers     Json      @default("{}") // { question_id: boolean }
-  completedAt DateTime? @map("completed_at")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  wing             String    @db.VarChar(30) // 'growth'|'preservation'|'philanthropy'|'experiences'|'legacy'|'operations'
+  level            Int       @default(0)    // 0=Foundation 1=Building 2=Established 3=Advanced
+  answers          Json      @default("{}") // { question_id: boolean }
+  completedAt      DateTime? @map("completed_at")
+  stepCompletedAt  DateTime? @map("step_completed_at") // When the current next step was marked done
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
 
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 

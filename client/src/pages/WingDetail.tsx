@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getWing, submitAssessment, type WingDetail, type WingId } from '@/api/wings';
+import { getWing, submitAssessment, completeStep, uncompleteStep, type WingDetail, type WingId } from '@/api/wings';
 import { getErrorMessage } from '@/api/client';
 import Spinner from '@/components/Spinner';
+import StepCelebrationModal from '@/components/wings/StepCelebrationModal';
 
 // ─── Color map (mirrors Dashboard) ───────────────────────────────────────────
 
@@ -31,6 +32,11 @@ export default function WingDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ level: number; levelLabel: string } | null>(null);
 
+  // Step completion state
+  const [completingStep, setCompletingStep] = useState(false);
+  const [stepCompletedAt, setStepCompletedAt] = useState<string | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+
   useEffect(() => {
     if (!wingParam) return;
     getWing(wingParam as WingId)
@@ -41,6 +47,9 @@ export default function WingDetail() {
           setAnswers(data.answers);
           setSubmitted(true);
           setResult({ level: data.level, levelLabel: data.levelLabel });
+        }
+        if (data.stepCompletedAt) {
+          setStepCompletedAt(data.stepCompletedAt);
         }
       })
       .catch((err) => setError(getErrorMessage(err)))
@@ -60,6 +69,30 @@ export default function WingDetail() {
       setError(getErrorMessage(err));
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleCompleteStep() {
+    if (!wing) return;
+    setCompletingStep(true);
+    try {
+      const res = await completeStep(wing.id as WingId);
+      setStepCompletedAt(res.stepCompletedAt);
+      setShowCelebration(true);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setCompletingStep(false);
+    }
+  }
+
+  async function handleUncompleteStep() {
+    if (!wing) return;
+    try {
+      await uncompleteStep(wing.id as WingId);
+      setStepCompletedAt(null);
+    } catch (err) {
+      setError(getErrorMessage(err));
     }
   }
 
@@ -130,41 +163,86 @@ export default function WingDetail() {
       {/* ── Current next step ─────────────────────────────────────────────── */}
       {submitted && (
         <div className="rounded-xl border border-gray-200 bg-white p-6 space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-            Your next step
-          </p>
-          <h2 className="text-lg font-bold text-gray-900">{currentStep.title}</h2>
+          <div className="flex items-center justify-between gap-3">
+            <p className={`text-xs font-semibold uppercase tracking-wide ${stepCompletedAt ? 'text-green-500' : 'text-gray-400'}`}>
+              {stepCompletedAt ? '✓ Step completed' : 'Your next step'}
+            </p>
+            {stepCompletedAt && (
+              <button
+                onClick={handleUncompleteStep}
+                className="text-xs text-gray-400 hover:text-gray-600 underline"
+              >
+                Undo
+              </button>
+            )}
+          </div>
+
+          <h2 className={`text-lg font-bold ${stepCompletedAt ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+            {currentStep.title}
+          </h2>
           <p className="text-sm text-gray-600 leading-relaxed">{currentStep.description}</p>
 
           {wing.level >= MAX_LEVEL ? (
             <div className={`rounded-lg ${c.bg} ${c.border} border p-3 text-sm font-semibold ${c.text}`}>
               🎉 You've reached Advanced level in this wing. Mastery unlocks.
             </div>
-          ) : currentStep.isInternal ? (
-            <Link
-              to={currentStep.actionUrl}
-              className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white ${c.btn} transition`}
-            >
-              {currentStep.actionLabel} →
-            </Link>
           ) : (
-            <div className="space-y-1">
-              <a
-                href={currentStep.actionUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white ${c.btn} transition`}
-              >
-                {currentStep.actionLabel} ↗
-              </a>
-              {currentStep.isAffiliate && (
-                <p className="text-[11px] text-gray-400 pl-1">
-                  Affiliate link · LegacyOS may earn a commission at no cost to you.
-                </p>
+            <div className="flex flex-wrap items-center gap-3">
+              {!stepCompletedAt && (
+                currentStep.isInternal ? (
+                  <Link
+                    to={currentStep.actionUrl}
+                    className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white ${c.btn} transition`}
+                  >
+                    {currentStep.actionLabel} →
+                  </Link>
+                ) : (
+                  <a
+                    href={currentStep.actionUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white ${c.btn} transition`}
+                  >
+                    {currentStep.actionLabel} ↗
+                  </a>
+                )
+              )}
+
+              {!stepCompletedAt ? (
+                <button
+                  onClick={handleCompleteStep}
+                  disabled={completingStep}
+                  className="inline-flex items-center gap-2 rounded-lg border border-green-300 bg-green-50 px-4 py-2 text-sm font-semibold text-green-700 hover:bg-green-100 transition disabled:opacity-50"
+                >
+                  {completingStep ? <Spinner className="h-4 w-4" /> : '✓'} Mark as complete
+                </button>
+              ) : (
+                <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-2">
+                  <p className="text-sm font-semibold text-green-700">
+                    ✓ Completed {new Date(stepCompletedAt).toLocaleDateString()}
+                  </p>
+                  <p className="text-xs text-green-600 mt-0.5">
+                    Re-assess this wing to unlock your next step.
+                  </p>
+                </div>
               )}
             </div>
           )}
+
+          {currentStep.isAffiliate && !stepCompletedAt && (
+            <p className="text-[11px] text-gray-400">
+              Affiliate link · LegacyOS may earn a commission at no cost to you.
+            </p>
+          )}
         </div>
+      )}
+
+      {/* ── Celebration modal ─────────────────────────────────────────────── */}
+      {showCelebration && wing && (
+        <StepCelebrationModal
+          wing={{ ...wing, stepCompletedAt, nextStep: currentStep }}
+          onClose={() => setShowCelebration(false)}
+        />
       )}
 
       {/* ── Roadmap ───────────────────────────────────────────────────────── */}
