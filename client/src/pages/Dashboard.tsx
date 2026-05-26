@@ -2,10 +2,14 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, getErrorMessage } from '@/api/client';
 import { getAllWings, completeStep, uncompleteStep, type WingSummary } from '@/api/wings';
+import { getFamilyProfile } from '@/api/profile';
+import { getTodos, type TodoItem } from '@/api/todos';
 import { useAuthStore } from '@/store/auth';
 import Spinner from '@/components/Spinner';
 import WingAssessmentFlow from '@/components/wings/WingAssessmentFlow';
 import StepCelebrationModal from '@/components/wings/StepCelebrationModal';
+import FamilyQuestionnaire from '@/components/profile/FamilyQuestionnaire';
+import TodoList from '@/components/todos/TodoList';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -238,6 +242,8 @@ export default function Dashboard() {
   const { user } = useAuthStore();
   const [wings, setWings] = useState<WingSummary[]>([]);
   const [netWorth, setNetWorth] = useState<NetWorthData | null>(null);
+  const [todos, setTodos] = useState<TodoItem[]>([]);
+  const [profileCompleted, setProfileCompleted] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -245,15 +251,20 @@ export default function Dashboard() {
   const [showAssessmentFlow, setShowAssessmentFlow] = useState(false);
   const [celebrationWing, setCelebrationWing] = useState<WingSummary | null>(null);
   const [completingWingId, setCompletingWingId] = useState<string | null>(null);
+  const [showQuestionnaire, setShowQuestionnaire] = useState(false);
 
   useEffect(() => {
     Promise.all([
       getAllWings(),
       api.get<NetWorthData>('/networth/current'),
+      getFamilyProfile(),
+      getTodos(),
     ])
-      .then(([w, nwRes]) => {
+      .then(([w, nwRes, profile, todoItems]) => {
         setWings(w);
         setNetWorth(nwRes.data);
+        setProfileCompleted(!!profile.completedAt);
+        setTodos(todoItems);
       })
       .catch((err) => setError(getErrorMessage(err)))
       .finally(() => setLoading(false));
@@ -285,6 +296,21 @@ export default function Dashboard() {
   function handleAssessmentFlowComplete(updatedWings: WingSummary[]) {
     setWings(updatedWings);
     setShowAssessmentFlow(false);
+  }
+
+  function handleQuestionnaireComplete() {
+    setProfileCompleted(true);
+    setShowQuestionnaire(false);
+    // Reload todos since the questionnaire generates new ones
+    getTodos().then(setTodos).catch(console.error);
+  }
+
+  function handleTodoComplete(id: string) {
+    setTodos((prev) => prev.filter((t) => t.id !== id));
+  }
+
+  function handleTodoDismiss(id: string) {
+    setTodos((prev) => prev.filter((t) => t.id !== id));
   }
 
   if (loading) {
@@ -341,6 +367,27 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* ── Family profile prompt ─────────────────────────────────────────── */}
+      {profileCompleted === false && (
+        <div className="rounded-2xl border-2 border-brand-200 bg-brand-50 p-5 flex items-center gap-4">
+          <div className="text-3xl shrink-0">🏠</div>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-brand-800">
+              Set up your family profile — it takes 3 minutes
+            </p>
+            <p className="text-xs text-brand-600 mt-0.5">
+              Tell Flo about your family, home, vehicles, insurance, and estate plan. She'll generate a personalized action list and give much better advice.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowQuestionnaire(true)}
+            className="shrink-0 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-700 transition"
+          >
+            Start →
+          </button>
+        </div>
+      )}
+
       {/* ── Most Important Next Step banner ───────────────────────────────── */}
       {priorityWing && !priorityWing.stepCompletedAt && (
         <MostImportantBanner
@@ -377,6 +424,20 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* ── Action Items (todos) ──────────────────────────────────────────── */}
+      {(todos.length > 0 || profileCompleted) && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            {profileCompleted && todos.length === 0 && null}
+          </div>
+          <TodoList
+            todos={todos}
+            onTodoComplete={handleTodoComplete}
+            onTodoDismiss={handleTodoDismiss}
+          />
+        </div>
+      )}
+
       {/* ── Net Worth Tracker ─────────────────────────────────────────────── */}
       <NetWorthStrip data={netWorth} />
 
@@ -393,6 +454,13 @@ export default function Dashboard() {
         <StepCelebrationModal
           wing={celebrationWing}
           onClose={() => setCelebrationWing(null)}
+        />
+      )}
+
+      {showQuestionnaire && (
+        <FamilyQuestionnaire
+          onComplete={handleQuestionnaireComplete}
+          onClose={() => setShowQuestionnaire(false)}
         />
       )}
     </div>

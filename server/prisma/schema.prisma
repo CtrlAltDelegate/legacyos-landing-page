@@ -34,6 +34,8 @@ model User {
   floConversations   FloConversation[]
   netWorthSnapshots  NetWorthSnapshot[]
   wingAssessments    WingAssessment[]
+  familyProfile      FamilyProfile?
+  todoItems          TodoItem[]
 
   @@map("users")
 }
@@ -237,6 +239,43 @@ model AffiliateLink {
 
   @@unique([wingId, level])
   @@map("affiliate_links")
+}
+
+// ─── Family Profile (onboarding questionnaire answers) ───────────────────────
+model FamilyProfile {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String    @unique @map("user_id") @db.Uuid
+  answers     Json      @default("{}") // all questionnaire answers as key-value pairs
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("family_profiles")
+}
+
+// ─── Todo Items (auto-generated + manually added action items) ────────────────
+model TodoItem {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  title       String    @db.VarChar(255)
+  description String?
+  category    String    @default("action") @db.VarChar(30) // 'document' | 'action' | 'review'
+  priority    Int       @default(50)        // 0=highest, 100=lowest; used for sort order
+  relatedWing String?   @map("related_wing") @db.VarChar(30)
+  actionUrl   String?   @map("action_url") @db.VarChar(500)
+  isInternal  Boolean   @default(false) @map("is_internal")
+  sourceKey   String?   @map("source_key") @db.VarChar(100) // idempotency key — prevents duplicates
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sourceKey])
+  @@index([userId])
+  @@map("todo_items")
 }
 
 // ─── Liabilities (non-mortgage debt) ─────────────────────────────────────────
