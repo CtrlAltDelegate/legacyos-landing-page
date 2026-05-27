@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AlertTriangle, Sparkles, Users } from 'lucide-react';
+import { AlertTriangle, Sparkles, Users, HelpCircle } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
 import { getAllWings, completeStep, uncompleteStep, type WingSummary } from '@/api/wings';
 import { getFamilyProfile } from '@/api/profile';
@@ -302,6 +302,7 @@ export default function Dashboard() {
   const [error, setError] = useState('');
 
   const [showAssessmentFlow, setShowAssessmentFlow] = useState(false);
+  const [showWhyAssess, setShowWhyAssess] = useState(false);
   const [celebrationWing, setCelebrationWing] = useState<WingSummary | null>(null);
   const [completingWingId, setCompletingWingId] = useState<string | null>(null);
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
@@ -408,6 +409,51 @@ export default function Dashboard() {
           </Link>
         </div>
       </div>
+
+      {/* ── Flo assessment prompt ───────────────────────────────────────── */}
+      {assessedCount < 6 && (
+        <div className="rounded-xl bg-white shadow-sm border border-gray-100 border-l-4 border-l-brand-500 p-5">
+          <div className="flex items-start gap-4">
+            <div className="h-10 w-10 rounded-full bg-brand-600 flex items-center justify-center shrink-0 mt-0.5">
+              <Sparkles className="h-5 w-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-bold text-gray-900">
+                  {assessedCount === 0
+                    ? 'Flo has a few questions for you'
+                    : `Flo still has questions — ${6 - assessedCount} wing${6 - assessedCount !== 1 ? 's' : ''} left`}
+                </p>
+                <button
+                  onClick={() => setShowWhyAssess((v) => !v)}
+                  className="text-gray-300 hover:text-gray-500 transition-colors flex-shrink-0"
+                  title="Why does this matter?"
+                >
+                  <HelpCircle className="h-4 w-4" />
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {assessedCount === 0
+                  ? 'Answer a few yes/no questions per wing and Flo will calculate your exact level, identify your most important next step, and build a personalized plan.'
+                  : `Flo's recommendations get sharper with every answer. Finish the remaining ${6 - assessedCount} wing${6 - assessedCount !== 1 ? 's' : ''} to unlock your full plan.`}
+              </p>
+              {showWhyAssess && (
+                <div className="mt-3 rounded-lg bg-brand-50 border border-brand-100 px-3 py-2.5">
+                  <p className="text-xs text-brand-800 leading-relaxed">
+                    <span className="font-semibold">Why does this matter?</span> Flo's advice is only as good as the context she has. Your answers let her calculate your exact level across all six wings, surface the most important gap in your financial life, and avoid the generic advice that doesn't actually apply to you. The whole assessment takes about 3 minutes — and you can skip any wing you're not ready for.
+                  </p>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => setShowAssessmentFlow(true)}
+              className="btn-primary shrink-0 px-4 py-2 text-sm"
+            >
+              {assessedCount === 0 ? 'Start →' : 'Continue →'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Net Worth Hero (moved above wings per design doc) ───────────── */}
       <NetWorthBar data={netWorth} />

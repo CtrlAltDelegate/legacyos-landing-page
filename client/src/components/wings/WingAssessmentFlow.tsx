@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { HelpCircle } from 'lucide-react';
 import { submitAssessment, type WingSummary, type WingId } from '@/api/wings';
 import { getErrorMessage } from '@/api/client';
 import Spinner from '@/components/Spinner';
@@ -24,6 +25,37 @@ const COLOR: Record<string, {
   slate:   { bg: 'bg-slate-50',   border: 'border-slate-200',   text: 'text-slate-700',   btn: 'bg-slate-600 hover:bg-slate-700',   badge: 'bg-slate-100 text-slate-700',   dot: 'bg-slate-500',   ring: 'ring-slate-400' },
 };
 
+// ─── Per-question "why Flo needs this" explanations ──────────────────────────
+
+const WHY_TEXT: Record<string, string> = {
+  // Growth
+  has_brokerage:       'Investment accounts are how your money works while you sleep. Without one, inflation quietly erodes your wealth. Flo uses this to gauge whether your money is positioned to grow.',
+  invests_regularly:   'Consistent investing — even small amounts — is the most reliable path to long-term wealth. Flo uses this to see if you\'re building momentum or just sitting on cash.',
+  has_real_estate:     'Real estate adds diversification and can generate passive income. Flo uses your answer to understand your asset mix and identify next steps for the Growth wing.',
+  has_business_equity: 'Business ownership is often the highest-leverage wealth-building vehicle. Flo uses this to understand your equity exposure and potential upside.',
+  // Preservation
+  has_emergency_fund:  'An emergency fund is your financial immune system. Without 3+ months of expenses liquid, one setback can force you to sell investments at the worst time.',
+  has_life_insurance:  'Life insurance protects the people who depend on your income. Flo uses this to determine whether your family\'s financial future is covered if something happens to you.',
+  has_will:            'Without a will, the state decides who gets your assets — which is almost never what you\'d want. Flo uses this to identify the most critical gap in your estate plan.',
+  has_trust:           'A living trust avoids probate, protects your privacy, and gives your family a smoother path. Flo uses this to tell the difference between a foundational and advanced estate plan.',
+  // Philanthropy
+  gives_regularly:       'Intentional generosity — when it\'s a system, not a reaction — is a cornerstone of legacy. Flo uses this to understand your giving foundation.',
+  has_giving_philosophy: 'A giving philosophy means you know who you want to help and why. Without it, giving tends to be reactive and scattered. Flo uses this to see if you\'ve moved from impulse to intention.',
+  has_daf:               'A donor-advised fund lets you take an immediate tax deduction and give strategically over time. It\'s the most powerful tool most high-income earners aren\'t using.',
+  // Experiences
+  has_experience_budget: 'Experiences are the memories your family will carry forever — but they don\'t happen unless you make them a financial priority. Flo uses this to see if you\'re investing in life, not just assets.',
+  has_traditions:        'Family traditions create identity and belonging. They\'re the anchors that hold a family together across decades. Flo uses this to understand your family culture.',
+  plans_learning:        'Intentional growth experiences — travel, mentorship, education — compound over a lifetime. Flo uses this to see if you\'re investing in your family\'s human capital.',
+  // Legacy
+  has_mission:              'A written family mission statement gives your family a "why" — and makes financial decisions much clearer. Flo uses this to assess whether your legacy is documented or still just in your head.',
+  has_family_conversations: 'Money conversations with your family are uncomfortable for almost everyone — and skipping them is how generational wealth gets lost. Flo uses this to see how intentional you are about passing on financial wisdom.',
+  has_succession_plan:      'A succession plan ensures your wealth, values, and knowledge transfer smoothly. Without one, even the best estate plan can fail. Flo uses this to find your most critical legacy gap.',
+  // Operations
+  finances_organized:  'You can\'t manage what you can\'t see. Having your finances in one place is the foundation of every other wing. Flo uses this to assess your operational baseline.',
+  documents_organized: 'Disorganized documents are the silent killer of good financial plans. Wills, insurance policies, and tax returns need to be findable in an emergency.',
+  regular_reviews:     'Regular financial reviews are how you stay proactive instead of reactive. Without them, drift and blind spots accumulate. Flo uses this to assess your operational discipline.',
+};
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function WingAssessmentFlow({ wings, onComplete, onClose }: Props) {
@@ -38,6 +70,12 @@ export default function WingAssessmentFlow({ wings, onComplete, onClose }: Props
   const [error, setError] = useState('');
   const [updatedWings, setUpdatedWings] = useState<WingSummary[]>([...wings]);
   const [showSummary, setShowSummary] = useState(false);
+  // tracks which question's "why" blurb is expanded
+  const [expandedWhy, setExpandedWhy] = useState<string | null>(null);
+
+  function toggleWhy(qId: string) {
+    setExpandedWhy((prev) => (prev === qId ? null : qId));
+  }
 
   const wing = wings[currentIndex];
   const answers = allAnswers[wing?.id] ?? {};
@@ -84,6 +122,8 @@ export default function WingAssessmentFlow({ wings, onComplete, onClose }: Props
   }
 
   function handleSkip() {
+    setExpandedWhy(null);
+    setExpandedWhy(null);
     if (isLast) {
       setShowSummary(true);
     } else {
@@ -202,30 +242,58 @@ export default function WingAssessmentFlow({ wings, onComplete, onClose }: Props
             Answer honestly — your level and next step are calculated from these answers.
           </p>
 
-          {wing.questions.map((q) => (
-            <div key={q.id}>
-              <p className="text-sm font-medium text-gray-800 mb-2.5 leading-snug">{q.text}</p>
-              <div className="flex gap-3">
-                {([true, false] as const).map((val) => {
-                  const selected = answers[q.id] === val;
-                  return (
+          {wing.questions.map((q) => {
+            const whyText = WHY_TEXT[q.id];
+            const isExpanded = expandedWhy === q.id;
+            return (
+              <div key={q.id}>
+                {/* Question text + why toggle */}
+                <div className="flex items-start gap-2 mb-2.5">
+                  <p className="flex-1 text-sm font-medium text-gray-800 leading-snug">{q.text}</p>
+                  {whyText && (
                     <button
-                      key={String(val)}
                       type="button"
-                      onClick={() => setAnswer(q.id, val)}
-                      className={`flex-1 rounded-xl border py-2.5 text-sm font-semibold transition ${
-                        selected
-                          ? `${c.btn} border-transparent text-white shadow-sm`
-                          : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                      onClick={() => toggleWhy(q.id)}
+                      title="Why does Flo need this?"
+                      className={`flex-shrink-0 mt-0.5 transition-colors ${
+                        isExpanded ? 'text-brand-500' : 'text-gray-300 hover:text-gray-500'
                       }`}
                     >
-                      {val ? '✓  Yes' : '✗  No'}
+                      <HelpCircle className="h-4 w-4" />
                     </button>
-                  );
-                })}
+                  )}
+                </div>
+
+                {/* Expandable "why" blurb */}
+                {isExpanded && whyText && (
+                  <div className="mb-2.5 rounded-lg bg-brand-50 border border-brand-100 px-3 py-2">
+                    <p className="text-xs text-brand-800 leading-relaxed">{whyText}</p>
+                  </div>
+                )}
+
+                {/* Yes / No buttons */}
+                <div className="flex gap-3">
+                  {([true, false] as const).map((val) => {
+                    const selected = answers[q.id] === val;
+                    return (
+                      <button
+                        key={String(val)}
+                        type="button"
+                        onClick={() => setAnswer(q.id, val)}
+                        className={`flex-1 rounded-xl border py-2.5 text-sm font-semibold transition ${
+                          selected
+                            ? `${c.btn} border-transparent text-white shadow-sm`
+                            : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {val ? '✓  Yes' : '✗  No'}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {error && (
             <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2">
