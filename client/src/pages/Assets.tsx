@@ -140,7 +140,9 @@ function AssetRow({ asset, onDelete, onRefresh, onEdit }: {
           )}
 
           {equity != null && (
-            <span className="text-blue-600 font-medium">Equity: {fmtMoney(equity)}</span>
+            <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
+              Equity {fmtMoney(equity)}
+            </span>
           )}
 
           {monthlyCF != null && (
@@ -188,7 +190,7 @@ function AssetRow({ asset, onDelete, onRefresh, onEdit }: {
           )}
           <button
             onClick={() => onDelete(asset.id)}
-            className="text-xs text-gray-400 hover:text-red-500 transition"
+            className="text-xs text-gray-300 hover:text-red-400 transition-colors"
           >
             Remove
           </button>
@@ -296,7 +298,7 @@ function PositionRow({ asset, onDelete, onRefresh, onEdit }: {
             </span>
           )}
           {isCash && (
-            <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-700">💵 Cash</span>
+            <span className="rounded-full bg-green-50 border border-green-200 px-1.5 py-0.5 text-xs font-medium text-green-700">Cash</span>
           )}
           {isAuto && (
             <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-600">Auto</span>
@@ -339,7 +341,7 @@ function PositionRow({ asset, onDelete, onRefresh, onEdit }: {
               Refresh
             </button>
           )}
-          <button onClick={() => onDelete(asset.id)} className="text-xs text-gray-300 hover:text-red-500 transition">
+          <button onClick={() => onDelete(asset.id)} className="text-xs text-gray-300 hover:text-red-400 transition-colors">
             ✕
           </button>
         </div>

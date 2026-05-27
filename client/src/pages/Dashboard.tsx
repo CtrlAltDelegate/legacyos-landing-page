@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AlertTriangle, Sparkles, ClipboardList } from 'lucide-react';
+import { AlertTriangle, Sparkles, Users } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
 import { getAllWings, completeStep, uncompleteStep, type WingSummary } from '@/api/wings';
 import { getFamilyProfile } from '@/api/profile';
@@ -65,9 +65,9 @@ export const WING_COLOR: Record<string, {
     dot: 'bg-violet-600', btn: 'bg-violet-600 hover:bg-violet-700', ring: 'ring-violet-400',
   },
   slate: {
-    bg: 'bg-gray-50',     border: 'border-gray-200',   accentBorder: 'border-l-gray-700',
-    badge: 'bg-gray-100 text-gray-700',    text: 'text-gray-700',
-    dot: 'bg-gray-700',   btn: 'bg-gray-700 hover:bg-gray-800',    ring: 'ring-gray-400',
+    bg: 'bg-teal-50',     border: 'border-teal-200',   accentBorder: 'border-l-teal-600',
+    badge: 'bg-teal-100 text-teal-700',    text: 'text-teal-700',
+    dot: 'bg-teal-600',   btn: 'bg-teal-600 hover:bg-teal-700',    ring: 'ring-teal-400',
   },
 };
 
@@ -94,43 +94,44 @@ function getMostImportantWing(wings: WingSummary[]): WingSummary | null {
 
 function NetWorthBar({ data }: { data: NetWorthData | null }) {
   const isPositive = data ? data.netWorth >= 0 : true;
+  const hasLiabilities = data ? data.totalLiabilities > 0 : false;
 
   return (
     <div className="rounded-xl bg-white shadow-md border border-gray-100 overflow-hidden">
-      <div className="grid grid-cols-2 divide-x divide-gray-100 sm:grid-cols-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4">
         {/* Net worth — hero metric */}
-        <div className="col-span-2 sm:col-span-1 px-6 py-5 bg-white">
+        <div className="col-span-2 sm:col-span-1 px-6 py-5 border-r border-gray-100">
           <p className="section-label mb-2">Net worth</p>
           <p className={`text-3xl font-bold tabular font-mono tracking-tight ${
             isPositive ? 'text-gray-900' : 'text-red-600'
           }`}>
             {data ? fmt(data.netWorth) : '—'}
           </p>
-          {data && data.netWorth > 0 && (
-            <p className="mt-1 text-xs font-medium text-green-600">↑ positive net worth</p>
-          )}
         </div>
 
         {/* Total assets */}
-        <div className="px-6 py-5">
+        <div className="px-6 py-5 border-r border-gray-100">
           <p className="section-label mb-2">Total assets</p>
-          <p className="text-xl font-semibold tabular font-mono text-gray-700">
+          <p className="text-xl font-semibold tabular font-mono text-gray-600">
             {data ? fmt(data.totalAssets) : '—'}
           </p>
         </div>
 
         {/* Total liabilities */}
-        <div className="px-6 py-5">
+        <div className="px-6 py-5 border-r border-gray-100">
           <p className="section-label mb-2">Total liabilities</p>
-          <p className="text-xl font-semibold tabular font-mono text-gray-700">
+          <p className={`text-xl font-semibold tabular font-mono ${hasLiabilities ? 'text-gray-600' : 'text-gray-400'}`}>
             {data ? fmt(data.totalLiabilities) : '—'}
           </p>
+          {data && !hasLiabilities && (
+            <p className="text-xs text-gray-400 mt-0.5">none entered</p>
+          )}
         </div>
 
         {/* Equity */}
         <div className="px-6 py-5">
           <p className="section-label mb-2">Equity &amp; stocks</p>
-          <p className="text-xl font-semibold tabular font-mono text-gray-700">
+          <p className="text-xl font-semibold tabular font-mono text-gray-600">
             {data ? fmt(data.breakdown.equityValue) : '—'}
           </p>
         </div>
@@ -231,15 +232,16 @@ function WingCard({ wing, isPriority, onCompleteStep, onUncompleteStep }: WingCa
         </div>
       </div>
 
-      {/* Action footer */}
+      {/* Action footer — left: action link, right: complete + assess buttons */}
       <div className="px-5 pb-4 border-t border-black/5 pt-3 flex items-center justify-between gap-2">
-        <div className="flex flex-col gap-1 min-w-0 flex-1">
-          {!isDone && (
+        {/* Left: action link (or empty spacer so Assess stays right-anchored) */}
+        <div className="min-w-0 flex-1">
+          {!isDone && wing.nextStep.actionLabel ? (
             wing.nextStep.isInternal ? (
               <Link
                 to={wing.nextStep.actionUrl}
                 onClick={(e) => e.stopPropagation()}
-                className={`text-xs font-semibold ${c.text} hover:underline truncate`}
+                className={`text-sm font-medium ${c.text} hover:underline truncate block`}
               >
                 {wing.nextStep.actionLabel} →
               </Link>
@@ -249,17 +251,15 @@ function WingCard({ wing, isPriority, onCompleteStep, onUncompleteStep }: WingCa
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className={`text-xs font-semibold ${c.text} hover:underline truncate`}
+                className={`text-sm font-medium ${c.text} hover:underline truncate block`}
               >
                 {wing.nextStep.actionLabel} ↗
               </a>
             )
-          )}
-          {wing.nextStep.isAffiliate && !isDone && (
-            <p className="text-[10px] text-gray-400">Affiliate · we may earn a commission</p>
-          )}
+          ) : <span />}
         </div>
 
+        {/* Right: done/undo + assess button */}
         <div className="flex items-center gap-2 shrink-0">
           {wing.assessed && (
             isDone ? (
@@ -280,7 +280,7 @@ function WingCard({ wing, isPriority, onCompleteStep, onUncompleteStep }: WingCa
           )}
           <button
             onClick={(e) => { e.stopPropagation(); navigate(`/wings/${wing.id}`); }}
-            className={`rounded-lg border ${c.border} bg-white px-2.5 py-1 text-[11px] font-medium ${c.text} hover:${c.bg} transition-colors`}
+            className={`rounded-lg border ${c.border} bg-white px-2.5 py-1 text-[11px] font-medium ${c.text} transition-colors`}
           >
             {wing.assessed ? 'Details →' : 'Assess →'}
           </button>
@@ -402,15 +402,6 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {assessedCount < 6 && (
-            <button
-              onClick={() => setShowAssessmentFlow(true)}
-              className="btn-secondary gap-2"
-            >
-              <ClipboardList className="h-4 w-4" />
-              {assessedCount === 0 ? 'Take assessment' : 'Continue assessment'}
-            </button>
-          )}
           <Link to="/flo" className="btn-primary gap-2">
             <Sparkles className="h-4 w-4" />
             Ask Flo
@@ -423,9 +414,9 @@ export default function Dashboard() {
 
       {/* ── Family profile prompt ────────────────────────────────────────── */}
       {profileCompleted === false && (
-        <div className="rounded-xl bg-white shadow-sm border border-brand-100 p-5 flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-brand-50 flex items-center justify-center shrink-0">
-            <span className="text-2xl">🏠</span>
+        <div className="rounded-xl bg-white shadow-sm border border-gray-100 border-l-4 border-l-indigo-500 p-5 flex items-center gap-4">
+          <div className="bg-indigo-50 rounded-lg p-2 shrink-0">
+            <Users className="w-8 h-8 text-indigo-500" />
           </div>
           <div className="flex-1">
             <p className="text-sm font-bold text-gray-900">
@@ -437,7 +428,7 @@ export default function Dashboard() {
           </div>
           <button
             onClick={() => setShowQuestionnaire(true)}
-            className="btn-primary shrink-0"
+            className="btn-primary shrink-0 px-4 py-2 text-sm"
           >
             Start →
           </button>
