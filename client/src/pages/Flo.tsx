@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, type FormEvent } from 'react';
 import { Sparkles, ChevronRight, Send, X } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
+import { getAllWings, type WingSummary } from '@/api/wings';
 import Spinner from '@/components/Spinner';
 import PlanGateCard, { isPlanGateError } from '@/components/PlanGateCard';
 
@@ -22,16 +23,46 @@ const SIGNAL_COLORS: Record<string, string> = {
   low:    'border-blue-200 bg-blue-50 text-blue-800',
 };
 
-const STARTER_PROMPTS = [
-  "What's my net worth looking like?",
-  "Am I on track for my financial goals?",
-  "Explain my allocation drift.",
-  "What should I be focused on right now?",
-];
+/** Build context-aware prompts based on the user's wing levels and todos */
+function buildStarterPrompts(wings: WingSummary[]): string[] {
+  const prompts: string[] = [];
+
+  const unassessed = wings.filter((w) => !w.assessed);
+  const assessed   = wings.filter((w) => w.assessed);
+  const lowestWing = assessed.length > 0
+    ? [...assessed].sort((a, b) => a.level - b.level)[0]
+    : null;
+  const hasNoEmergencyFund = lowestWing?.id === 'preservation' && lowestWing.level === 0;
+
+  // Most relevant first based on their actual situation
+  if (unassessed.length > 0) {
+    prompts.push(`I haven't been assessed on ${unassessed[0].name} yet — where should I start?`);
+  }
+  if (hasNoEmergencyFund) {
+    prompts.push("How much should I have in my emergency fund, and where should I keep it?");
+  }
+  if (lowestWing && !hasNoEmergencyFund) {
+    prompts.push(`My ${lowestWing.name} Wing is my weakest — what's the most important thing to fix?`);
+  }
+
+  // Always useful
+  prompts.push("What's my net worth looking like and is my allocation on track?");
+  prompts.push("What should I be focused on right now?");
+
+  if (assessed.length > 0) {
+    prompts.push("Am I making progress toward my financial goals?");
+  } else {
+    prompts.push("Can you explain the Six Wing Framework?");
+  }
+
+  // Return 4 prompts max
+  return prompts.slice(0, 4);
+}
 
 export default function Flo() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [signals, setSignals] = useState<Signal[]>([]);
+  const [wings, setWings] = useState<WingSummary[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -56,6 +87,10 @@ export default function Flo() {
     api.post('/flo/priority', {})
       .then((sigRes) => setSignals(sigRes.data.signals ?? []))
       .catch(() => { /* signals are non-critical — silently ignore */ });
+
+    getAllWings()
+      .then(setWings)
+      .catch(() => { /* non-critical */ });
   }, []);
 
   useEffect(() => {
@@ -168,7 +203,7 @@ export default function Flo() {
           <div>
             <p className="mb-3 section-label">Ask Flo</p>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {STARTER_PROMPTS.map((p) => (
+              {buildStarterPrompts(wings).map((p) => (
                 <button
                   key={p}
                   onClick={() => send(p)}

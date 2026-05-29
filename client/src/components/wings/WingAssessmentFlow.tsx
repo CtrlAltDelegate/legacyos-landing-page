@@ -22,7 +22,7 @@ const COLOR: Record<string, {
   rose:    { bg: 'bg-rose-50',    border: 'border-rose-200',    text: 'text-rose-700',    btn: 'bg-rose-600 hover:bg-rose-700',    badge: 'bg-rose-100 text-rose-700',    dot: 'bg-rose-500',    ring: 'ring-rose-400' },
   amber:   { bg: 'bg-amber-50',   border: 'border-amber-200',   text: 'text-amber-700',   btn: 'bg-amber-500 hover:bg-amber-600',   badge: 'bg-amber-100 text-amber-700',   dot: 'bg-amber-500',   ring: 'ring-amber-400' },
   violet:  { bg: 'bg-violet-50',  border: 'border-violet-200',  text: 'text-violet-700',  btn: 'bg-violet-600 hover:bg-violet-700',  badge: 'bg-violet-100 text-violet-700',  dot: 'bg-violet-500',  ring: 'ring-violet-400' },
-  slate:   { bg: 'bg-slate-50',   border: 'border-slate-200',   text: 'text-slate-700',   btn: 'bg-slate-600 hover:bg-slate-700',   badge: 'bg-slate-100 text-slate-700',   dot: 'bg-slate-500',   ring: 'ring-slate-400' },
+  slate:   { bg: 'bg-teal-50',    border: 'border-teal-200',    text: 'text-teal-700',    btn: 'bg-teal-600 hover:bg-teal-700',    badge: 'bg-teal-100 text-teal-700',    dot: 'bg-teal-500',    ring: 'ring-teal-400' },
 };
 
 // ─── Per-question "why Flo needs this" explanations ──────────────────────────

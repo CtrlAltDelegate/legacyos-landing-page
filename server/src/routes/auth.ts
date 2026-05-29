@@ -56,6 +56,7 @@ const registerSchema = Joi.object({
   email: Joi.string().email().lowercase().required(),
   password: Joi.string().min(8).max(128).required(),
   fullName: Joi.string().max(255).optional(),
+  referralCode: Joi.string().max(20).optional(),
 });
 
 const loginSchema = Joi.object({
@@ -79,7 +80,7 @@ const resetPasswordSchema = Joi.object({
 // ─── POST /api/auth/register ──────────────────────────────────────────────────
 
 router.post('/register', authLimiter, validate(registerSchema), async (req: Request, res: Response) => {
-  const { email, password, fullName } = req.body;
+  const { email, password, fullName, referralCode } = req.body;
 
   try {
     const existing = await prisma.user.findUnique({ where: { email } });
@@ -91,6 +92,16 @@ router.post('/register', authLimiter, validate(registerSchema), async (req: Requ
     const passwordHash = await bcrypt.hash(password, 12);
     const verificationToken = generateToken();
 
+    // Resolve referral code → referrer
+    let referrerId: string | null = null;
+    if (referralCode) {
+      const referrer = await prisma.user.findUnique({
+        where: { referralCode: String(referralCode).toUpperCase() },
+        select: { id: true },
+      });
+      referrerId = referrer?.id ?? null;
+    }
+
     const user = await prisma.user.create({
       data: {
         email,
@@ -98,8 +109,16 @@ router.post('/register', authLimiter, validate(registerSchema), async (req: Requ
         fullName: fullName || null,
         plan: 'free',
         emailVerificationToken: verificationToken,
+        referredBy: referrerId,
       },
     });
+
+    // Record referral
+    if (referrerId) {
+      await prisma.referral.create({
+        data: { referrerId, referredEmail: email },
+      }).catch(() => { /* non-blocking */ });
+    }
 
     const payload: AuthPayload = { userId: user.id, email: user.email, plan: user.plan, isAdmin: user.isAdmin };
     const accessToken = signAccessToken(payload);

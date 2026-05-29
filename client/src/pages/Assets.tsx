@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { RefreshCw, Plus } from 'lucide-react';
+import { RefreshCw, Plus, Upload } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
 import Spinner from '@/components/Spinner';
 import AddAssetModal from '@/components/assets/AddAssetModal';
 import EditPositionModal, { type EditableAsset } from '@/components/assets/EditPositionModal';
 import EditAssetModal, { type EditableNonEquityAsset } from '@/components/assets/EditAssetModal';
+import CsvImportModal from '@/components/assets/CsvImportModal';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -366,6 +367,7 @@ export default function Assets() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [showCsvImport, setShowCsvImport] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [editingAsset, setEditingAsset] = useState<EditableAsset | null>(null);
   const [editingNonEquity, setEditingNonEquity] = useState<EditableNonEquityAsset | null>(null);
@@ -475,6 +477,13 @@ export default function Assets() {
               Refresh prices
             </button>
           )}
+          <button
+            onClick={() => setShowCsvImport(true)}
+            className="btn-secondary hidden sm:inline-flex"
+          >
+            <Upload className="h-4 w-4" />
+            Import CSV
+          </button>
           <button
             onClick={() => setShowModal(true)}
             className="btn-primary"
@@ -620,6 +629,14 @@ export default function Assets() {
             </div>
           );
         })
+      )}
+
+      {/* CSV import modal */}
+      {showCsvImport && (
+        <CsvImportModal
+          onClose={() => setShowCsvImport(false)}
+          onImported={load}
+        />
       )}
 
       {/* Add modal */}

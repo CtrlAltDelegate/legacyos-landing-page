@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth';
+import { tokenStore } from '@/api/client';
 
 import Layout from '@/components/Layout';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -20,6 +21,9 @@ import WingDetail from '@/pages/WingDetail';
 import Admin from '@/pages/Admin';
 import Profile from '@/pages/Profile';
 import Liabilities from '@/pages/Liabilities';
+import ExportReport from '@/pages/ExportReport';
+import TwoFactorSetup from '@/pages/TwoFactorSetup';
+import Landing from '@/pages/Landing';
 
 export default function App() {
   const { initialize, isInitialized } = useAuthStore();
@@ -54,6 +58,8 @@ export default function App() {
             <Route path="/wings/:wing" element={<WingDetail />} />
             <Route path="/assets" element={<Assets />} />
             <Route path="/liabilities" element={<Liabilities />} />
+            <Route path="/export" element={<ExportReport />} />
+            <Route path="/security/2fa" element={<TwoFactorSetup />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/flo" element={<Flo />} />
             <Route path="/admin" element={<Admin />} />
@@ -61,9 +67,9 @@ export default function App() {
           </Route>
         </Route>
 
-        {/* Root redirect */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        {/* Root: landing for guests, dashboard for logged-in users */}
+        <Route path="/" element={tokenStore.getAccess() ? <Navigate to="/dashboard" replace /> : <Landing />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

@@ -7,6 +7,7 @@ import { getFamilyProfile } from '@/api/profile';
 import { getTodos, type TodoItem } from '@/api/todos';
 import { useAuthStore } from '@/store/auth';
 import Spinner from '@/components/Spinner';
+import NetWorthChart from '@/components/NetWorthChart';
 import WingAssessmentFlow from '@/components/wings/WingAssessmentFlow';
 import StepCelebrationModal from '@/components/wings/StepCelebrationModal';
 import FamilyQuestionnaire from '@/components/profile/FamilyQuestionnaire';
@@ -302,6 +303,7 @@ export default function Dashboard() {
   const [wings, setWings] = useState<WingSummary[]>([]);
   const [netWorth, setNetWorth] = useState<NetWorthData | null>(null);
   const [momDelta, setMomDelta] = useState<number | null>(null);
+  const [snapshots, setSnapshots] = useState<Array<{ snapshotDate: string; netWorth: number }>>([]);
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [profileCompleted, setProfileCompleted] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
@@ -317,7 +319,7 @@ export default function Dashboard() {
     Promise.all([
       getAllWings(),
       api.get<NetWorthData>('/networth/current'),
-      api.get<{ monthOverMonth: number | null }>('/networth/snapshots?limit=2'),
+      api.get<{ snapshots: Array<{ snapshotDate: string; netWorth: number }>; monthOverMonth: number | null }>('/networth/snapshots?limit=24'),
       getFamilyProfile(),
       getTodos(),
     ])
@@ -325,6 +327,7 @@ export default function Dashboard() {
         setWings(w);
         setNetWorth(nwRes.data);
         setMomDelta(snapshotRes.data.monthOverMonth ?? null);
+        setSnapshots(snapshotRes.data.snapshots ?? []);
         setProfileCompleted(!!profile.completedAt);
         setTodos(todoItems);
       })
@@ -462,8 +465,11 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── Net Worth Hero (moved above wings per design doc) ───────────── */}
+      {/* ── Net Worth Hero ────────────────────────────────────────────────── */}
       <NetWorthBar data={netWorth} momDelta={momDelta} />
+
+      {/* ── Net Worth History Chart ─────────────────────────────────────── */}
+      <NetWorthChart snapshots={snapshots} />
 
       {/* ── Family profile prompt ────────────────────────────────────────── */}
       {profileCompleted === false && (

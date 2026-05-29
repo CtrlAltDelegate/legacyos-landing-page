@@ -17,6 +17,8 @@ import wingRoutes from './routes/wings';
 import adminRoutes from './routes/admin';
 import profileRoutes from './routes/profile';
 import todoRoutes from './routes/todos';
+import twoFactorRoutes from './routes/twoFactor';
+import referralRoutes from './routes/referral';
 
 import { startPriceRefreshCron } from './cron/priceRefresh';
 import { startMonthlySnapshotCron } from './cron/monthlySnapshot';
@@ -81,6 +83,8 @@ app.use('/api/wings', wingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/todos', todoRoutes);
+app.use('/api/2fa', twoFactorRoutes);
+app.use('/api/referral', referralRoutes);
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 app.use((_req, res) => {

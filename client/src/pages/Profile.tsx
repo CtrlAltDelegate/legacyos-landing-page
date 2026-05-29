@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Shield, Printer, Users, Copy, CheckCircle2 } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
 import { useAuthStore } from '@/store/auth';
 import Spinner from '@/components/Spinner';
@@ -56,6 +58,9 @@ export default function Profile() {
   const [saving, setSaving]     = useState(false);
   const [error, setError]       = useState('');
   const [success, setSuccess]   = useState('');
+  const [referralLink, setReferralLink]   = useState('');
+  const [referralCount, setReferralCount] = useState(0);
+  const [copiedRef, setCopiedRef] = useState(false);
 
   // Form state
   const [primaryGoal, setPrimaryGoal]               = useState('');
@@ -73,6 +78,11 @@ export default function Profile() {
   const allocSum = Object.values(alloc).reduce((a, b) => a + b, 0);
 
   useEffect(() => {
+    api.get('/referral/code').then(({ data }) => {
+      setReferralLink(data.link);
+      setReferralCount(data.referralCount);
+    }).catch(() => {});
+
     async function load() {
       try {
         const { data } = await api.get('/goals');
@@ -268,12 +278,91 @@ export default function Profile() {
       {error   && <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
       {success && <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</p>}
 
+      {/* Referrals */}
+      <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6 space-y-4">
+        <h2 className="section-label">Invite friends</h2>
+        <div className="flex items-start gap-3">
+          <div className="h-9 w-9 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+            <Users className="h-4 w-4 text-indigo-500" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900 mb-0.5">
+              Share LegacyOS with your family and friends
+            </p>
+            <p className="text-xs text-gray-500 mb-3">
+              {referralCount > 0
+                ? `You've referred ${referralCount} person${referralCount !== 1 ? 's' : ''} so far. 🎉`
+                : 'Your personal invite link — share it with anyone.'}
+            </p>
+            <div className="flex items-center gap-2">
+              <input
+                readOnly
+                value={referralLink}
+                className="input text-xs py-1.5 flex-1 bg-gray-50"
+              />
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(referralLink);
+                  setCopiedRef(true);
+                  setTimeout(() => setCopiedRef(false), 2000);
+                }}
+                className="btn-secondary px-3 py-1.5 text-xs flex-shrink-0"
+              >
+                {copiedRef ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Security */}
+      <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6 space-y-4">
+        <h2 className="section-label">Security</h2>
+        <div className="flex items-center justify-between gap-4 py-2">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-brand-50 flex items-center justify-center">
+              <Shield className="h-4 w-4 text-brand-600" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-900">Two-factor authentication</p>
+              <p className="text-xs text-gray-500">Add an extra layer of security with an authenticator app.</p>
+            </div>
+          </div>
+          <Link to="/security/2fa" className="btn-secondary text-sm px-4 py-2 shrink-0">
+            Manage 2FA
+          </Link>
+        </div>
+      </div>
+
+      {/* Export */}
+      <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6 space-y-4">
+        <h2 className="section-label">Export</h2>
+        <div className="flex items-center justify-between gap-4 py-2">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-gray-50 flex items-center justify-center">
+              <Printer className="h-4 w-4 text-gray-500" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-900">Financial snapshot report</p>
+              <p className="text-xs text-gray-500">Net worth, wing levels, and action items — exportable as PDF.</p>
+            </div>
+          </div>
+          <Link to="/export" className="btn-secondary text-sm px-4 py-2 shrink-0">
+            Generate report
+          </Link>
+        </div>
+      </div>
+
+      {/* Feedback */}
+      {error   && <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+      {success && <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</p>}
+
       {/* Save */}
       <div className="flex justify-end pb-8">
         <button
           onClick={handleSave}
           disabled={saving || Math.abs(allocSum - 100) > 1}
-          className="rounded-xl bg-brand-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 transition disabled:opacity-50 flex items-center gap-2"
+          className="btn-primary px-6 py-2.5"
         >
           {saving ? <><Spinner className="h-4 w-4" /> Saving…</> : 'Save changes'}
         </button>
