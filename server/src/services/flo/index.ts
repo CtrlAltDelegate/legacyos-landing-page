@@ -58,7 +58,7 @@ async function saveMessages(userId: string, messages: FloMessage[]): Promise<voi
  * Runs in parallel where possible.
  */
 async function loadUserContext(userId: string): Promise<FloUserContext> {
-  const [user, goals, netWorth] = await Promise.all([
+  const [user, goals, netWorth, familyProfileRecord] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: { fullName: true, assumedTaxRate: true },
@@ -68,6 +68,10 @@ async function loadUserContext(userId: string): Promise<FloUserContext> {
       orderBy: { createdAt: 'desc' },
     }),
     calculateNetWorth(userId),
+    prisma.familyProfile.findUnique({
+      where: { userId },
+      select: { answers: true, completedAt: true },
+    }),
   ]);
 
   return {
@@ -77,6 +81,9 @@ async function loadUserContext(userId: string): Promise<FloUserContext> {
     riskTolerance: goals?.riskTolerance ?? null,
     assumedTaxRate: Number(user?.assumedTaxRate ?? 25),
     netWorth,
+    familyProfile: familyProfileRecord?.completedAt
+      ? (familyProfileRecord.answers as Record<string, unknown>)
+      : null,
   };
 }
 

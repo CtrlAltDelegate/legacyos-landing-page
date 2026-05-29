@@ -9,6 +9,9 @@ import Spinner from '@/components/Spinner';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import Onboarding from '@/pages/Onboarding';
+import ForgotPassword from '@/pages/ForgotPassword';
+import ResetPassword from '@/pages/ResetPassword';
+import VerifyEmail from '@/pages/VerifyEmail';
 import Dashboard from '@/pages/Dashboard';
 import Assets from '@/pages/Assets';
 import Documents from '@/pages/Documents';
@@ -39,6 +42,9 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
 
         {/* Protected — requires auth + onboarding complete */}
         <Route element={<ProtectedRoute />}>

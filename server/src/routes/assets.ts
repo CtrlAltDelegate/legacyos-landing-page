@@ -444,8 +444,9 @@ router.post('/refresh-prices', async (req: Request, res: Response) => {
 
 router.get('/ticker/:symbol', async (req: Request, res: Response) => {
   const symbol = req.params.symbol.toUpperCase();
+  const assetType = typeof req.query.assetType === 'string' ? req.query.assetType : undefined;
   try {
-    const data = await fetchSingleTicker(symbol);
+    const data = await fetchSingleTicker(symbol, assetType);
     if (!data) {
       res.status(404).json({ error: `No price data found for ${symbol}.` });
       return;

@@ -9,19 +9,53 @@ export interface FloUserContext {
   riskTolerance: string | null;
   assumedTaxRate: number;
   netWorth: NetWorthResult;
+  familyProfile: Record<string, unknown> | null;
 }
+
+// ─── Family profile field labels ─────────────────────────────────────────────
+
+const FAMILY_LABELS: Record<string, string> = {
+  is_married:               'Married / partnered',
+  has_kids:                 'Has children',
+  num_kids:                 'Number of children',
+  co_parent_relationship:   'Co-parent relationship quality',
+  has_elderly_dependents:   'Has elderly dependents',
+  home_status:              'Home ownership',
+  has_mortgage:             'Has a mortgage',
+  monthly_rent_range:       'Monthly rent range',
+  has_vehicle:              'Has a vehicle',
+  vehicle_status:           'Vehicle ownership type',
+  has_multiple_vehicles:    'Has multiple vehicles',
+  vehicle2_status:          'Second vehicle type',
+  has_health_insurance:     'Has health insurance',
+  has_life_insurance:       'Has life insurance',
+  has_disability_insurance: 'Has disability insurance',
+  has_umbrella_policy:      'Has umbrella liability policy',
+  has_will:                 'Has a will',
+  has_trust:                'Has a living trust',
+  beneficiaries_designated: 'Beneficiaries designated on accounts',
+  has_power_of_attorney:    'Has power of attorney',
+  is_self_employed:         'Self-employed',
+  has_business_entity:      'Has a business entity (LLC/S-corp)',
+  has_business_partner:     'Has a business partner',
+  has_other_income:         'Has other income sources',
+  income_range:             'Annual household income range',
+  is_primary_earner:        'Primary earner in household',
+  has_emergency_fund:       'Has emergency fund (3+ months)',
+  is_actively_investing:    'Actively investing',
+};
 
 // ─── System prompt builder ────────────────────────────────────────────────────
 
 /**
  * Builds Flo's system prompt by injecting a live snapshot of the user's
- * financial picture. Called fresh on every chat turn so the data is never stale.
+ * financial picture and family context. Called fresh on every chat turn.
  *
  * Compliance guardrail baked in: Flo provides information and education,
  * never personalized investment advice. This is non-negotiable.
  */
 export function buildFloSystemPrompt(ctx: FloUserContext): string {
-  const { fullName, primaryGoal, targetMonthlyIncome, riskTolerance, assumedTaxRate, netWorth } = ctx;
+  const { fullName, primaryGoal, targetMonthlyIncome, riskTolerance, assumedTaxRate, netWorth, familyProfile } = ctx;
 
   const {
     netWorth: nw,
@@ -83,11 +117,28 @@ export function buildFloSystemPrompt(ctx: FloUserContext): string {
     `  Assumed tax rate:       ${assumedTaxRate}%`,
   ];
 
+  // ── Family profile ─────────────────────────────────────────────────────────
+  const familyLines: string[] = [];
+  if (familyProfile && Object.keys(familyProfile).length > 0) {
+    familyLines.push(``, `Family & life context:`);
+    for (const [key, value] of Object.entries(familyProfile)) {
+      if (value === null || value === undefined || value === '') continue;
+      const label = FAMILY_LABELS[key] ?? key.replace(/_/g, ' ');
+      const display = typeof value === 'boolean'
+        ? (value ? 'Yes' : 'No')
+        : String(value);
+      familyLines.push(`  ${label}: ${display}`);
+    }
+  } else {
+    familyLines.push(``, `Family & life context: Not yet provided`);
+  }
+
   const portfolioSnapshot = [
     ...portfolioLines,
     ...driftLines,
     ...cocLines,
     ...goalLines,
+    ...familyLines,
   ].join('\n');
 
   // ── Full system prompt ─────────────────────────────────────────────────────
@@ -99,6 +150,7 @@ You are speaking with ${fullName}.
 - Help ${fullName} understand their financial picture, track progress toward goals, and think clearly about wealth decisions
 - Surface insights from their portfolio data, explain financial concepts in plain English, and ask thoughtful questions
 - Be warm, direct, and substantive — like a knowledgeable friend who happens to understand finance deeply
+- Use the family context (kids, insurance coverage, estate documents, etc.) to make advice relevant to their actual life situation
 
 ## COMPLIANCE — NON-NEGOTIABLE
 - You provide financial INFORMATION and EDUCATION only — never personalized investment advice
@@ -113,6 +165,7 @@ ${portfolioSnapshot}
 ## Conversation style
 - Lead with insight, not disclaimers — only mention compliance when directly relevant
 - Use the portfolio data naturally — reference their actual numbers, not placeholders
+- When family context is available, weave it in naturally (e.g. if they have kids and no will, proactively flag the gap)
 - When drift alerts are present, weave them in proactively if the conversation touches allocations
 - Keep responses focused: 2-4 paragraphs unless the question clearly calls for more depth
 - Use plain dollar amounts and percentages — avoid jargon unless the user introduces it first

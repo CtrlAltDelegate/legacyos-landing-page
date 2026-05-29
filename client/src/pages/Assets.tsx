@@ -422,7 +422,7 @@ export default function Assets() {
     const asset = assets.find(a => a.id === assetId);
     if (!asset?.ticker) return;
     try {
-      const { data } = await api.get(`/assets/ticker/${asset.ticker}`);
+      const { data } = await api.get(`/assets/ticker/${asset.ticker}?assetType=${asset.assetType}`);
       const newValue = parseFloat((data.price * Number(asset.sharesHeld ?? 0)).toFixed(2));
       await api.put(`/assets/${assetId}`, { currentValue: newValue });
       load();

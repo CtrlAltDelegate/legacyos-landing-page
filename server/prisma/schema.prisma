@@ -21,10 +21,14 @@ model User {
   stripeSubId        String?   @unique @map("stripe_sub_id") @db.VarChar(255)
   assumedTaxRate     Decimal   @default(25.00) @map("assumed_tax_rate") @db.Decimal(5, 2)
   onboardingComplete Boolean   @default(false) @map("onboarding_complete")
-  isAdmin            Boolean   @default(false) @map("is_admin")
-  refreshToken       String?   @map("refresh_token")
-  createdAt          DateTime  @default(now()) @map("created_at")
-  updatedAt          DateTime  @updatedAt @map("updated_at")
+  isAdmin                  Boolean   @default(false) @map("is_admin")
+  refreshToken             String?   @map("refresh_token")
+  emailVerifiedAt          DateTime? @map("email_verified_at")
+  emailVerificationToken   String?   @unique @map("email_verification_token")
+  passwordResetToken       String?   @unique @map("password_reset_token")
+  passwordResetExpiry      DateTime? @map("password_reset_expiry")
+  createdAt                DateTime  @default(now()) @map("created_at")
+  updatedAt                DateTime  @updatedAt @map("updated_at")
 
   assets             Asset[]
   assetHistory       AssetHistory[]

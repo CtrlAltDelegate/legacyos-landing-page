@@ -1,11 +1,13 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import Joi from 'joi';
 import { prisma } from '../lib/prisma';
 import { requireAuth, AuthPayload } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { rateLimit } from 'express-rate-limit';
+import { sendVerificationEmail, sendPasswordResetEmail } from '../services/email';
 
 const router = Router();
 
@@ -26,7 +28,11 @@ function signRefreshToken(payload: AuthPayload): string {
   return jwt.sign(payload, process.env.JWT_REFRESH_SECRET!, { expiresIn: '7d' });
 }
 
-function safeUser(user: { id: string; email: string; fullName: string | null; plan: string; assumedTaxRate: unknown; onboardingComplete: boolean; isAdmin: boolean; createdAt: Date }) {
+function safeUser(user: {
+  id: string; email: string; fullName: string | null; plan: string;
+  assumedTaxRate: unknown; onboardingComplete: boolean; isAdmin: boolean;
+  createdAt: Date; emailVerifiedAt: Date | null;
+}) {
   return {
     id: user.id,
     email: user.email,
@@ -36,7 +42,12 @@ function safeUser(user: { id: string; email: string; fullName: string | null; pl
     onboardingComplete: user.onboardingComplete,
     isAdmin: user.isAdmin,
     createdAt: user.createdAt,
+    emailVerified: !!user.emailVerifiedAt,
   };
+}
+
+function generateToken(): string {
+  return crypto.randomBytes(32).toString('hex');
 }
 
 // ─── Validation schemas ───────────────────────────────────────────────────────
@@ -56,6 +67,15 @@ const refreshSchema = Joi.object({
   refreshToken: Joi.string().required(),
 });
 
+const forgotPasswordSchema = Joi.object({
+  email: Joi.string().email().lowercase().required(),
+});
+
+const resetPasswordSchema = Joi.object({
+  token: Joi.string().required(),
+  password: Joi.string().min(8).max(128).required(),
+});
+
 // ─── POST /api/auth/register ──────────────────────────────────────────────────
 
 router.post('/register', authLimiter, validate(registerSchema), async (req: Request, res: Response) => {
@@ -69,6 +89,7 @@ router.post('/register', authLimiter, validate(registerSchema), async (req: Requ
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
+    const verificationToken = generateToken();
 
     const user = await prisma.user.create({
       data: {
@@ -76,6 +97,7 @@ router.post('/register', authLimiter, validate(registerSchema), async (req: Requ
         passwordHash,
         fullName: fullName || null,
         plan: 'free',
+        emailVerificationToken: verificationToken,
       },
     });
 
@@ -83,11 +105,15 @@ router.post('/register', authLimiter, validate(registerSchema), async (req: Requ
     const accessToken = signAccessToken(payload);
     const refreshToken = signRefreshToken(payload);
 
-    // Store hashed refresh token
     await prisma.user.update({
       where: { id: user.id },
       data: { refreshToken: await bcrypt.hash(refreshToken, 8) },
     });
+
+    // Send verification email (non-blocking — don't fail registration if email fails)
+    sendVerificationEmail(email, verificationToken).catch((err) =>
+      console.error('[auth/register] verification email failed:', err)
+    );
 
     res.status(201).json({
       accessToken,
@@ -206,6 +232,125 @@ router.get('/me', requireAuth, async (req: Request, res: Response) => {
   } catch (err) {
     console.error('[auth/me]', err);
     res.status(500).json({ error: 'Failed to fetch user.' });
+  }
+});
+
+// ─── GET /api/auth/verify-email ───────────────────────────────────────────────
+// Called when user clicks the link in their verification email.
+
+router.get('/verify-email', async (req: Request, res: Response) => {
+  const { token } = req.query;
+  if (!token || typeof token !== 'string') {
+    res.status(400).json({ error: 'Invalid verification token.' });
+    return;
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { emailVerificationToken: token },
+    });
+
+    if (!user) {
+      res.status(400).json({ error: 'Verification token is invalid or has already been used.' });
+      return;
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { emailVerifiedAt: new Date(), emailVerificationToken: null },
+    });
+
+    res.json({ message: 'Email verified successfully.' });
+  } catch (err) {
+    console.error('[auth/verify-email]', err);
+    res.status(500).json({ error: 'Email verification failed.' });
+  }
+});
+
+// ─── POST /api/auth/forgot-password ──────────────────────────────────────────
+// Always returns 200 to avoid user enumeration.
+
+router.post('/forgot-password', authLimiter, validate(forgotPasswordSchema), async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (user) {
+      const token = generateToken();
+      const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { passwordResetToken: token, passwordResetExpiry: expiry },
+      });
+
+      sendPasswordResetEmail(email, token).catch((err) =>
+        console.error('[auth/forgot-password] email failed:', err)
+      );
+    }
+
+    // Always return 200 — don't reveal whether the email exists
+    res.json({ message: 'If an account exists for that email, a reset link has been sent.' });
+  } catch (err) {
+    console.error('[auth/forgot-password]', err);
+    res.status(500).json({ error: 'Failed to process reset request.' });
+  }
+});
+
+// ─── POST /api/auth/reset-password ───────────────────────────────────────────
+
+router.post('/reset-password', authLimiter, validate(resetPasswordSchema), async (req: Request, res: Response) => {
+  const { token, password } = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { passwordResetToken: token },
+    });
+
+    if (!user || !user.passwordResetExpiry || user.passwordResetExpiry < new Date()) {
+      res.status(400).json({ error: 'Reset token is invalid or has expired.' });
+      return;
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        passwordResetToken: null,
+        passwordResetExpiry: null,
+        refreshToken: null, // invalidate all existing sessions
+      },
+    });
+
+    res.json({ message: 'Password reset successfully. Please log in with your new password.' });
+  } catch (err) {
+    console.error('[auth/reset-password]', err);
+    res.status(500).json({ error: 'Password reset failed.' });
+  }
+});
+
+// ─── POST /api/auth/resend-verification ──────────────────────────────────────
+
+router.post('/resend-verification', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+    if (!user) { res.status(404).json({ error: 'User not found.' }); return; }
+    if (user.emailVerifiedAt) { res.json({ message: 'Email is already verified.' }); return; }
+
+    const token = generateToken();
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { emailVerificationToken: token },
+    });
+
+    await sendVerificationEmail(user.email, token);
+    res.json({ message: 'Verification email sent.' });
+  } catch (err) {
+    console.error('[auth/resend-verification]', err);
+    res.status(500).json({ error: 'Failed to resend verification email.' });
   }
 });
 

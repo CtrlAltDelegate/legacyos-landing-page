@@ -92,7 +92,7 @@ function getMostImportantWing(wings: WingSummary[]): WingSummary | null {
 
 // ─── Net Worth Hero Bar ───────────────────────────────────────────────────────
 
-function NetWorthBar({ data }: { data: NetWorthData | null }) {
+function NetWorthBar({ data, momDelta }: { data: NetWorthData | null; momDelta: number | null }) {
   const isPositive = data ? data.netWorth >= 0 : true;
   const hasLiabilities = data ? data.totalLiabilities > 0 : false;
 
@@ -107,6 +107,11 @@ function NetWorthBar({ data }: { data: NetWorthData | null }) {
           }`}>
             {data ? fmt(data.netWorth) : '—'}
           </p>
+          {momDelta !== null && (
+            <p className={`mt-1 text-xs font-semibold ${momDelta >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+              {momDelta >= 0 ? '↑' : '↓'} {fmt(Math.abs(momDelta))} vs. last month
+            </p>
+          )}
         </div>
 
         {/* Total assets */}
@@ -296,6 +301,7 @@ export default function Dashboard() {
   const { user } = useAuthStore();
   const [wings, setWings] = useState<WingSummary[]>([]);
   const [netWorth, setNetWorth] = useState<NetWorthData | null>(null);
+  const [momDelta, setMomDelta] = useState<number | null>(null);
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [profileCompleted, setProfileCompleted] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
@@ -311,12 +317,14 @@ export default function Dashboard() {
     Promise.all([
       getAllWings(),
       api.get<NetWorthData>('/networth/current'),
+      api.get<{ monthOverMonth: number | null }>('/networth/snapshots?limit=2'),
       getFamilyProfile(),
       getTodos(),
     ])
-      .then(([w, nwRes, profile, todoItems]) => {
+      .then(([w, nwRes, snapshotRes, profile, todoItems]) => {
         setWings(w);
         setNetWorth(nwRes.data);
+        setMomDelta(snapshotRes.data.monthOverMonth ?? null);
         setProfileCompleted(!!profile.completedAt);
         setTodos(todoItems);
       })
@@ -456,7 +464,7 @@ export default function Dashboard() {
       )}
 
       {/* ── Net Worth Hero (moved above wings per design doc) ───────────── */}
-      <NetWorthBar data={netWorth} />
+      <NetWorthBar data={netWorth} momDelta={momDelta} />
 
       {/* ── Family profile prompt ────────────────────────────────────────── */}
       {profileCompleted === false && (

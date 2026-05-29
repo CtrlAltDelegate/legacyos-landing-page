@@ -213,39 +213,42 @@ async function fetchFromBinance(symbol: string): Promise<TickerPrice | null> {
 
 /**
  * Fetch one ticker price.
- * Chain: cache → Polygon → Yahoo Finance → CoinGecko → Coinbase → Binance
  *
- * Polygon + Yahoo cover every US stock/ETF.
- * CoinGecko covers most crypto by symbol search.
- * Coinbase covers US retail crypto that CoinGecko search misses (e.g. W = Wormhole).
- * Binance covers broader global crypto not listed on Coinbase.
+ * For stocks/ETFs: Polygon → Yahoo Finance → (crypto sources skipped)
+ * For crypto:      CoinGecko → Coinbase → Binance  (stock sources skipped entirely
+ *                  to prevent ticker collisions like W=Wormhole vs W=Wayfair)
+ * When assetType is unknown: full chain (legacy behaviour)
  */
-export async function fetchSingleTicker(ticker: string): Promise<TickerPrice | null> {
+export async function fetchSingleTicker(
+  ticker: string,
+  assetType?: string,
+): Promise<TickerPrice | null> {
   const key = ticker.toUpperCase();
+  const isCrypto = assetType === 'crypto';
+  const isStock  = assetType && assetType !== 'crypto';
 
   const cached = cacheGet(key);
   if (cached) return cached;
 
-  // 1. Polygon
-  const polygon = await fetchFromPolygon(key);
-  if (polygon) { cacheSet(key, polygon); return polygon; }
+  // ── Stock / ETF path ────────────────────────────────────────────────────────
+  if (!isCrypto) {
+    const polygon = await fetchFromPolygon(key);
+    if (polygon) { cacheSet(key, polygon); return polygon; }
 
-  // 2. Yahoo Finance (catches ETFs, indices, anything Polygon misses)
-  const yahoo = await fetchFromYahoo(key);
-  if (yahoo) { cacheSet(key, yahoo); return yahoo; }
+    const yahoo = await fetchFromYahoo(key);
+    if (yahoo) { cacheSet(key, yahoo); return yahoo; }
 
-  // 3. CoinGecko (crypto only at this point)
-  console.log(`[ticker] ${key} not on Polygon or Yahoo — trying CoinGecko (crypto)...`);
-  const crypto = await fetchFromCoinGecko(key);
-  if (crypto) { cacheSet(key, crypto); return crypto; }
+    // If we know it's a stock, don't fall into crypto sources
+    if (isStock) return null;
+  }
 
-  // 4. Coinbase — best coverage for US retail crypto (Wormhole W, etc.)
-  console.log(`[ticker] ${key} not on CoinGecko — trying Coinbase...`);
+  // ── Crypto path ─────────────────────────────────────────────────────────────
+  const gecko = await fetchFromCoinGecko(key);
+  if (gecko) { cacheSet(key, gecko); return gecko; }
+
   const coinbase = await fetchFromCoinbase(key);
   if (coinbase) { cacheSet(key, coinbase); return coinbase; }
 
-  // 5. Binance — broader global crypto fallback
-  console.log(`[ticker] ${key} not on Coinbase — trying Binance...`);
   const binance = await fetchFromBinance(key);
   if (binance) { cacheSet(key, binance); }
   return binance;

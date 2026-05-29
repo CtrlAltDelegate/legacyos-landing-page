@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { FileText, FileUp, AlertTriangle } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
 import Spinner from '@/components/Spinner';
+import PlanGateCard, { isPlanGateError } from '@/components/PlanGateCard';
 
 interface Doc {
   id: string;
@@ -43,6 +44,7 @@ export default function Documents() {
   const [docs, setDocs] = useState<Doc[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [planGate, setPlanGate] = useState<string | null>(null);
 
   // Upload state
   const fileRef = useRef<HTMLInputElement>(null);
@@ -67,7 +69,9 @@ export default function Documents() {
       const { data } = await api.get('/documents');
       setDocs(data.documents);
     } catch (err) {
-      setError(getErrorMessage(err));
+      const gate = isPlanGateError(err);
+      if (gate) { setPlanGate(gate.requiredPlan); }
+      else { setError(getErrorMessage(err)); }
     } finally {
       setLoading(false);
     }
@@ -151,6 +155,16 @@ export default function Documents() {
   }
 
   if (loading) return <div className="flex h-full items-center justify-center"><Spinner className="h-8 w-8" /></div>;
+
+  if (planGate) {
+    return (
+      <PlanGateCard
+        requiredPlan={planGate}
+        featureName="Document uploads"
+        description="Upgrade to Core to upload financial statements. Flo will extract the data automatically — mortgage balances, investment values, insurance details — and update your net worth in real time."
+      />
+    );
+  }
 
   return (
     <div className="p-6 lg:p-8 max-w-3xl mx-auto space-y-6">

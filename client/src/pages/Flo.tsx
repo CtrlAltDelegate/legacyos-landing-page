@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, type FormEvent } from 'react';
 import { Sparkles, ChevronRight, Send, X } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
 import Spinner from '@/components/Spinner';
+import PlanGateCard, { isPlanGateError } from '@/components/PlanGateCard';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -35,6 +36,7 @@ export default function Flo() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
+  const [planGate, setPlanGate] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -44,7 +46,11 @@ export default function Flo() {
       .then((convRes) => {
         setMessages(convRes.data.messages ?? []);
       })
-      .catch((err) => setError(getErrorMessage(err)))
+      .catch((err) => {
+        const gate = isPlanGateError(err);
+        if (gate) { setPlanGate(gate.requiredPlan); }
+        else { setError(getErrorMessage(err)); }
+      })
       .finally(() => setLoading(false));
 
     api.post('/flo/priority', {})
@@ -97,6 +103,16 @@ export default function Flo() {
 
   if (loading) {
     return <div className="flex h-full items-center justify-center"><Spinner className="h-8 w-8 text-brand-600" /></div>;
+  }
+
+  if (planGate) {
+    return (
+      <PlanGateCard
+        requiredPlan={planGate}
+        featureName="Flo AI"
+        description="Upgrade to Core to unlock Flo — your AI financial companion. She reads your live portfolio, tracks your wing progress, and gives personalized guidance based on your actual financial picture."
+      />
+    );
   }
 
   return (
