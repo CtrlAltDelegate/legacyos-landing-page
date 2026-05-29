@@ -97,7 +97,7 @@ export default function NetWorthChart({ snapshots }: Props) {
             width={48}
             domain={domain}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={CustomTooltip} />
           <Area
             type="monotone"
             dataKey="value"

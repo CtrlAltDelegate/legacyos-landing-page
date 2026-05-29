@@ -6,8 +6,9 @@ import { getAllWings, completeStep, uncompleteStep, type WingSummary } from '@/a
 import { getFamilyProfile } from '@/api/profile';
 import { getTodos, type TodoItem } from '@/api/todos';
 import { useAuthStore } from '@/store/auth';
+import { lazy, Suspense } from 'react';
 import Spinner from '@/components/Spinner';
-import NetWorthChart from '@/components/NetWorthChart';
+const NetWorthChart = lazy(() => import('@/components/NetWorthChart'));
 import WingAssessmentFlow from '@/components/wings/WingAssessmentFlow';
 import StepCelebrationModal from '@/components/wings/StepCelebrationModal';
 import FamilyQuestionnaire from '@/components/profile/FamilyQuestionnaire';
@@ -469,7 +470,9 @@ export default function Dashboard() {
       <NetWorthBar data={netWorth} momDelta={momDelta} />
 
       {/* ── Net Worth History Chart ─────────────────────────────────────── */}
-      <NetWorthChart snapshots={snapshots} />
+      <Suspense fallback={null}>
+        <NetWorthChart snapshots={snapshots} />
+      </Suspense>
 
       {/* ── Family profile prompt ────────────────────────────────────────── */}
       {profileCompleted === false && (
