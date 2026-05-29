@@ -102,7 +102,6 @@ function parseRows(raw: string[][]): ParsedRow[] {
 
 export default function CsvImportModal({ onClose, onImported }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const [rows, setRows] = useState<ParsedRow[]>([]);
   const [editRows, setEditRows] = useState<ParsedRow[]>([]);
   const [stage, setStage] = useState<'upload' | 'review' | 'importing' | 'done'>('upload');
   const [importing, setImporting] = useState(false);
@@ -115,7 +114,6 @@ export default function CsvImportModal({ onClose, onImported }: Props) {
       const text = e.target?.result as string;
       const parsed = parseCSV(text);
       const result = parseRows(parsed);
-      setRows(result);
       setEditRows(result.map((r) => ({ ...r })));
       setStage('review');
     };
