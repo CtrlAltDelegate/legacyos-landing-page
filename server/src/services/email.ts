@@ -1,6 +1,13 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy client — avoids crashing on startup when RESEND_API_KEY is not yet set
+function getResend(): Resend {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error('RESEND_API_KEY is not configured.');
+  }
+  return new Resend(process.env.RESEND_API_KEY);
+}
+
 const FROM   = process.env.EMAIL_FROM ?? 'LegacyOS <noreply@legacyos.com>';
 const CLIENT = process.env.CLIENT_URL ?? 'http://localhost:5173';
 
@@ -54,7 +61,7 @@ export async function sendVerificationEmail(
     return;
   }
 
-  await resend.emails.send({ from: FROM, to, subject: 'Verify your LegacyOS email', html });
+  await getResend().emails.send({ from: FROM, to, subject: 'Verify your LegacyOS email', html });
 }
 
 // ─── Send password reset email ────────────────────────────────────────────────
@@ -87,5 +94,5 @@ export async function sendPasswordResetEmail(
     return;
   }
 
-  await resend.emails.send({ from: FROM, to, subject: 'Reset your LegacyOS password', html });
+  await getResend().emails.send({ from: FROM, to, subject: 'Reset your LegacyOS password', html });
 }

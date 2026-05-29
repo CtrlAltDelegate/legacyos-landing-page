@@ -3,10 +3,18 @@ import { prisma } from '../lib/prisma';
 import { calculateNetWorth } from '../services/networth';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy clients — avoids crashing on startup when env vars are not yet set
+function getResend(): Resend {
+  if (!process.env.RESEND_API_KEY) throw new Error('RESEND_API_KEY not configured.');
+  return new Resend(process.env.RESEND_API_KEY);
+}
+function getAnthropic(): Anthropic {
+  if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured.');
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+}
+
 const FROM   = process.env.EMAIL_FROM ?? 'Flo at LegacyOS <flo@legacyos.com>';
 const CLIENT = process.env.CLIENT_URL ?? 'http://localhost:5173';
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
 const fmt = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -67,7 +75,7 @@ Write a brief, warm, personalized weekly check-in message for this user.
 - Do NOT mention this is automated or a "digest"`;
 
   try {
-    const response = await anthropic.messages.create({
+    const response = await getAnthropic().messages.create({
       model: 'claude-haiku-4-5',
       max_tokens: 400,
       messages: [{ role: 'user', content: prompt }],
@@ -199,7 +207,7 @@ export async function runWeeklyDigest(): Promise<void> {
         fmt(netWorthResult.netWorth),
       );
 
-      await resend.emails.send({
+      await getResend().emails.send({
         from: FROM,
         to: user.email,
         subject: `Flo's weekly check-in — ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`,
