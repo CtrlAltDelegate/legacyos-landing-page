@@ -20,6 +20,7 @@ import todoRoutes from './routes/todos';
 
 import { startPriceRefreshCron } from './cron/priceRefresh';
 import { startMonthlySnapshotCron } from './cron/monthlySnapshot';
+import { startWeeklyDigestCron } from './cron/weeklyDigestCron';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -96,6 +97,7 @@ app.listen(PORT, () => {
   console.log(`LegacyOS server running on port ${PORT}`);
   startPriceRefreshCron();
   startMonthlySnapshotCron();
+  startWeeklyDigestCron();
 });
 
 export default app;

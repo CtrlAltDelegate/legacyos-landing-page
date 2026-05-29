@@ -19,6 +19,7 @@ import Flo from '@/pages/Flo';
 import WingDetail from '@/pages/WingDetail';
 import Admin from '@/pages/Admin';
 import Profile from '@/pages/Profile';
+import Liabilities from '@/pages/Liabilities';
 
 export default function App() {
   const { initialize, isInitialized } = useAuthStore();
@@ -52,6 +53,7 @@ export default function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/wings/:wing" element={<WingDetail />} />
             <Route path="/assets" element={<Assets />} />
+            <Route path="/liabilities" element={<Liabilities />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/flo" element={<Flo />} />
             <Route path="/admin" element={<Admin />} />

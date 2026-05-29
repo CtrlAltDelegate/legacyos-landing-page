@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { FileText, FileUp, AlertTriangle } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
 import Spinner from '@/components/Spinner';
@@ -41,6 +42,10 @@ function fmtDate(iso: string) {
 }
 
 export default function Documents() {
+  const [searchParams] = useSearchParams();
+  const prefilledType = searchParams.get('type') ?? 'unknown';
+  const prefilledLabel = searchParams.get('label');
+
   const [docs, setDocs] = useState<Doc[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -48,7 +53,7 @@ export default function Documents() {
 
   // Upload state
   const fileRef = useRef<HTMLInputElement>(null);
-  const [docType, setDocType] = useState('unknown');
+  const [docType, setDocType] = useState(prefilledType);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
 
@@ -174,6 +179,16 @@ export default function Documents() {
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">Documents</h1>
         <p className="mt-1 text-sm text-gray-500">Upload financial statements — Flo extracts the data automatically.</p>
       </div>
+
+      {/* Pre-fill banner — shown when arriving from a todo action */}
+      {prefilledLabel && (
+        <div className="rounded-xl bg-brand-50 border border-brand-100 border-l-4 border-l-brand-500 px-4 py-3 flex items-center gap-3">
+          <FileUp className="h-4 w-4 text-brand-500 flex-shrink-0" />
+          <p className="text-sm text-brand-800">
+            <span className="font-semibold">Ready to upload:</span> {decodeURIComponent(prefilledLabel)}
+          </p>
+        </div>
+      )}
 
       {/* Upload card */}
       <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6 space-y-4">

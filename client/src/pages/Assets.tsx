@@ -452,24 +452,24 @@ export default function Assets() {
     .filter(g => g.items.length > 0);
 
   return (
-    <div className="p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Assets</h1>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">Assets</h1>
           <p className="mt-1 text-sm text-gray-500">
             {assets.length === 0
               ? 'Add your first asset to start tracking net worth.'
               : `${assets.length} asset${assets.length !== 1 ? 's' : ''} tracked across all classes`}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {hasEquity && (
             <button
               onClick={handleRefreshAll}
               disabled={refreshing}
-              className="btn-secondary"
+              className="btn-secondary hidden sm:inline-flex"
             >
               {refreshing ? <Spinner className="h-4 w-4" /> : <RefreshCw className="h-4 w-4" />}
               Refresh prices
@@ -480,7 +480,7 @@ export default function Assets() {
             className="btn-primary"
           >
             <Plus className="h-4 w-4" />
-            Add asset
+            <span className="hidden sm:inline">Add asset</span>
           </button>
         </div>
       </div>

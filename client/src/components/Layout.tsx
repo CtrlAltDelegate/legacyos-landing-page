@@ -4,6 +4,7 @@ import {
   Gem,
   LayoutDashboard,
   Briefcase,
+  CreditCard,
   FileText,
   Sparkles,
   User,
@@ -12,10 +13,11 @@ import {
 } from 'lucide-react';
 
 const nav = [
-  { to: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
-  { to: '/assets',    label: 'Assets',    Icon: Briefcase       },
-  { to: '/documents', label: 'Documents', Icon: FileText        },
-  { to: '/flo',       label: 'Flo',       Icon: Sparkles        },
+  { to: '/dashboard',   label: 'Dashboard',   Icon: LayoutDashboard },
+  { to: '/assets',      label: 'Assets',      Icon: Briefcase       },
+  { to: '/liabilities', label: 'Liabilities', Icon: CreditCard      },
+  { to: '/documents',   label: 'Documents',   Icon: FileText        },
+  { to: '/flo',         label: 'Flo',         Icon: Sparkles        },
 ];
 
 export default function Layout() {
@@ -29,8 +31,9 @@ export default function Layout() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-surface-1">
-      {/* ── Sidebar ─────────────────────────────────────────────────────── */}
-      <aside className="flex w-56 flex-col bg-surface-1 border-r border-gray-100 shadow-sidebar flex-shrink-0">
+
+      {/* ── Desktop sidebar ──────────────────────────────────────────────── */}
+      <aside className="hidden md:flex w-56 flex-col bg-surface-1 border-r border-gray-100 shadow-sidebar flex-shrink-0">
 
         {/* Logo */}
         <div className="flex h-16 items-center gap-2.5 px-5 border-b border-gray-100">
@@ -39,7 +42,7 @@ export default function Layout() {
         </div>
 
         {/* Nav links */}
-        <nav className="flex-1 space-y-0.5 px-3 py-4">
+        <nav className="flex-1 space-y-0.5 px-3 py-4 overflow-y-auto">
           {nav.map(({ to, label, Icon }) => (
             <NavLink
               key={to}
@@ -64,7 +67,6 @@ export default function Layout() {
 
         {/* User footer */}
         <div className="border-t border-gray-100 p-3 space-y-0.5">
-          {/* Email + plan badge */}
           <div className="px-3 py-2 mb-1">
             <p className="truncate text-xs font-medium text-gray-500 mb-1.5">{user?.email}</p>
             <span className="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-semibold text-brand-700 capitalize">
@@ -116,10 +118,49 @@ export default function Layout() {
         </div>
       </aside>
 
-      {/* ── Main content ────────────────────────────────────────────────── */}
-      <main className="flex-1 overflow-y-auto bg-surface-1">
+      {/* ── Main content ─────────────────────────────────────────────────── */}
+      {/* On mobile: add bottom padding so content clears the bottom nav */}
+      <main className="flex-1 overflow-y-auto bg-surface-1 pb-16 md:pb-0">
         <Outlet />
       </main>
+
+      {/* ── Mobile bottom nav ─────────────────────────────────────────────── */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 flex items-stretch">
+        {nav.map(({ to, label, Icon }) => (
+          <NavLink
+            key={to}
+            to={to}
+            className={({ isActive }) =>
+              `flex-1 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
+                isActive ? 'text-brand-600' : 'text-gray-400'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <Icon className={`h-5 w-5 ${isActive ? 'text-brand-600' : 'text-gray-400'}`} />
+                <span className="leading-tight">{label}</span>
+              </>
+            )}
+          </NavLink>
+        ))}
+        {/* Profile link in bottom nav */}
+        <NavLink
+          to="/profile"
+          className={({ isActive }) =>
+            `flex-1 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
+              isActive ? 'text-brand-600' : 'text-gray-400'
+            }`
+          }
+        >
+          {({ isActive }) => (
+            <>
+              <User className={`h-5 w-5 ${isActive ? 'text-brand-600' : 'text-gray-400'}`} />
+              <span className="leading-tight">Profile</span>
+            </>
+          )}
+        </NavLink>
+      </nav>
     </div>
   );
 }

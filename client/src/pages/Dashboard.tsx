@@ -100,7 +100,7 @@ function NetWorthBar({ data, momDelta }: { data: NetWorthData | null; momDelta: 
     <div className="rounded-xl bg-white shadow-md border border-gray-100 overflow-hidden">
       <div className="grid grid-cols-2 sm:grid-cols-4">
         {/* Net worth — hero metric */}
-        <div className="col-span-2 sm:col-span-1 px-6 py-5 border-r border-gray-100">
+        <div className="col-span-2 sm:col-span-1 px-5 py-4 sm:px-6 sm:py-5 border-b sm:border-b-0 sm:border-r border-gray-100">
           <p className="section-label mb-2">Net worth</p>
           <p className={`text-3xl font-bold tabular font-mono tracking-tight ${
             isPositive ? 'text-gray-900' : 'text-red-600'
@@ -115,17 +115,17 @@ function NetWorthBar({ data, momDelta }: { data: NetWorthData | null; momDelta: 
         </div>
 
         {/* Total assets */}
-        <div className="px-6 py-5 border-r border-gray-100">
-          <p className="section-label mb-2">Total assets</p>
-          <p className="text-xl font-semibold tabular font-mono text-gray-600">
+        <div className="px-5 py-4 sm:px-6 sm:py-5 border-r border-gray-100">
+          <p className="section-label mb-1.5">Total assets</p>
+          <p className="text-lg sm:text-xl font-semibold tabular font-mono text-gray-600">
             {data ? fmt(data.totalAssets) : '—'}
           </p>
         </div>
 
         {/* Total liabilities */}
-        <div className="px-6 py-5 border-r border-gray-100">
-          <p className="section-label mb-2">Total liabilities</p>
-          <p className={`text-xl font-semibold tabular font-mono ${hasLiabilities ? 'text-gray-600' : 'text-gray-400'}`}>
+        <div className="px-5 py-4 sm:px-6 sm:py-5 border-r border-gray-100">
+          <p className="section-label mb-1.5">Liabilities</p>
+          <p className={`text-lg sm:text-xl font-semibold tabular font-mono ${hasLiabilities ? 'text-gray-600' : 'text-gray-400'}`}>
             {data ? fmt(data.totalLiabilities) : '—'}
           </p>
           {data && !hasLiabilities && (
@@ -134,9 +134,9 @@ function NetWorthBar({ data, momDelta }: { data: NetWorthData | null; momDelta: 
         </div>
 
         {/* Equity */}
-        <div className="px-6 py-5">
-          <p className="section-label mb-2">Equity &amp; stocks</p>
-          <p className="text-xl font-semibold tabular font-mono text-gray-600">
+        <div className="px-5 py-4 sm:px-6 sm:py-5">
+          <p className="section-label mb-1.5">Equity &amp; stocks</p>
+          <p className="text-lg sm:text-xl font-semibold tabular font-mono text-gray-600">
             {data ? fmt(data.breakdown.equityValue) : '—'}
           </p>
         </div>
@@ -396,26 +396,25 @@ export default function Dashboard() {
   const priorityWing = getMostImportantWing(wings);
 
   return (
-    <div className="p-6 lg:p-8 space-y-8 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto">
 
       {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 leading-tight">
             Good {getTimeOfDay()}, {firstName}
           </h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-gray-500 hidden sm:block">
             {assessedCount === 0
               ? 'Start by taking a quick assessment to discover your level in each wing.'
               : `${assessedCount} of 6 wings assessed · ${completedCount} steps completed · Overall: ${levelLabels[avgLevel]}`}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Link to="/flo" className="btn-primary gap-2">
-            <Sparkles className="h-4 w-4" />
-            Ask Flo
-          </Link>
-        </div>
+        <Link to="/flo" className="btn-primary gap-2 flex-shrink-0 text-sm px-3 sm:px-4">
+          <Sparkles className="h-4 w-4" />
+          <span className="hidden sm:inline">Ask Flo</span>
+          <span className="sm:hidden">Flo</span>
+        </Link>
       </div>
 
       {/* ── Flo assessment prompt ───────────────────────────────────────── */}
