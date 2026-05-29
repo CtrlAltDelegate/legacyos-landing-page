@@ -23,17 +23,10 @@ function fmtMonth(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
 }
 
-interface TooltipPayload {
-  value: number;
-}
-
-function CustomTooltip({ active, payload, label }: {
-  active?: boolean;
-  payload?: TooltipPayload[];
-  label?: string;
-}) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
-  const value = payload[0].value;
+  const value = Number(payload[0].value);
   return (
     <div className="rounded-lg bg-white border border-gray-100 shadow-md px-3 py-2">
       <p className="text-xs text-gray-400 mb-0.5">{label}</p>
