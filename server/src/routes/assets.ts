@@ -3,7 +3,7 @@ import Joi from 'joi';
 import { prisma } from '../lib/prisma';
 import { requireAuth } from '../middleware/auth';
 import { validate } from '../middleware/validate';
-import { fetchTickerPrices, fetchSingleTicker } from '../services/polygon';
+import { fetchAllEquityPrices, fetchSingleTicker } from '../services/polygon';
 
 const router = Router();
 router.use(requireAuth);
@@ -384,7 +384,8 @@ router.post('/refresh-prices', async (req: Request, res: Response) => {
         assetClass: 'equity',
         ticker: { not: null },
       },
-      select: { id: true, ticker: true, sharesHeld: true, currentValue: true, name: true },
+      // Include assetType so fetchAllEquityPrices can route crypto vs stocks correctly
+      select: { id: true, ticker: true, assetType: true, sharesHeld: true, currentValue: true, name: true },
     });
 
     if (equityAssets.length === 0) {
@@ -392,8 +393,16 @@ router.post('/refresh-prices', async (req: Request, res: Response) => {
       return;
     }
 
-    const tickers = [...new Set(equityAssets.map(a => a.ticker!))];
-    const priceMap = await fetchTickerPrices(tickers);
+    // Deduplicate by ticker, preserving assetType for routing
+    const seen = new Set<string>();
+    const assetsMeta: Array<{ ticker: string; assetType: string }> = [];
+    for (const a of equityAssets) {
+      const key = a.ticker!.toUpperCase();
+      if (!seen.has(key)) { seen.add(key); assetsMeta.push({ ticker: key, assetType: a.assetType }); }
+    }
+
+    // fetchAllEquityPrices routes stocks → Polygon/Yahoo, crypto → CoinGecko/Coinbase/Binance
+    const priceMap = await fetchAllEquityPrices(assetsMeta);
 
     let updated = 0;
     const refreshed: Array<{ ticker: string; price: number; totalValue: number }> = [];

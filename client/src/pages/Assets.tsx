@@ -180,7 +180,7 @@ function AssetRow({ asset, onDelete, onRefresh, onEdit }: {
           >
             ✎
           </button>
-          {asset.ticker && !isAuto && (
+          {asset.ticker && (
             <button
               onClick={() => onRefresh(asset.id)}
               className="text-[11px] text-brand-600 hover:underline"
@@ -337,7 +337,7 @@ function PositionRow({ asset, onDelete, onRefresh, onEdit }: {
           >
             ✎
           </button>
-          {asset.ticker && !isAuto && (
+          {asset.ticker && (
             <button onClick={() => onRefresh(asset.id)} className="text-[11px] text-brand-600 hover:underline">
               Refresh
             </button>

@@ -326,33 +326,43 @@ export async function fetchCryptoPrices(symbols: string[]): Promise<Map<string, 
     await sleep(500); // ~2 req/s — well within the 30/min free limit
   }
 
-  if (!symbolToMeta.size) return results;
+  // ── CoinGecko batch price call ──────────────────────────────────────────────
+  if (symbolToMeta.size > 0) {
+    try {
+      const ids = Array.from(symbolToMeta.values()).map(v => v.id);
+      const priceRes = await axios.get(`${COINGECKO_BASE}/simple/price`, {
+        params: { ids: ids.join(','), vs_currencies: 'usd', include_last_updated_at: 'true' },
+        timeout: 15_000,
+      });
 
-  // Single batch price call
-  try {
-    const ids = Array.from(symbolToMeta.values()).map(v => v.id);
-    const priceRes = await axios.get(`${COINGECKO_BASE}/simple/price`, {
-      params: { ids: ids.join(','), vs_currencies: 'usd', include_last_updated_at: 'true' },
-      timeout: 15_000,
-    });
-
-    for (const [sym, meta] of symbolToMeta.entries()) {
-      const pd = priceRes.data?.[meta.id];
-      if (pd?.usd) {
-        const result: TickerPrice = {
-          ticker: sym,
-          name: meta.name,
-          price: pd.usd,
-          updatedAt: pd.last_updated_at
-            ? new Date(pd.last_updated_at * 1000).toISOString()
-            : new Date().toISOString(),
-        };
-        results.set(sym, result);
-        cacheSet(sym, result);
+      for (const [sym, meta] of symbolToMeta.entries()) {
+        const pd = priceRes.data?.[meta.id];
+        if (pd?.usd) {
+          const result: TickerPrice = {
+            ticker: sym,
+            name: meta.name,
+            price: pd.usd,
+            updatedAt: pd.last_updated_at
+              ? new Date(pd.last_updated_at * 1000).toISOString()
+              : new Date().toISOString(),
+          };
+          results.set(sym, result);
+          cacheSet(sym, result);
+        }
       }
+    } catch (err) {
+      console.error('[coingecko] Batch price fetch failed:', err);
     }
-  } catch (err) {
-    console.error('[coingecko] Batch price fetch failed:', err);
+  }
+
+  // ── Coinbase + Binance fallback for any symbol CoinGecko missed ─────────────
+  const missed = symbols.map(s => s.toUpperCase()).filter(s => !results.has(s));
+  for (const sym of missed) {
+    const coinbase = await fetchFromCoinbase(sym);
+    if (coinbase) { results.set(sym, coinbase); cacheSet(sym, coinbase); continue; }
+    const binance = await fetchFromBinance(sym);
+    if (binance) { results.set(sym, binance); cacheSet(sym, binance); }
+    await sleep(200);
   }
 
   return results;
