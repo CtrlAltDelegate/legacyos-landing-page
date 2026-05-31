@@ -110,8 +110,14 @@ export default function Flo() {
       const { data } = await api.post('/flo/chat', { message: text.trim() });
       setMessages(data.messages);
     } catch (err) {
-      setError(getErrorMessage(err));
-      setMessages((prev) => prev.filter((m) => m !== optimistic));
+      const gate = isPlanGateError(err);
+      if (gate) {
+        setPlanGate(gate.requiredPlan);
+        setMessages((prev) => prev.filter((m) => m !== optimistic));
+      } else {
+        setError(getErrorMessage(err));
+        setMessages((prev) => prev.filter((m) => m !== optimistic));
+      }
     } finally {
       setSending(false);
       inputRef.current?.focus();
