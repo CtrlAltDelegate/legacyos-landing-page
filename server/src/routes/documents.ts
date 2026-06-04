@@ -88,7 +88,31 @@ router.post(
       });
     } catch (err) {
       console.error('[documents/upload]', err);
-      res.status(500).json({ error: 'Upload failed.' });
+
+      // Surface a specific error for missing S3 config so it's obvious in the UI
+      if (!process.env.AWS_S3_BUCKET || !process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+        res.status(500).json({
+          error: 'Document storage is not configured. Set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_S3_BUCKET in Railway → Variables.',
+        });
+        return;
+      }
+
+      // AWS SDK errors have a Code property
+      const code = (err as { Code?: string; name?: string }).Code ?? (err as { name?: string }).name ?? '';
+      if (code === 'InvalidAccessKeyId' || code === 'AuthFailure') {
+        res.status(500).json({ error: 'AWS credentials are invalid. Check AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in Railway → Variables.' });
+        return;
+      }
+      if (code === 'NoSuchBucket') {
+        res.status(500).json({ error: `S3 bucket "${process.env.AWS_S3_BUCKET}" does not exist. Create it in AWS S3 or check the AWS_S3_BUCKET variable.` });
+        return;
+      }
+      if (code === 'AccessDenied') {
+        res.status(500).json({ error: 'AWS access denied. Ensure the IAM user has s3:PutObject permission on the bucket.' });
+        return;
+      }
+
+      res.status(500).json({ error: 'Upload failed. Check Railway logs for details.' });
     }
   }
 );

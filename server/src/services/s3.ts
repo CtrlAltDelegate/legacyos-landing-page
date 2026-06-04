@@ -7,15 +7,28 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Readable } from 'stream';
 
+// ─── Startup validation ───────────────────────────────────────────────────────
+// Fail loudly on missing S3 config so the problem is obvious in Railway logs.
+
+const REQUIRED_S3_VARS = ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_S3_BUCKET'] as const;
+const missingS3Vars = REQUIRED_S3_VARS.filter((v) => !process.env[v]);
+if (missingS3Vars.length > 0) {
+  console.error(
+    `[s3] MISSING ENVIRONMENT VARIABLES: ${missingS3Vars.join(', ')}.\n` +
+    '  Document uploads will fail until these are set in Railway > Variables.\n' +
+    '  Required: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_S3_BUCKET, AWS_REGION (optional, defaults to us-east-1)'
+  );
+}
+
 const s3 = new S3Client({
   region: process.env.AWS_REGION ?? 'us-east-1',
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? '',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? '',
   },
 });
 
-const BUCKET = process.env.AWS_S3_BUCKET!;
+const BUCKET = process.env.AWS_S3_BUCKET ?? '';
 
 // ─── Upload ───────────────────────────────────────────────────────────────────
 
