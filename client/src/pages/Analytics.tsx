@@ -3,11 +3,8 @@ import { api, getErrorMessage } from '@/api/client';
 import { useAuthStore } from '@/store/auth';
 import Spinner from '@/components/Spinner';
 import PlanGateCard from '@/components/PlanGateCard';
-import BenchmarkChart, { BenchmarkPoint } from '@/components/BenchmarkChart';
-import TrajectoryChart, {
-  TrajectorySnapshot,
-  TrajectoryGoal,
-} from '@/components/TrajectoryChart';
+import BenchmarkChart, { type BenchmarkPoint } from '@/components/BenchmarkChart';
+import TrajectoryChart, { type TrajectorySnapshot, type TrajectoryGoal } from '@/components/TrajectoryChart';
 
 export default function Analytics() {
   const { user } = useAuthStore();
