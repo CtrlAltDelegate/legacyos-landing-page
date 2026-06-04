@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { RefreshCw, Plus, Upload } from 'lucide-react';
+import { RefreshCw, Plus, Upload, ChevronDown } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
 import Spinner from '@/components/Spinner';
 import AddAssetModal from '@/components/assets/AddAssetModal';
@@ -374,6 +374,34 @@ export default function Assets() {
   // Persisted account display order (largest-first by default; user can reorder)
   const [accountOrder, setAccountOrder] = useState<string[]>(loadAccountOrder);
 
+  // Expand / collapse state — persisted to localStorage
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(() => {
+    try { return new Set<string>(JSON.parse(localStorage.getItem('lo_collapsed_sections') ?? '[]')); }
+    catch { return new Set<string>(); }
+  });
+  const [collapsedAccounts, setCollapsedAccounts] = useState<Set<string>>(() => {
+    try { return new Set<string>(JSON.parse(localStorage.getItem('lo_collapsed_accounts') ?? '[]')); }
+    catch { return new Set<string>(); }
+  });
+
+  function toggleSection(key: string) {
+    setCollapsedSections(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      localStorage.setItem('lo_collapsed_sections', JSON.stringify([...next]));
+      return next;
+    });
+  }
+
+  function toggleAccount(label: string) {
+    setCollapsedAccounts(prev => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label); else next.add(label);
+      localStorage.setItem('lo_collapsed_accounts', JSON.stringify([...next]));
+      return next;
+    });
+  }
+
   function moveAccount(label: string, dir: 'up' | 'down', sortedAccounts: EquityAccountGroup[]) {
     const labels = sortedAccounts.map(a => a.label);
     const idx = labels.indexOf(label);
@@ -532,100 +560,128 @@ export default function Assets() {
           // ── Equity: render grouped by account ───────────────────────────
           if (cls === 'equity') {
             const rawAccounts = groupEquityByAccount(items);
-            // Default order: largest account first (before user has set a preference)
             const defaultSorted = accountOrder.length
               ? rawAccounts
               : [...rawAccounts].sort((a, b) => b.totalValue - a.totalValue);
             const accounts = applyAccountOrder(defaultSorted, accountOrder);
+            const sectionCollapsed = collapsedSections.has(cls);
             return (
               <div key={cls} className="space-y-3">
-                {/* Section header */}
-                <div className="flex items-center justify-between px-1 pb-1">
-                  <h2 className="section-label flex items-center gap-2">
-                    <span>{emoji}</span> {label}
+                {/* Section header — clickable to collapse */}
+                <button
+                  onClick={() => toggleSection(cls)}
+                  className="w-full flex items-center justify-between px-1 pb-1 text-left group"
+                >
+                  <h2 className="section-label flex items-center gap-2 mb-0">
+                    <span>{emoji}</span>
+                    {label}
+                    <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-200 group-hover:text-gray-600 ${sectionCollapsed ? '-rotate-90' : ''}`} />
                   </h2>
                   <span className="text-sm font-bold tabular font-mono text-gray-700">{fmt(groupTotal)}</span>
-                </div>
+                </button>
+
                 {/* Account cards */}
-                {accounts.map((acct, idx) => (
-                  <div key={acct.label} className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-                    {/* Account header */}
-                    <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-100">
-                      <div className="flex items-center gap-2">
-                        {/* Up / down reorder buttons */}
-                        {accounts.length > 1 && (
-                          <div className="flex flex-col gap-0 mr-0.5">
-                            <button
-                              onClick={() => moveAccount(acct.label, 'up', accounts)}
-                              disabled={idx === 0}
-                              className="text-gray-300 hover:text-gray-600 disabled:opacity-0 leading-none transition text-[10px] px-0.5"
-                              title="Move account up"
-                            >▲</button>
-                            <button
-                              onClick={() => moveAccount(acct.label, 'down', accounts)}
-                              disabled={idx === accounts.length - 1}
-                              className="text-gray-300 hover:text-gray-600 disabled:opacity-0 leading-none transition text-[10px] px-0.5"
-                              title="Move account down"
-                            >▼</button>
-                          </div>
-                        )}
-                        <p className="text-sm font-bold text-gray-900">{acct.label}</p>
-                        <span className="rounded-full bg-white border border-gray-200 px-2 py-0.5 text-[11px] font-medium text-gray-500">
-                          {ACCOUNT_TYPE_LABELS[acct.assetType] ?? acct.assetType}
-                        </span>
-                        {acct.isPretax && (
-                          <span className="rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-medium text-amber-700">Pre-tax</span>
-                        )}
+                {!sectionCollapsed && accounts.map((acct, idx) => {
+                  const accountCollapsed = collapsedAccounts.has(acct.label);
+                  return (
+                    <div key={acct.label} className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+                      {/* Account header */}
+                      <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-100">
+                        <div className="flex items-center gap-2">
+                          {/* Up / down reorder buttons */}
+                          {accounts.length > 1 && (
+                            <div className="flex flex-col gap-0 mr-0.5">
+                              <button
+                                onClick={() => moveAccount(acct.label, 'up', accounts)}
+                                disabled={idx === 0}
+                                className="text-gray-300 hover:text-gray-600 disabled:opacity-0 leading-none transition text-[10px] px-0.5"
+                                title="Move account up"
+                              >▲</button>
+                              <button
+                                onClick={() => moveAccount(acct.label, 'down', accounts)}
+                                disabled={idx === accounts.length - 1}
+                                className="text-gray-300 hover:text-gray-600 disabled:opacity-0 leading-none transition text-[10px] px-0.5"
+                                title="Move account down"
+                              >▼</button>
+                            </div>
+                          )}
+                          {/* Account label — clicking toggles collapse */}
+                          <button
+                            onClick={() => toggleAccount(acct.label)}
+                            className="flex items-center gap-1.5 text-left group/acct"
+                          >
+                            <ChevronDown className={`h-3.5 w-3.5 text-gray-400 transition-transform duration-200 group-hover/acct:text-gray-600 ${accountCollapsed ? '-rotate-90' : ''}`} />
+                            <p className="text-sm font-bold text-gray-900">{acct.label}</p>
+                          </button>
+                          <span className="rounded-full bg-white border border-gray-200 px-2 py-0.5 text-[11px] font-medium text-gray-500">
+                            {ACCOUNT_TYPE_LABELS[acct.assetType] ?? acct.assetType}
+                          </span>
+                          {acct.isPretax && (
+                            <span className="rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-medium text-amber-700">Pre-tax</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-bold text-gray-900">{fmt(acct.totalValue)}</span>
+                          <button
+                            onClick={() => setShowModal(true)}
+                            className="text-[11px] font-semibold text-brand-600 hover:underline"
+                            title="Add position to this account"
+                          >
+                            + Add
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-bold text-gray-900">{fmt(acct.totalValue)}</span>
-                        <button
-                          onClick={() => setShowModal(true)}
-                          className="text-[11px] font-semibold text-brand-600 hover:underline"
-                          title="Add position to this account"
-                        >
-                          + Add
-                        </button>
-                      </div>
+                      {/* Positions — hidden when account is collapsed */}
+                      {!accountCollapsed && (
+                        <div className="px-5">
+                          {acct.positions.map(asset => (
+                            <PositionRow
+                              key={asset.id}
+                              asset={asset}
+                              onDelete={handleDelete}
+                              onRefresh={handleRefreshOne}
+                              onEdit={setEditingAsset}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    {/* Positions — already sorted largest → smallest by groupEquityByAccount */}
-                    <div className="px-5">
-                      {acct.positions.map(asset => (
-                        <PositionRow
-                          key={asset.id}
-                          asset={asset}
-                          onDelete={handleDelete}
-                          onRefresh={handleRefreshOne}
-                          onEdit={setEditingAsset}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             );
           }
 
           // ── Non-equity: flat list ────────────────────────────────────────
+          const sectionCollapsed = collapsedSections.has(cls);
           return (
             <div key={cls} className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/60">
-                <h2 className="section-label flex items-center gap-2">
-                  <span>{emoji}</span> {label}
+              {/* Section header — full row is clickable */}
+              <button
+                onClick={() => toggleSection(cls)}
+                className="w-full flex items-center justify-between px-6 py-4 bg-gray-50/60 text-left group"
+                style={{ borderBottom: sectionCollapsed ? 'none' : undefined }}
+              >
+                <h2 className="section-label flex items-center gap-2 mb-0">
+                  <span>{emoji}</span>
+                  {label}
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-200 group-hover:text-gray-600 ${sectionCollapsed ? '-rotate-90' : ''}`} />
                 </h2>
                 <span className="text-sm font-bold tabular font-mono text-gray-700">{fmt(groupTotal)}</span>
-              </div>
-              <div className="px-6">
-                {items.map(asset => (
-                  <AssetRow
-                    key={asset.id}
-                    asset={asset}
-                    onDelete={handleDelete}
-                    onRefresh={handleRefreshOne}
-                    onEdit={setEditingNonEquity}
-                  />
-                ))}
-              </div>
+              </button>
+              {!sectionCollapsed && (
+                <div className="px-6 border-t border-gray-100">
+                  {items.map(asset => (
+                    <AssetRow
+                      key={asset.id}
+                      asset={asset}
+                      onDelete={handleDelete}
+                      onRefresh={handleRefreshOne}
+                      onEdit={setEditingNonEquity}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           );
         })
