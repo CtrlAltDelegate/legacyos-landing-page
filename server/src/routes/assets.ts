@@ -58,6 +58,14 @@ const createAssetSchema = Joi.object({
   // Shared
   currentValue: Joi.number().min(0).optional(),
   notes: Joi.string().optional(),
+
+  // Equity enrichment (auto-populated from Yahoo Finance)
+  sector:            Joi.string().max(60).optional().allow(null, ''),
+  geography:         Joi.string().valid('domestic', 'international', 'emerging').optional().allow(null, ''),
+  marketCapCategory: Joi.string().valid('mega_cap', 'large_cap', 'mid_cap', 'small_cap', 'micro_cap').optional().allow(null, ''),
+
+  // Flexible source tagging
+  currentValueSource: Joi.string().max(30).optional(),
 });
 
 const updateAssetSchema = createAssetSchema.fork(
@@ -246,9 +254,13 @@ router.post('/', validate(createAssetSchema), async (req: Request, res: Response
         vestDate: data.vestDate ? new Date(data.vestDate as string) : null,
         probability: data.probability != null ? Number(data.probability) : null,
         currentValue: data.currentValue != null ? Number(data.currentValue) : null,
-        currentValueSource: 'manual',
+        currentValueSource: (data.currentValueSource as string) ?? 'manual',
         currentValueUpdatedAt: data.currentValue != null ? new Date() : null,
         notes: (data.notes as string) ?? null,
+        // Enrichment
+        sector:            (data.sector as string) ?? null,
+        geography:         (data.geography as string) ?? null,
+        marketCapCategory: (data.marketCapCategory as string) ?? null,
       },
     });
 

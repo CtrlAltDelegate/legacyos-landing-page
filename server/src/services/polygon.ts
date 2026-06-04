@@ -12,6 +12,34 @@ export interface TickerPrice {
   price: number;
   name?: string;
   updatedAt: string;
+  // Enrichment — populated for stocks/ETFs via Yahoo Finance, null for crypto
+  sector?: string | null;
+  geography?: string | null;         // 'domestic' | 'international' | 'emerging'
+  marketCapCategory?: string | null; // 'mega_cap' | 'large_cap' | 'mid_cap' | 'small_cap' | 'micro_cap'
+}
+
+/** Classify a market cap number into a category. */
+export function classifyMarketCap(marketCap: number | null | undefined): string | null {
+  if (!marketCap || marketCap <= 0) return null;
+  if (marketCap >= 200_000_000_000) return 'mega_cap';     // $200B+
+  if (marketCap >= 10_000_000_000)  return 'large_cap';    // $10B–$200B
+  if (marketCap >= 2_000_000_000)   return 'mid_cap';      // $2B–$10B
+  if (marketCap >= 300_000_000)     return 'small_cap';    // $300M–$2B
+  return 'micro_cap';                                       // < $300M
+}
+
+/** Map a country/locale string to a geography category. */
+export function classifyGeography(country: string | null | undefined): string | null {
+  if (!country) return null;
+  const c = country.toLowerCase();
+  // Emerging market countries
+  const emerging = ['china', 'india', 'brazil', 'russia', 'mexico', 'indonesia',
+                    'turkey', 'thailand', 'malaysia', 'philippines', 'south africa',
+                    'colombia', 'egypt', 'vietnam', 'taiwan'];
+  if (emerging.some((e) => c.includes(e))) return 'emerging';
+  // US / Canada / Western Europe / Australia / Japan / South Korea = domestic-adjacent
+  if (['united states', 'usa', 'us'].some((e) => c.includes(e))) return 'domestic';
+  return 'international';
 }
 
 function sleep(ms: number): Promise<void> {
@@ -83,6 +111,10 @@ async function fetchFromYahoo(ticker: string): Promise<TickerPrice | null> {
       name: (quote.longName || quote.shortName) ?? undefined,
       price: parseFloat(price.toFixed(6)),
       updatedAt: new Date().toISOString(),
+      // Enrichment fields — available for most stocks/ETFs
+      sector: (quote.sector as string | undefined) ?? null,
+      geography: classifyGeography((quote.country as string | undefined) ?? null),
+      marketCapCategory: classifyMarketCap((quote.marketCap as number | undefined) ?? null),
     };
   } catch (err) {
     console.warn(`[yahoo] ${ticker}:`, err instanceof Error ? err.message : err);

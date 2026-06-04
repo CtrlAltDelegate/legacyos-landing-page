@@ -131,6 +131,11 @@ model Asset {
   vestDate              DateTime? @map("vest_date") @db.Date
   probability           Decimal?  @db.Decimal(5, 2)
 
+  // Equity enrichment — auto-populated from Yahoo Finance when ticker resolves
+  sector                String?   @db.VarChar(60)
+  geography             String?   @db.VarChar(20)          // 'domestic' | 'international' | 'emerging'
+  marketCapCategory     String?   @map("market_cap_category") @db.VarChar(20)  // 'mega_cap' | 'large_cap' | 'mid_cap' | 'small_cap' | 'micro_cap'
+
   // Shared value fields
   currentValue          Decimal?  @map("current_value") @db.Decimal(12, 2)
   currentValueSource    String    @default("manual") @map("current_value_source") @db.VarChar(30)

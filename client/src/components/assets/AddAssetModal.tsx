@@ -10,7 +10,14 @@ type EquityAccountType = 'taxable' | 'ira' | 'roth_ira' | '401k' | 'crypto';
 type Step = 'category' | 'account' | 'details';
 type AccountMode = 'existing' | 'new' | null;
 
-interface TickerData { ticker: string; price: number; name: string; }
+interface TickerData {
+  ticker: string;
+  price: number;
+  name?: string;
+  sector?: string | null;
+  geography?: string | null;
+  marketCapCategory?: string | null;
+}
 
 interface EquityAccount {
   label: string;
@@ -375,6 +382,10 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
             accountLabel: eqLabel || undefined,
             isPretax,
             currentValue: shares > 0 && price > 0 ? parseFloat((shares * price).toFixed(2)) : undefined,
+            // Enrichment from Yahoo Finance (populated automatically on ticker resolve)
+            sector:            tickerData?.sector ?? null,
+            geography:         tickerData?.geography ?? null,
+            marketCapCategory: tickerData?.marketCapCategory ?? null,
           };
         }
       }
@@ -997,6 +1008,7 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
                       <option value="checking">Checking</option>
                       <option value="money_market">Money market</option>
                       <option value="tbills">T-Bills / Treasury</option>
+                      <option value="bonds">Bonds (corporate / muni / agency)</option>
                       <option value="cash">Cash on hand</option>
                     </select>
                   </div>
@@ -1048,6 +1060,7 @@ export default function AddAssetModal({ onClose, onAdded }: Props) {
                     <label className="block text-xs font-semibold text-gray-600 mb-1">Asset type</label>
                     <select value={otherType} onChange={e => setOtherType(e.target.value)} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
                       <option value="whole_life">Whole life insurance (cash value)</option>
+                      <option value="precious_metals">Precious metals (gold, silver, platinum)</option>
                       <option value="vehicle">Vehicle</option>
                       <option value="collectible">Collectibles / art / jewelry</option>
                       <option value="other">Other</option>

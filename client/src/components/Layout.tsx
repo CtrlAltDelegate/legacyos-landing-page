@@ -8,6 +8,7 @@ import {
   FileText,
   Sparkles,
   BarChart2,
+  PieChart,
   User,
   ShieldCheck,
   LogOut,
@@ -16,6 +17,7 @@ import {
 const nav = [
   { to: '/dashboard',   label: 'Dashboard',   Icon: LayoutDashboard },
   { to: '/assets',      label: 'Assets',      Icon: Briefcase       },
+  { to: '/portfolio',   label: 'Portfolio',   Icon: PieChart        },
   { to: '/liabilities', label: 'Liabilities', Icon: CreditCard      },
   { to: '/documents',   label: 'Documents',   Icon: FileText        },
   { to: '/flo',         label: 'Flo',         Icon: Sparkles        },
