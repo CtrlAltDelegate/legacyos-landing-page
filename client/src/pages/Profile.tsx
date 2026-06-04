@@ -1,15 +1,21 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, Printer, Users, Copy, CheckCircle2 } from 'lucide-react';
+import { Shield, Printer, Users, Copy, CheckCircle2, TrendingUp, HeadphonesIcon, Mail, Calendar } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
 import { useAuthStore } from '@/store/auth';
 import Spinner from '@/components/Spinner';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+interface Snapshot {
+  snapshotDate: string;
+  netWorth: number | string;
+}
+
 interface Goal {
   primaryGoal: string;
   targetMonthlyIncome: number | null;
+  targetDate: string | null;
   riskTolerance: string | null;
   targetEquityPct: number;
   targetRealEstatePct: number;
@@ -18,6 +24,67 @@ interface Goal {
   targetInsurancePct: number;
   targetOtherPct: number;
 }
+
+// ─── Projection helpers ───────────────────────────────────────────────────────
+
+/** Monthly growth rate from snapshot history, or risk-tolerance fallback. */
+function monthlyGrowthRate(snapshots: Snapshot[], riskTolerance: string | null): number {
+  if (snapshots.length >= 3) {
+    const first = Number(snapshots[0].netWorth);
+    const last  = Number(snapshots[snapshots.length - 1].netWorth);
+    const n     = snapshots.length - 1;
+    if (first > 0 && last > 0) {
+      const rate = Math.pow(last / first, 1 / n) - 1;
+      if (rate > -0.1 && rate < 0.1) return rate; // sanity-cap outliers
+    }
+  }
+  // Fallback by risk tolerance (annual → monthly)
+  const annual: Record<string, number> = {
+    conservative: 0.05,
+    moderate:     0.07,
+    aggressive:   0.10,
+  };
+  const a = annual[riskTolerance ?? 'moderate'] ?? 0.07;
+  return Math.pow(1 + a, 1 / 12) - 1;
+}
+
+/** Target net worth from 4% safe-withdrawal rule. */
+function targetNetWorth(targetMonthlyIncome: number): number {
+  return targetMonthlyIncome * 12 * 25;
+}
+
+/** Compound years to reach target from current at a monthly rate. */
+function yearsToGoal(
+  currentNW: number,
+  targetNW: number,
+  monthlyRate: number
+): number | null {
+  if (currentNW <= 0 || targetNW <= 0 || monthlyRate <= 0) return null;
+  if (currentNW >= targetNW) return 0;
+  return Math.log(targetNW / currentNW) / Math.log(1 + monthlyRate) / 12;
+}
+
+/** Projected net worth at a future date using compound growth. */
+function projectedAtDate(
+  currentNW: number,
+  targetDate: Date,
+  monthlyRate: number
+): number {
+  const now     = new Date();
+  const months  = (targetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 30.44);
+  if (months <= 0) return currentNW;
+  return currentNW * Math.pow(1 + monthlyRate, months);
+}
+
+const fmtCurrency = (n: number) =>
+  n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
+const fmtCompact = (n: number) =>
+  n >= 1_000_000
+    ? `$${(n / 1_000_000).toFixed(1)}M`
+    : n >= 1_000
+    ? `$${(n / 1_000).toFixed(0)}K`
+    : `$${n.toFixed(0)}`;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -62,6 +129,11 @@ export default function Profile() {
   const [referralCount, setReferralCount] = useState(0);
   const [copiedRef, setCopiedRef] = useState(false);
 
+  // Projection data
+  const [snapshots, setSnapshots]   = useState<Snapshot[]>([]);
+  const [currentNW, setCurrentNW]   = useState<number | null>(null);
+  const [targetDate, setTargetDate] = useState<string | null>(null);
+
   // Form state
   const [primaryGoal, setPrimaryGoal]               = useState('');
   const [targetMonthlyIncome, setTargetMonthlyIncome] = useState('');
@@ -85,12 +157,18 @@ export default function Profile() {
 
     async function load() {
       try {
-        const { data } = await api.get('/goals');
-        const g: Goal = data.goal;
+        const [goalsRes, snapshotRes, nwRes] = await Promise.all([
+          api.get('/goals'),
+          api.get('/networth/snapshots?limit=24'),
+          api.get('/networth/current'),
+        ]);
+
+        const g: Goal = goalsRes.data.goal;
         if (g) {
           setPrimaryGoal(g.primaryGoal ?? '');
           setTargetMonthlyIncome(g.targetMonthlyIncome != null ? String(g.targetMonthlyIncome) : '');
           setRiskTolerance(g.riskTolerance ?? '');
+          setTargetDate(g.targetDate ?? null);
           setAlloc({
             targetEquityPct:     g.targetEquityPct     ?? 30,
             targetRealEstatePct: g.targetRealEstatePct ?? 40,
@@ -100,6 +178,9 @@ export default function Profile() {
             targetOtherPct:      g.targetOtherPct      ?? 5,
           });
         }
+
+        setSnapshots(snapshotRes.data.snapshots ?? []);
+        setCurrentNW(nwRes.data.netWorth ?? null);
       } catch (err) {
         setError(getErrorMessage(err));
       } finally {
@@ -125,6 +206,7 @@ export default function Profile() {
       await api.put('/goals', {
         primaryGoal: primaryGoal || undefined,
         targetMonthlyIncome: targetMonthlyIncome ? Number(targetMonthlyIncome) : null,
+        targetDate: targetDate || null,
         riskTolerance: riskTolerance || null,
         ...alloc,
       });
@@ -202,19 +284,115 @@ export default function Profile() {
       <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6 space-y-4">
         <h2 className="section-label">Monthly Income Target</h2>
         <p className="text-sm text-gray-500">The monthly passive / total income you're working toward.</p>
-        <div>
-          <label className="label" htmlFor="income">Amount ($)</label>
-          <input
-            id="income"
-            type="number"
-            min={0}
-            className="input"
-            placeholder="e.g. 10000"
-            value={targetMonthlyIncome}
-            onChange={(e) => setTargetMonthlyIncome(e.target.value)}
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="label" htmlFor="income">Amount ($)</label>
+            <input
+              id="income"
+              type="number"
+              min={0}
+              className="input"
+              placeholder="e.g. 10000"
+              value={targetMonthlyIncome}
+              onChange={(e) => setTargetMonthlyIncome(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="label" htmlFor="targetDate">Target date</label>
+            <input
+              id="targetDate"
+              type="date"
+              className="input"
+              value={targetDate ? targetDate.split('T')[0] : ''}
+              onChange={(e) => setTargetDate(e.target.value || null)}
+            />
+          </div>
         </div>
       </div>
+
+      {/* Goal Projections */}
+      {(() => {
+        const income = targetMonthlyIncome ? Number(targetMonthlyIncome) : null;
+        const nw     = currentNW;
+        if (!income || !nw) return null;
+
+        const rate      = monthlyGrowthRate(snapshots, riskTolerance || null);
+        const targetNW  = targetNetWorth(income);
+        const years     = yearsToGoal(nw, targetNW, rate);
+        const goalDate  = targetDate ? new Date(targetDate) : null;
+        const projNW    = goalDate ? projectedAtDate(nw, goalDate, rate) : null;
+        const annualPct = ((Math.pow(1 + rate, 12) - 1) * 100).toFixed(1);
+        const onTrack   = projNW != null && projNW >= targetNW;
+
+        return (
+          <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-brand-600" />
+              <h2 className="section-label mb-0">Goal Projections</h2>
+            </div>
+            <p className="text-xs text-gray-400">
+              Based on {snapshots.length >= 3 ? `your last ${snapshots.length} monthly snapshots` : `${riskTolerance ?? 'moderate'} assumed growth`} &middot; 4% safe-withdrawal rule
+            </p>
+
+            <div className="grid grid-cols-2 gap-4">
+              {/* Target net worth */}
+              <div className="rounded-lg bg-gray-50 px-4 py-3">
+                <p className="text-xs text-gray-400 mb-1">Target net worth</p>
+                <p className="text-base font-bold text-gray-900">{fmtCompact(targetNW)}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{fmtCurrency(income)}/mo × 25</p>
+              </div>
+
+              {/* Current trajectory */}
+              <div className="rounded-lg bg-gray-50 px-4 py-3">
+                <p className="text-xs text-gray-400 mb-1">Current growth rate</p>
+                <p className={`text-base font-bold ${rate > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {rate > 0 ? '+' : ''}{annualPct}%/yr
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {snapshots.length >= 3 ? 'Observed' : 'Estimated'}
+                </p>
+              </div>
+
+              {/* Years to goal */}
+              <div className="rounded-lg bg-gray-50 px-4 py-3">
+                <p className="text-xs text-gray-400 mb-1">Years to goal</p>
+                {years === 0 ? (
+                  <p className="text-base font-bold text-emerald-600">Already there 🎉</p>
+                ) : years != null && rate > 0 ? (
+                  <>
+                    <p className="text-base font-bold text-gray-900">{years.toFixed(1)} yrs</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      ~{new Date(Date.now() + years * 365.25 * 24 * 3600 * 1000).getFullYear()}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-base font-bold text-gray-400">—</p>
+                )}
+              </div>
+
+              {/* Projected at target date */}
+              {projNW != null && goalDate ? (
+                <div className={`rounded-lg px-4 py-3 ${onTrack ? 'bg-emerald-50' : 'bg-amber-50'}`}>
+                  <p className="text-xs text-gray-400 mb-1">
+                    Projected at {goalDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                  </p>
+                  <p className={`text-base font-bold ${onTrack ? 'text-emerald-700' : 'text-amber-700'}`}>
+                    {fmtCompact(projNW)}
+                  </p>
+                  <p className={`text-xs mt-0.5 ${onTrack ? 'text-emerald-600' : 'text-amber-600'}`}>
+                    {onTrack ? '✓ On track' : `${fmtCompact(targetNW - projNW)} gap`}
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-lg bg-gray-50 px-4 py-3">
+                  <p className="text-xs text-gray-400 mb-1">Projected at target date</p>
+                  <p className="text-xs text-gray-400">Set a target date to see this.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Risk tolerance */}
       <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6 space-y-4">
@@ -314,6 +492,50 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      {/* Priority Support — Premium only */}
+      {(user?.plan === 'premium' || user?.isAdmin) && (
+        <div className="rounded-xl bg-white shadow-sm border border-amber-100 p-6 space-y-4">
+          <div className="flex items-center gap-2">
+            <HeadphonesIcon className="h-4 w-4 text-amber-600" />
+            <h2 className="section-label mb-0">Priority Support</h2>
+            <span className="ml-auto inline-flex items-center rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-xs font-semibold text-amber-700">
+              Premium
+            </span>
+          </div>
+          <p className="text-sm text-gray-500">
+            As a Premium member you get direct access to our team — not a help-desk queue.
+          </p>
+          <div className="space-y-3">
+            <a
+              href="mailto:premium@legacyos.com"
+              className="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 hover:border-brand-300 hover:bg-brand-50 transition group"
+            >
+              <div className="h-8 w-8 rounded-lg bg-brand-50 border border-brand-100 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-100 transition">
+                <Mail className="h-4 w-4 text-brand-600" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">Email support</p>
+                <p className="text-xs text-gray-500">premium@legacyos.com · Response within 24 hours</p>
+              </div>
+            </a>
+            <a
+              href="https://calendly.com/legacyos/premium-support"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 hover:border-brand-300 hover:bg-brand-50 transition group"
+            >
+              <div className="h-8 w-8 rounded-lg bg-brand-50 border border-brand-100 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-100 transition">
+                <Calendar className="h-4 w-4 text-brand-600" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">Book a call</p>
+                <p className="text-xs text-gray-500">30-min screenshare with the LegacyOS team</p>
+              </div>
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* Security */}
       <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6 space-y-4">

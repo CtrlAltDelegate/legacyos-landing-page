@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { prisma } from '../../lib/prisma';
 import { calculateNetWorth } from '../networth';
-import { buildFloSystemPrompt, FloUserContext } from './systemPrompt';
+import { buildFloSystemPrompt, FloUserContext, TaxSummary } from './systemPrompt';
 import { buildPrioritySignals, PrioritySignal } from './priorities';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
@@ -58,7 +58,7 @@ async function saveMessages(userId: string, messages: FloMessage[]): Promise<voi
  * Runs in parallel where possible.
  */
 async function loadUserContext(userId: string): Promise<FloUserContext> {
-  const [user, goals, netWorth, familyProfileRecord] = await Promise.all([
+  const [user, goals, netWorth, familyProfileRecord, taxDoc] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: { fullName: true, assumedTaxRate: true },
@@ -72,7 +72,35 @@ async function loadUserContext(userId: string): Promise<FloUserContext> {
       where: { userId },
       select: { answers: true, completedAt: true },
     }),
+    // Most recently confirmed tax return for tax context injection
+    prisma.document.findFirst({
+      where: { userId, documentType: 'tax_return', parseStatus: 'confirmed' },
+      orderBy: { confirmedAt: 'desc' },
+      select: { parsedData: true },
+    }),
   ]);
+
+  // Build tax summary from extracted data if available
+  let taxSummary: TaxSummary | null = null;
+  if (taxDoc?.parsedData) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const d = taxDoc.parsedData as Record<string, any>;
+    const agi: number | null = d.adjusted_gross_income ?? null;
+    const federalTax: number | null = d.federal_tax_owed ?? null;
+    const stateTax: number | null = d.state_tax_owed ?? null;
+    const totalTax = federalTax != null && stateTax != null ? federalTax + stateTax : null;
+    taxSummary = {
+      taxYear: d.tax_year ?? null,
+      agi,
+      federalTax,
+      stateTax,
+      totalTax,
+      effectiveTaxRate: agi && agi > 0 && totalTax != null
+        ? parseFloat(((totalTax / agi) * 100).toFixed(1))
+        : null,
+      estimatedQuarterlyPayment: totalTax != null ? parseFloat((totalTax / 4).toFixed(2)) : null,
+    };
+  }
 
   return {
     fullName: user?.fullName ?? 'there',
@@ -84,6 +112,7 @@ async function loadUserContext(userId: string): Promise<FloUserContext> {
     familyProfile: familyProfileRecord?.completedAt
       ? (familyProfileRecord.answers as Record<string, unknown>)
       : null,
+    taxSummary,
   };
 }
 

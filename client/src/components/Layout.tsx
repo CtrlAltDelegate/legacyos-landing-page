@@ -7,6 +7,7 @@ import {
   CreditCard,
   FileText,
   Sparkles,
+  BarChart2,
   User,
   ShieldCheck,
   LogOut,
@@ -18,6 +19,7 @@ const nav = [
   { to: '/liabilities', label: 'Liabilities', Icon: CreditCard      },
   { to: '/documents',   label: 'Documents',   Icon: FileText        },
   { to: '/flo',         label: 'Flo',         Icon: Sparkles        },
+  { to: '/analytics',   label: 'Analytics',   Icon: BarChart2       },
 ];
 
 export default function Layout() {

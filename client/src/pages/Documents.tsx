@@ -24,8 +24,12 @@ const DOC_TYPES = [
   { value: 'mortgage_statement',  label: 'Mortgage statement' },
   { value: 'brokerage_statement', label: 'Brokerage statement' },
   { value: 'whole_life_statement',label: 'Whole life statement' },
-  { value: 'tax_return',          label: 'Tax return' },
+  { value: 'tax_return',          label: 'Tax return (1040)' },
   { value: 'insurance_policy',    label: 'Insurance policy' },
+  { value: 'bank_statement',      label: 'Bank statement' },
+  { value: 'retirement_401k',     label: '401(k) / IRA statement' },
+  { value: 'trust_document',      label: 'Trust document' },
+  { value: 'business_financials', label: 'Business financials (P&L)' },
   { value: 'unknown',             label: 'Other / unknown' },
 ];
 

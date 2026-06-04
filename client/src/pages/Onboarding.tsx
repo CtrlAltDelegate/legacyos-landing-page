@@ -85,6 +85,29 @@ export default function Onboarding() {
     navigate('/dashboard');
   }
 
+  async function handleSkipSetup() {
+    setIsLoading(true);
+    setError('');
+    try {
+      await api.post('/goals', {
+        primaryGoal: primaryGoal || 'other',
+        targetMonthlyIncome: targetMonthlyIncome ? Number(targetMonthlyIncome) : undefined,
+        riskTolerance: riskTolerance || undefined,
+        targetEquityPct:     30,
+        targetRealEstatePct: 40,
+        targetCashPct:       10,
+        targetBusinessPct:   10,
+        targetInsurancePct:  5,
+        targetOtherPct:      5,
+      });
+    } catch {
+      // 409 means goals already exist — safe to proceed
+    } finally {
+      setIsLoading(false);
+      handleFinish();
+    }
+  }
+
   return (
     <div className="flex min-h-screen items-start justify-center bg-surface-1 px-4 py-12 overflow-y-auto">
       <div className="w-full max-w-lg">
@@ -138,9 +161,17 @@ export default function Onboarding() {
                 ))}
               </div>
             </div>
-            <div className="mt-4">
+            <div className="mt-4 space-y-2">
               <button type="submit" disabled={!primaryGoal} className="btn-primary w-full justify-center">
                 Continue
+              </button>
+              <button
+                type="button"
+                onClick={handleSkipSetup}
+                disabled={isLoading}
+                className="w-full text-center text-xs text-gray-400 hover:text-gray-600 py-2 transition-colors"
+              >
+                {isLoading ? 'Setting up…' : 'Skip setup — explore the dashboard first →'}
               </button>
             </div>
           </form>
@@ -162,9 +193,15 @@ export default function Onboarding() {
                 />
               </div>
             </div>
-            <div className="mt-4 flex gap-3">
-              <button type="button" onClick={() => setStep(0)} className="btn-secondary flex-1">Back</button>
-              <button type="button" onClick={() => setStep(2)} className="btn-primary flex-1">Continue</button>
+            <div className="mt-4 space-y-2">
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setStep(0)} className="btn-secondary flex-1">Back</button>
+                <button type="button" onClick={() => setStep(2)} className="btn-primary flex-1">Continue</button>
+              </div>
+              <button type="button" onClick={handleSkipSetup} disabled={isLoading}
+                className="w-full text-center text-xs text-gray-400 hover:text-gray-600 py-1 transition-colors">
+                Skip setup — explore the dashboard first →
+              </button>
             </div>
           </div>
         )}
@@ -196,9 +233,15 @@ export default function Onboarding() {
                 ))}
               </div>
             </div>
-            <div className="mt-4 flex gap-3">
-              <button type="button" onClick={() => setStep(1)} className="btn-secondary flex-1">Back</button>
-              <button type="button" onClick={() => setStep(3)} className="btn-primary flex-1">Continue</button>
+            <div className="mt-4 space-y-2">
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setStep(1)} className="btn-secondary flex-1">Back</button>
+                <button type="button" onClick={() => setStep(3)} className="btn-primary flex-1">Continue</button>
+              </div>
+              <button type="button" onClick={handleSkipSetup} disabled={isLoading}
+                className="w-full text-center text-xs text-gray-400 hover:text-gray-600 py-1 transition-colors">
+                Skip setup — explore the dashboard first →
+              </button>
             </div>
           </div>
         )}
@@ -239,10 +282,16 @@ export default function Onboarding() {
 
               {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
             </div>
-            <div className="mt-4 flex gap-3">
-              <button type="button" onClick={() => setStep(2)} className="btn-secondary flex-1">Back</button>
-              <button type="submit" disabled={isLoading || Math.abs(allocSum - 100) > 1} className="btn-primary flex-1">
-                {isLoading ? <Spinner className="h-4 w-4" /> : 'Save & continue'}
+            <div className="mt-4 space-y-2">
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setStep(2)} className="btn-secondary flex-1">Back</button>
+                <button type="submit" disabled={isLoading || Math.abs(allocSum - 100) > 1} className="btn-primary flex-1">
+                  {isLoading ? <Spinner className="h-4 w-4" /> : 'Save & continue'}
+                </button>
+              </div>
+              <button type="button" onClick={handleSkipSetup} disabled={isLoading}
+                className="w-full text-center text-xs text-gray-400 hover:text-gray-600 py-1 transition-colors">
+                Skip setup — explore the dashboard first →
               </button>
             </div>
           </form>

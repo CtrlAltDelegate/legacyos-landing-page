@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma';
 
 export interface AssetBreakdown {
   equityValue: number;
+  cryptoValue: number;       // subset of equityValue — assets priced via CoinGecko/Binance
   realEstateValue: number;   // adjusted equity (adjustedValue - mortgageBalance)
   otherValue: number;
   restrictedValue: number;   // tracked separately, never in net worth
@@ -87,10 +88,14 @@ export async function calculateNetWorth(userId: string): Promise<NetWorthResult>
   // ─── Asset totals by class ────────────────────────────────────────────────
 
   let equityValue = 0;
+  let cryptoValue = 0;      // subset of equity — priced via CoinGecko/Binance
   let realEstateValue = 0;  // equity portion (adjusted - mortgage)
   let otherValue = 0;
   let restrictedValue = 0;
   let totalMortgageBalance = 0;
+
+  // Sources that indicate a crypto asset
+  const CRYPTO_SOURCES = ['coingecko', 'binance', 'coinbase'];
 
   const equityAssets: NetWorthResult['equityAssets'] = [];
 
@@ -99,6 +104,11 @@ export async function calculateNetWorth(userId: string): Promise<NetWorthResult>
       case 'equity': {
         const val = Number(asset.currentValue ?? 0);
         equityValue += val;
+        // Track crypto separately by price source
+        const src = (asset.currentValueSource ?? '').toLowerCase();
+        if (CRYPTO_SOURCES.some((s) => src.includes(s))) {
+          cryptoValue += val;
+        }
         const row: NetWorthResult['equityAssets'][0] = {
           id: asset.id,
           name: asset.name,
@@ -218,6 +228,7 @@ export async function calculateNetWorth(userId: string): Promise<NetWorthResult>
     netWorth,
     breakdown: {
       equityValue: parseFloat(equityValue.toFixed(2)),
+      cryptoValue: parseFloat(cryptoValue.toFixed(2)),
       realEstateValue: parseFloat(realEstateValue.toFixed(2)),
       otherValue: parseFloat(otherValue.toFixed(2)),
       restrictedValue: parseFloat(restrictedValue.toFixed(2)),

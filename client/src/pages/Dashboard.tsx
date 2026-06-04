@@ -22,6 +22,7 @@ interface NetWorthData {
   totalLiabilities: number;
   breakdown: {
     equityValue: number;
+    cryptoValue: number;
     realEstateValue: number;
     otherValue: number;
     restrictedValue: number;
@@ -135,12 +136,19 @@ function NetWorthBar({ data, momDelta }: { data: NetWorthData | null; momDelta: 
           )}
         </div>
 
-        {/* Equity */}
+        {/* Equity & Crypto */}
         <div className="px-5 py-4 sm:px-6 sm:py-5">
           <p className="section-label mb-1.5">Equity &amp; stocks</p>
           <p className="text-lg sm:text-xl font-semibold tabular font-mono text-gray-600">
             {data ? fmt(data.breakdown.equityValue) : '—'}
           </p>
+          {data && data.breakdown.cryptoValue > 0 && (
+            <p className="text-xs text-gray-400 mt-0.5">
+              <span className="text-gray-500 font-medium">{fmt(data.breakdown.equityValue - data.breakdown.cryptoValue)}</span> stocks
+              {' · '}
+              <span className="text-orange-500 font-medium">{fmt(data.breakdown.cryptoValue)}</span> crypto
+            </p>
+          )}
         </div>
       </div>
 

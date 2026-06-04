@@ -93,6 +93,90 @@ If a field cannot be found, use null.
   "expiration_date": "YYYY-MM-DD" | null
 }`,
 
+  bank_statement: `Extract the following fields from this bank statement.
+Return ONLY valid JSON — no explanation, no markdown, no code fences.
+If a field cannot be found, use null. For transaction_categories, return an empty array if none found.
+
+{
+  "institution": string | null,
+  "account_type": string | null,
+  "statement_date": "YYYY-MM-DD" | null,
+  "ending_balance": number | null,
+  "average_daily_balance": number | null,
+  "total_deposits": number | null,
+  "total_withdrawals": number | null,
+  "transaction_categories": [
+    {
+      "category": string,
+      "amount": number
+    }
+  ]
+}`,
+
+  retirement_401k: `Extract the following fields from this retirement account statement (401k, IRA, 403b, etc.).
+Return ONLY valid JSON — no explanation, no markdown, no code fences.
+If a field cannot be found, use null. For holdings, return an empty array if none found.
+
+{
+  "institution": string | null,
+  "account_type": string | null,
+  "statement_date": "YYYY-MM-DD" | null,
+  "total_value": number | null,
+  "vested_balance": number | null,
+  "employer_match_ytd": number | null,
+  "employee_contribution_ytd": number | null,
+  "holdings": [
+    {
+      "name": string,
+      "allocation_pct": number | null,
+      "value": number | null
+    }
+  ]
+}`,
+
+  trust_document: `Extract the following fields from this trust document (living trust, revocable trust, irrevocable trust, etc.).
+Return ONLY valid JSON — no explanation, no markdown, no code fences.
+If a field cannot be found, use null. For lists, return an empty array if none found.
+
+{
+  "trust_name": string | null,
+  "trust_type": string | null,
+  "grantor": string | null,
+  "trustee": string | null,
+  "successor_trustee": string | null,
+  "execution_date": "YYYY-MM-DD" | null,
+  "beneficiaries": [
+    {
+      "name": string,
+      "relationship": string | null,
+      "share_pct": number | null
+    }
+  ],
+  "assets_mentioned": [
+    {
+      "description": string,
+      "estimated_value": number | null
+    }
+  ]
+}`,
+
+  business_financials: `Extract the following fields from this business financial statement (P&L, income statement, balance sheet, etc.).
+Return ONLY valid JSON — no explanation, no markdown, no code fences.
+If a field cannot be found, use null.
+
+{
+  "business_name": string | null,
+  "period": string | null,
+  "total_revenue": number | null,
+  "cost_of_goods_sold": number | null,
+  "gross_profit": number | null,
+  "operating_expenses": number | null,
+  "net_income": number | null,
+  "total_assets": number | null,
+  "total_liabilities": number | null,
+  "owners_equity": number | null
+}`,
+
   unknown: `Extract any financially relevant information from this document.
 Return ONLY valid JSON — no explanation, no markdown, no code fences.
 Use whatever fields are present and relevant. Example structure:

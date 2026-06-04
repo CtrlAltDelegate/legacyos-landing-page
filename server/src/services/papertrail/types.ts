@@ -8,6 +8,10 @@ export type DocumentType =
   | 'whole_life_statement'
   | 'tax_return'
   | 'insurance_policy'
+  | 'bank_statement'
+  | 'retirement_401k'
+  | 'trust_document'
+  | 'business_financials'
   | 'unknown';
 
 // ─── Extracted data shapes per document type ──────────────────────────────────
@@ -80,12 +84,76 @@ export interface InsurancePolicyExtraction {
   expiration_date: string | null;
 }
 
+export interface BankStatementExtraction {
+  institution: string | null;
+  account_type: string | null;        // 'checking', 'savings', 'money_market'
+  statement_date: string | null;      // YYYY-MM-DD
+  ending_balance: number | null;
+  average_daily_balance: number | null;
+  total_deposits: number | null;
+  total_withdrawals: number | null;
+  transaction_categories: Array<{
+    category: string;
+    amount: number;
+  }>;
+}
+
+export interface RetirementExtraction {
+  institution: string | null;
+  account_type: string | null;        // '401k', 'roth_ira', 'traditional_ira', '403b', etc.
+  statement_date: string | null;
+  total_value: number | null;
+  vested_balance: number | null;
+  employer_match_ytd: number | null;
+  employee_contribution_ytd: number | null;
+  holdings: Array<{
+    name: string;
+    allocation_pct: number | null;
+    value: number | null;
+  }>;
+}
+
+export interface TrustDocumentExtraction {
+  trust_name: string | null;
+  trust_type: string | null;          // 'revocable', 'irrevocable', 'testamentary'
+  grantor: string | null;
+  trustee: string | null;
+  successor_trustee: string | null;
+  execution_date: string | null;      // YYYY-MM-DD
+  beneficiaries: Array<{
+    name: string;
+    relationship: string | null;
+    share_pct: number | null;
+  }>;
+  assets_mentioned: Array<{
+    description: string;
+    estimated_value: number | null;
+  }>;
+}
+
+export interface BusinessFinancialsExtraction {
+  business_name: string | null;
+  period: string | null;              // e.g. 'FY 2024', 'Q3 2024'
+  total_revenue: number | null;
+  cost_of_goods_sold: number | null;
+  gross_profit: number | null;
+  operating_expenses: number | null;
+  net_income: number | null;
+  total_assets: number | null;
+  total_liabilities: number | null;
+  owners_equity: number | null;
+}
+
 export type ParsedData =
   | MortgageExtraction
   | BrokerageExtraction
   | WholeLifeExtraction
   | TaxReturnExtraction
   | InsurancePolicyExtraction
+  | BankStatementExtraction
+  | RetirementExtraction
+  | TrustDocumentExtraction
+  | BusinessFinancialsExtraction
   | Record<string, unknown>;
 
 // ─── Parse result ─────────────────────────────────────────────────────────────

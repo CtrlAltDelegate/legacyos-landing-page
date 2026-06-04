@@ -339,6 +339,61 @@ router.get('/:id/download', async (req: Request, res: Response) => {
   }
 });
 
+// ─── GET /api/documents/tax-summary ──────────────────────────────────────────
+// Returns the most recently confirmed tax_return document's parsed data.
+// Used by the Dashboard and Flo context to surface tax insights.
+
+router.get('/tax-summary', async (req: Request, res: Response) => {
+  try {
+    const doc = await prisma.document.findFirst({
+      where: {
+        userId: req.user!.userId,
+        documentType: 'tax_return',
+        parseStatus: 'confirmed',
+      },
+      orderBy: { confirmedAt: 'desc' },
+      select: { parsedData: true, confirmedAt: true, filename: true },
+    });
+
+    if (!doc || !doc.parsedData) {
+      res.json({ hasTaxData: false });
+      return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data = doc.parsedData as Record<string, any>;
+
+    // Compute derived metrics
+    const agi: number | null = data.adjusted_gross_income ?? null;
+    const federalTax: number | null = data.federal_tax_owed ?? null;
+    const stateTax: number | null = data.state_tax_owed ?? null;
+    const totalTax = federalTax != null && stateTax != null ? federalTax + stateTax : null;
+    const effectiveTaxRate =
+      agi && agi > 0 && totalTax != null
+        ? parseFloat(((totalTax / agi) * 100).toFixed(1))
+        : null;
+
+    // Estimated quarterly payment (total tax / 4)
+    const estimatedQuarterlyPayment =
+      totalTax != null ? parseFloat((totalTax / 4).toFixed(2)) : null;
+
+    res.json({
+      hasTaxData: true,
+      confirmedAt: doc.confirmedAt,
+      filename: doc.filename,
+      data,
+      derived: {
+        effectiveTaxRate,
+        totalTax,
+        estimatedQuarterlyPayment,
+      },
+    });
+  } catch (err) {
+    console.error('[documents/tax-summary]', err);
+    res.status(500).json({ error: 'Failed to fetch tax summary.' });
+  }
+});
+
 // ─── DELETE /api/documents/:id ────────────────────────────────────────────────
 
 router.delete('/:id', async (req: Request, res: Response) => {

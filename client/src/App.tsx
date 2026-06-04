@@ -24,6 +24,7 @@ import Liabilities from '@/pages/Liabilities';
 import ExportReport from '@/pages/ExportReport';
 import TwoFactorSetup from '@/pages/TwoFactorSetup';
 import Landing from '@/pages/Landing';
+import Analytics from '@/pages/Analytics';
 
 export default function App() {
   const { initialize, isInitialized } = useAuthStore();
@@ -62,6 +63,7 @@ export default function App() {
             <Route path="/security/2fa" element={<TwoFactorSetup />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/flo" element={<Flo />} />
+            <Route path="/analytics" element={<Analytics />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/profile" element={<Profile />} />
           </Route>

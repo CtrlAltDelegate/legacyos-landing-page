@@ -2,6 +2,16 @@ import { NetWorthResult } from '../networth';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export interface TaxSummary {
+  taxYear: number | null;
+  agi: number | null;
+  federalTax: number | null;
+  stateTax: number | null;
+  totalTax: number | null;
+  effectiveTaxRate: number | null;  // %
+  estimatedQuarterlyPayment: number | null;
+}
+
 export interface FloUserContext {
   fullName: string;
   primaryGoal: string | null;
@@ -10,6 +20,7 @@ export interface FloUserContext {
   assumedTaxRate: number;
   netWorth: NetWorthResult;
   familyProfile: Record<string, unknown> | null;
+  taxSummary: TaxSummary | null;
 }
 
 // ─── Family profile field labels ─────────────────────────────────────────────
@@ -55,7 +66,7 @@ const FAMILY_LABELS: Record<string, string> = {
  * never personalized investment advice. This is non-negotiable.
  */
 export function buildFloSystemPrompt(ctx: FloUserContext): string {
-  const { fullName, primaryGoal, targetMonthlyIncome, riskTolerance, assumedTaxRate, netWorth, familyProfile } = ctx;
+  const { fullName, primaryGoal, targetMonthlyIncome, riskTolerance, assumedTaxRate, netWorth, familyProfile, taxSummary } = ctx;
 
   const {
     netWorth: nw,
@@ -133,12 +144,25 @@ export function buildFloSystemPrompt(ctx: FloUserContext): string {
     familyLines.push(``, `Family & life context: Not yet provided`);
   }
 
+  // ── Tax context ────────────────────────────────────────────────────────────
+  const taxLines: string[] = [];
+  if (taxSummary) {
+    taxLines.push(``, `Tax context (from most recent confirmed return):`);
+    if (taxSummary.taxYear) taxLines.push(`  Tax year:                     ${taxSummary.taxYear}`);
+    if (taxSummary.agi != null)   taxLines.push(`  Adjusted gross income (AGI):  ${fmt(taxSummary.agi)}`);
+    if (taxSummary.totalTax != null) taxLines.push(`  Total tax owed (fed + state): ${fmt(taxSummary.totalTax)}`);
+    if (taxSummary.effectiveTaxRate != null) taxLines.push(`  Effective tax rate:          ${taxSummary.effectiveTaxRate}%`);
+    if (taxSummary.estimatedQuarterlyPayment != null)
+      taxLines.push(`  Est. quarterly payment (÷4):  ${fmt(taxSummary.estimatedQuarterlyPayment)}`);
+  }
+
   const portfolioSnapshot = [
     ...portfolioLines,
     ...driftLines,
     ...cocLines,
     ...goalLines,
     ...familyLines,
+    ...taxLines,
   ].join('\n');
 
   // ── Full system prompt ─────────────────────────────────────────────────────
