@@ -3,7 +3,7 @@ import Joi from 'joi';
 import { prisma } from '../lib/prisma';
 import { requireAuth } from '../middleware/auth';
 import { validate } from '../middleware/validate';
-import { fetchAllEquityPrices, fetchSingleTicker } from '../services/polygon';
+import { fetchAllEquityPrices, fetchSingleTicker, fetchEnrichmentFromYahoo } from '../services/polygon';
 
 const router = Router();
 router.use(requireAuth);
@@ -397,7 +397,7 @@ router.post('/refresh-prices', async (req: Request, res: Response) => {
         ticker: { not: null },
       },
       // Include assetType so fetchAllEquityPrices can route crypto vs stocks correctly
-      select: { id: true, ticker: true, assetType: true, sharesHeld: true, currentValue: true, name: true },
+      select: { id: true, ticker: true, assetType: true, sharesHeld: true, currentValue: true, name: true, sector: true },
     });
 
     if (equityAssets.length === 0) {
@@ -428,12 +428,26 @@ router.post('/refresh-prices', async (req: Request, res: Response) => {
       const newValue = parseFloat((priceData.price * shares).toFixed(2));
       const oldValue = Number(asset.currentValue ?? 0);
 
+      // For non-crypto stocks: fetch enrichment from Yahoo if not yet populated
+      const isStock = !['crypto'].includes(asset.assetType);
+      const needsEnrichment = isStock && !asset.sector;
+      const enrichment = needsEnrichment
+        ? await fetchEnrichmentFromYahoo(asset.ticker.toUpperCase())
+        : null;
+
       await prisma.asset.update({
         where: { id: asset.id },
         data: {
           currentValue: newValue,
           currentValueSource: 'ticker_api',
           currentValueUpdatedAt: new Date(priceData.updatedAt),
+          // Save enrichment fields from priceData (populated by Yahoo) or fresh lookup
+          ...(priceData.sector             && { sector: priceData.sector }),
+          ...(priceData.geography          && { geography: priceData.geography }),
+          ...(priceData.marketCapCategory  && { marketCapCategory: priceData.marketCapCategory }),
+          ...(enrichment?.sector           && { sector: enrichment.sector }),
+          ...(enrichment?.geography        && { geography: enrichment.geography }),
+          ...(enrichment?.marketCapCategory && { marketCapCategory: enrichment.marketCapCategory }),
         },
       });
 

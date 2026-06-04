@@ -340,15 +340,39 @@ export default function Portfolio() {
             <span className="text-sm font-semibold text-gray-500">{fmt(totalStocks)} · {fmtPct((totalStocks / totalValue) * 100)}</span>
           </div>
 
+          {/* Enrich nudge — only when data is partially or fully missing */}
           {!hasEnrichment && (
-            <p className="text-xs text-gray-400 rounded-lg bg-gray-50 border border-gray-100 px-4 py-3">
-              Sector, geography, and market cap data auto-populate when you add positions via ticker lookup.
-              Refresh prices to backfill existing holdings.
-            </p>
+            <div className="rounded-lg bg-amber-50 border border-amber-100 px-4 py-2.5">
+              <p className="text-xs text-amber-700">
+                <span className="font-semibold">Sector &amp; geography data not yet populated.</span>{' '}
+                Go to <span className="font-medium">Assets → Refresh Prices</span> to backfill your existing holdings.
+                New positions auto-enrich when added via ticker lookup.
+              </p>
+            </div>
           )}
 
-          {/* Sector breakdown */}
-          {sectors.length > 0 && sectors[0].label !== 'Unknown' && (
+          {/* By Position — always shown */}
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">By Position</p>
+            <div className="space-y-2.5">
+              {stockAssets
+                .sort((a, b) => assetValue(b) - assetValue(a))
+                .map((a) => (
+                  <BarRow
+                    key={a.id}
+                    label={a.name}
+                    value={assetValue(a)}
+                    pct={(assetValue(a) / totalStocks) * 100}
+                    color={sectorColor(a.sector)}
+                    sub={[a.sector, a.geography === 'domestic' ? 'US' : a.geography === 'international' ? 'Intl' : a.geography === 'emerging' ? 'Emerging' : null]
+                      .filter(Boolean).join(' · ') || undefined}
+                  />
+                ))}
+            </div>
+          </div>
+
+          {/* Sector breakdown — shown when at least one position has sector data */}
+          {sectors.some((s) => s.label !== 'Unknown') && (
             <div>
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">By Sector</p>
               <div className="space-y-2.5">
@@ -365,8 +389,8 @@ export default function Portfolio() {
             </div>
           )}
 
-          {/* Geography breakdown */}
-          {geos.length > 0 && !geos.every((g) => g.label === 'Unknown') && (
+          {/* Geography breakdown — shown when at least one position has geography data */}
+          {geos.some((g) => g.label !== 'Unknown') && (
             <div>
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">By Geography</p>
               <div className="space-y-2.5">
@@ -383,8 +407,8 @@ export default function Portfolio() {
             </div>
           )}
 
-          {/* Market cap breakdown */}
-          {caps.length > 0 && !caps.every((c) => c.label === 'Unknown') && (
+          {/* Market cap breakdown — shown when at least one position has cap data */}
+          {caps.some((c) => c.label !== 'Unknown') && (
             <div>
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">By Market Cap</p>
               <div className="space-y-2.5">

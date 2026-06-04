@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { prisma } from '../lib/prisma';
-import { fetchTickerPrices } from '../services/polygon';
+import { fetchTickerPrices, fetchEnrichmentFromYahoo } from '../services/polygon';
 
 /**
  * refreshPricesForAllUsers — the core refresh logic.
@@ -34,9 +34,11 @@ export async function refreshPricesForAllUsers(): Promise<{
         id: true,
         userId: true,
         ticker: true,
+        assetType: true,
         sharesHeld: true,
         currentValue: true,
         name: true,
+        sector: true,
       },
     });
 
@@ -74,12 +76,26 @@ export async function refreshPricesForAllUsers(): Promise<{
         const newValue = parseFloat((priceData.price * shares).toFixed(2));
         const oldValue = Number(asset.currentValue ?? 0);
 
+        // For non-crypto stocks: fetch enrichment from Yahoo if not yet populated
+        const isStock = asset.assetType !== 'crypto';
+        const needsEnrichment = isStock && !asset.sector;
+        const enrichment = needsEnrichment
+          ? await fetchEnrichmentFromYahoo(asset.ticker!.toUpperCase())
+          : null;
+
         await prisma.asset.update({
           where: { id: asset.id },
           data: {
             currentValue: newValue,
             currentValueSource: 'ticker_api',
             currentValueUpdatedAt: new Date(priceData.updatedAt),
+            // Save enrichment (priceData from Yahoo fallback, or fresh enrichment call)
+            ...(priceData.sector             && { sector: priceData.sector }),
+            ...(priceData.geography          && { geography: priceData.geography }),
+            ...(priceData.marketCapCategory  && { marketCapCategory: priceData.marketCapCategory }),
+            ...(enrichment?.sector           && { sector: enrichment.sector }),
+            ...(enrichment?.geography        && { geography: enrichment.geography }),
+            ...(enrichment?.marketCapCategory && { marketCapCategory: enrichment.marketCapCategory }),
           },
         });
 

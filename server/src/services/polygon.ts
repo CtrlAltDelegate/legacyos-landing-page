@@ -286,6 +286,31 @@ export async function fetchSingleTicker(
   return binance;
 }
 
+// ─── Enrichment: sector / geography / market-cap from Yahoo ─────────────────
+// Separate lightweight call — only fetches metadata, not price.
+// Used to backfill enrichment on existing assets and during price refresh.
+
+export interface TickerEnrichment {
+  sector: string | null;
+  geography: string | null;
+  marketCapCategory: string | null;
+}
+
+export async function fetchEnrichmentFromYahoo(ticker: string): Promise<TickerEnrichment | null> {
+  try {
+    const quote = await yahooFinance.quote(ticker, {}, { validateResult: false });
+    if (!quote) return null;
+    return {
+      sector:            (quote.sector as string | undefined) ?? null,
+      geography:         classifyGeography((quote.country as string | undefined) ?? null),
+      marketCapCategory: classifyMarketCap((quote.marketCap as number | undefined) ?? null),
+    };
+  } catch (err) {
+    console.warn(`[enrichment] Yahoo failed for ${ticker}:`, err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
 // ─── Public: batch stock/ETF prices ──────────────────────────────────────────
 
 /**
