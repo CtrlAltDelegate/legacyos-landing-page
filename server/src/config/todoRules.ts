@@ -1,15 +1,17 @@
 // ─── Todo generation rules ────────────────────────────────────────────────────
 // Each rule maps a family profile condition to an auto-generated todo item.
 // `sourceKey` is a stable unique ID so the same todo is never duplicated.
+// `actionLabel` is the affiliate CTA label shown inline on the action item row.
 
 export interface TodoRule {
   sourceKey: string;
   title: string;
   description: string;
   category: 'document' | 'action' | 'review';
-  priority: number;   // 0 = highest urgency
+  priority: number;     // 0 = highest urgency
   relatedWing?: string;
   actionUrl?: string;
+  actionLabel?: string; // button label — affiliate name or short CTA
   isInternal?: boolean;
   condition: (a: Record<string, unknown>) => boolean;
 }
@@ -19,12 +21,12 @@ export const TODO_RULES: TodoRule[] = [
   {
     sourceKey: 'build_emergency_fund',
     title: 'Build your emergency fund',
-    description: 'You need 3–6 months of living expenses in a high-yield savings account before investing. This is the single most important financial foundation.',
+    description: 'You need 3–6 months of living expenses in a high-yield savings account before investing. This is the single most important financial foundation. Capital One 360 Performance Savings earns a strong APY with no fees or minimums.',
     category: 'action',
     priority: 5,
     relatedWing: 'preservation',
-    actionUrl: '/wings/preservation',
-    isInternal: true,
+    actionUrl: 'https://www.capitalone.com/bank/savings-accounts/online-high-yield-savings/',
+    actionLabel: 'Open Capital One HYSA',
     condition: (a) => a.has_emergency_fund === false,
   },
 
@@ -32,11 +34,12 @@ export const TODO_RULES: TodoRule[] = [
   {
     sourceKey: 'get_life_insurance',
     title: 'Get a life insurance quote',
-    description: 'You have dependents but no life insurance. If something happened to you, your family would be financially exposed. Term life is inexpensive and fast to get.',
+    description: 'You have dependents but no life insurance. If something happened to you, your family would be financially exposed. Term life is inexpensive and fast to get. Policygenius compares quotes from top carriers in minutes.',
     category: 'action',
     priority: 10,
     relatedWing: 'preservation',
     actionUrl: 'https://www.policygenius.com/life-insurance/',
+    actionLabel: 'Compare on Policygenius',
     condition: (a) =>
       a.has_life_insurance === false &&
       (a.has_kids === true || a.is_married === true),
@@ -46,11 +49,12 @@ export const TODO_RULES: TodoRule[] = [
   {
     sourceKey: 'create_will',
     title: 'Create a will and power of attorney',
-    description: 'Without a will, courts decide what happens to your assets and — if you have children — who raises them. This takes less than an hour online.',
+    description: 'Without a will, courts decide what happens to your assets and — if you have children — who raises them. Trust & Will lets you create a legally valid will and POA online in under an hour. No attorney required.',
     category: 'action',
     priority: 15,
     relatedWing: 'preservation',
     actionUrl: 'https://trustandwill.com',
+    actionLabel: 'Create with Trust & Will',
     condition: (a) => a.has_will === false,
   },
 
@@ -58,11 +62,12 @@ export const TODO_RULES: TodoRule[] = [
   {
     sourceKey: 'get_disability_insurance',
     title: 'Get disability insurance',
-    description: "You're the primary earner but have no disability coverage. Your ability to earn is your most valuable asset — protect it.",
+    description: "You're the primary earner but have no disability coverage. Your ability to earn is your most valuable asset — protect it. Policygenius compares short-term and long-term disability quotes from multiple carriers.",
     category: 'action',
     priority: 20,
     relatedWing: 'preservation',
     actionUrl: 'https://www.policygenius.com/disability-insurance/',
+    actionLabel: 'Compare on Policygenius',
     condition: (a) =>
       a.has_disability_insurance === false && a.is_primary_earner === true,
   },
@@ -71,10 +76,12 @@ export const TODO_RULES: TodoRule[] = [
   {
     sourceKey: 'designate_beneficiaries',
     title: 'Designate beneficiaries on all accounts',
-    description: 'Retirement accounts and life insurance pass outside your will. If beneficiaries are missing or outdated, assets may go to the wrong person — or to probate.',
+    description: 'Retirement accounts and life insurance pass outside your will. If beneficiaries are missing or outdated, assets may go to the wrong person — or to probate. Trust & Will walks you through a complete beneficiary audit.',
     category: 'review',
     priority: 25,
     relatedWing: 'preservation',
+    actionUrl: 'https://trustandwill.com',
+    actionLabel: 'Audit with Trust & Will',
     condition: (a) => a.beneficiaries_designated === false,
   },
 
@@ -86,6 +93,7 @@ export const TODO_RULES: TodoRule[] = [
     category: 'document',
     priority: 30,
     actionUrl: '/documents?type=unknown&label=Vehicle+Lease',
+    actionLabel: 'Upload now',
     isInternal: true,
     condition: (a) => a.vehicle_status === 'leased',
   },
@@ -98,6 +106,7 @@ export const TODO_RULES: TodoRule[] = [
     category: 'document',
     priority: 31,
     actionUrl: '/documents?type=unknown&label=Auto+Loan+Statement',
+    actionLabel: 'Upload now',
     isInternal: true,
     condition: (a) => a.vehicle_status === 'financed',
   },
@@ -110,6 +119,7 @@ export const TODO_RULES: TodoRule[] = [
     category: 'document',
     priority: 32,
     actionUrl: '/documents?type=unknown&label=Vehicle+Lease+%232',
+    actionLabel: 'Upload now',
     isInternal: true,
     condition: (a) =>
       a.has_multiple_vehicles === true && a.vehicle2_status === 'leased',
@@ -123,6 +133,7 @@ export const TODO_RULES: TodoRule[] = [
     category: 'document',
     priority: 33,
     actionUrl: '/documents?type=unknown&label=Auto+Loan+%232',
+    actionLabel: 'Upload now',
     isInternal: true,
     condition: (a) =>
       a.has_multiple_vehicles === true && a.vehicle2_status === 'financed',
@@ -132,11 +143,12 @@ export const TODO_RULES: TodoRule[] = [
   {
     sourceKey: 'consider_living_trust',
     title: 'Consider setting up a living trust',
-    description: 'You have children but no trust. A revocable living trust keeps your estate out of probate, stays private, and lets you control exactly how assets reach your kids.',
+    description: 'You have children but no trust. A revocable living trust keeps your estate out of probate, stays private, and lets you control exactly how assets reach your kids. Trust & Will\'s trust package walks you through the entire process.',
     category: 'action',
     priority: 40,
     relatedWing: 'preservation',
     actionUrl: 'https://trustandwill.com',
+    actionLabel: 'Set up with Trust & Will',
     condition: (a) => a.has_trust === false && a.has_kids === true,
   },
 
@@ -144,11 +156,12 @@ export const TODO_RULES: TodoRule[] = [
   {
     sourceKey: 'form_business_entity',
     title: 'Form a business entity (LLC or S-Corp)',
-    description: "You're self-employed without a formal business structure. An LLC separates your personal assets from business liability; an S-Corp can significantly reduce self-employment taxes.",
+    description: "You're self-employed without a formal business structure. An LLC separates your personal assets from business liability; an S-Corp can significantly reduce self-employment taxes. LegalZoom handles the paperwork in days.",
     category: 'action',
     priority: 45,
     relatedWing: 'operations',
     actionUrl: 'https://www.legalzoom.com/business/business-formation/',
+    actionLabel: 'Form with LegalZoom',
     condition: (a) =>
       a.is_self_employed === true && a.has_business_entity === false,
   },
@@ -157,10 +170,12 @@ export const TODO_RULES: TodoRule[] = [
   {
     sourceKey: 'review_custody_docs',
     title: 'Review guardianship and custody documents',
-    description: "You have children and aren't in a married co-parenting situation. Your will should explicitly name a guardian, and a family lawyer can help document custody and financial provisions.",
+    description: "You have children and aren't in a married co-parenting situation. Your will should explicitly name a guardian, and a family lawyer can help document custody and financial provisions. LegalZoom connects you with family law attorneys.",
     category: 'review',
     priority: 50,
     relatedWing: 'legacy',
+    actionUrl: 'https://www.legalzoom.com/personal/parenting-and-family/',
+    actionLabel: 'Get help on LegalZoom',
     condition: (a) =>
       a.has_kids === true &&
       a.co_parent_relationship !== 'married',
@@ -170,10 +185,12 @@ export const TODO_RULES: TodoRule[] = [
   {
     sourceKey: 'get_umbrella_policy',
     title: 'Get an umbrella liability policy',
-    description: 'An umbrella policy covers you above and beyond your home and auto insurance — usually $1M+ for $200–400/year. As your net worth grows, this becomes essential protection.',
+    description: 'An umbrella policy covers you above and beyond your home and auto insurance — usually $1M+ for $200–400/year. As your net worth grows, this becomes essential protection. Policygenius compares umbrella quotes from top carriers.',
     category: 'action',
     priority: 60,
     relatedWing: 'preservation',
+    actionUrl: 'https://www.policygenius.com/homeowners-insurance/',
+    actionLabel: 'Compare on Policygenius',
     condition: (a) => a.has_umbrella_policy === false,
   },
 
@@ -185,6 +202,7 @@ export const TODO_RULES: TodoRule[] = [
     category: 'document',
     priority: 70,
     actionUrl: '/documents?type=mortgage_statement',
+    actionLabel: 'Upload now',
     isInternal: true,
     condition: (a) => a.has_mortgage === true,
   },
@@ -198,6 +216,7 @@ export const TODO_RULES: TodoRule[] = [
     priority: 80,
     relatedWing: 'legacy',
     actionUrl: '/flo',
+    actionLabel: 'Start with Flo',
     isInternal: true,
     condition: (a) => a.has_kids === true,
   },

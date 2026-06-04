@@ -292,6 +292,7 @@ model TodoItem {
   priority    Int       @default(50)        // 0=highest, 100=lowest; used for sort order
   relatedWing String?   @map("related_wing") @db.VarChar(30)
   actionUrl   String?   @map("action_url") @db.VarChar(500)
+  actionLabel String?   @map("action_label") @db.VarChar(255)  // button label for affiliate CTA
   isInternal  Boolean   @default(false) @map("is_internal")
   sourceKey   String?   @map("source_key") @db.VarChar(100) // idempotency key — prevents duplicates
   completedAt DateTime? @map("completed_at")

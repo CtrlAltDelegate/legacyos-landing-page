@@ -77,15 +77,18 @@ router.put('/family', async (req: Request, res: Response) => {
             priority: todo.priority,
             relatedWing: todo.relatedWing ?? null,
             actionUrl: todo.actionUrl ?? null,
+            actionLabel: todo.actionLabel ?? null,
             isInternal: todo.isInternal ?? false,
             sourceKey: todo.sourceKey,
           },
           update: {
-            // Update title/description in case the copy changed, but
-            // don't reset completedAt — user may have already done this.
+            // Update copy + affiliate data in case rules were updated,
+            // but don't reset completedAt — user may have already done this.
             title: todo.title,
             description: todo.description,
             priority: todo.priority,
+            actionUrl: todo.actionUrl ?? null,
+            actionLabel: todo.actionLabel ?? null,
           },
         });
       }

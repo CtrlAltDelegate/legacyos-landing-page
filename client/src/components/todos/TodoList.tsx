@@ -15,6 +15,43 @@ const WING_EMOJI: Record<string, string> = {
   experiences: '🌟', legacy: '📜', operations: '⚙️',
 };
 
+// ─── Affiliate / action CTA button ────────────────────────────────────────────
+// Shown inline on every todo row so the affiliate link is always visible.
+
+function ActionCta({ todo, stopProp }: { todo: TodoItem; stopProp: (e: React.MouseEvent) => void }) {
+  if (!todo.actionUrl) return null;
+
+  const label = todo.actionLabel ?? (todo.isInternal ? 'Start →' : 'Get started ↗');
+  // Truncate long labels so the row stays compact
+  const display = label.length > 22 ? label.slice(0, 21) + '…' : label;
+
+  const cls =
+    'shrink-0 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition whitespace-nowrap ' +
+    (todo.isInternal
+      ? 'border-brand-200 bg-brand-50 text-brand-700 hover:bg-brand-100'
+      : 'border-brand-300 bg-brand-600 text-white hover:bg-brand-700');
+
+  if (todo.isInternal) {
+    return (
+      <Link to={todo.actionUrl} className={cls} onClick={stopProp}>
+        {display}
+      </Link>
+    );
+  }
+
+  return (
+    <a
+      href={todo.actionUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cls}
+      onClick={stopProp}
+    >
+      {display}
+    </a>
+  );
+}
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -69,7 +106,6 @@ export default function TodoList({ todos, onTodoComplete, onTodoDismiss }: Props
     );
   }
 
-  // Separate by category for ordering: action → document → review
   const sorted = [...todos].sort((a, b) => a.priority - b.priority);
 
   return (
@@ -93,6 +129,7 @@ export default function TodoList({ todos, onTodoComplete, onTodoDismiss }: Props
           const isExpanded = expanded === todo.id;
           const isCompleting = completing === todo.id;
           const isDismissing = dismissing === todo.id;
+          const stopProp = (e: React.MouseEvent) => e.stopPropagation();
 
           return (
             <div
@@ -101,7 +138,7 @@ export default function TodoList({ todos, onTodoComplete, onTodoDismiss }: Props
                 isExpanded ? 'shadow-sm' : ''
               }`}
             >
-              {/* Main row */}
+              {/* ── Main row ── */}
               <div
                 className="flex items-start gap-3 px-4 py-3 cursor-pointer"
                 onClick={() => setExpanded(isExpanded ? null : todo.id)}
@@ -111,6 +148,7 @@ export default function TodoList({ todos, onTodoComplete, onTodoDismiss }: Props
                   onClick={(e) => { e.stopPropagation(); handleComplete(todo.id); }}
                   disabled={isCompleting}
                   className="mt-0.5 h-5 w-5 shrink-0 rounded-full border-2 border-gray-300 hover:border-green-400 hover:bg-green-50 transition flex items-center justify-center"
+                  title="Mark complete"
                 >
                   {isCompleting && (
                     <div className="h-2.5 w-2.5 rounded-full bg-green-400 animate-pulse" />
@@ -134,13 +172,16 @@ export default function TodoList({ todos, onTodoComplete, onTodoDismiss }: Props
                   </div>
                 </div>
 
+                {/* Affiliate / action CTA — always visible */}
+                <ActionCta todo={todo} stopProp={stopProp} />
+
                 {/* Expand chevron */}
-                <span className={`text-gray-300 text-xs transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
+                <span className={`text-gray-300 text-xs transition-transform duration-200 self-center ml-0.5 ${isExpanded ? 'rotate-180' : ''}`}>
                   ▾
                 </span>
               </div>
 
-              {/* Expanded detail */}
+              {/* ── Expanded detail ── */}
               {isExpanded && (
                 <div className="px-4 pb-4 border-t border-gray-100 pt-3 space-y-3">
                   {todo.description && (
@@ -148,15 +189,15 @@ export default function TodoList({ todos, onTodoComplete, onTodoDismiss }: Props
                   )}
 
                   <div className="flex flex-wrap gap-2">
-                    {/* Action link */}
+                    {/* Full action button with longer label */}
                     {todo.actionUrl && (
                       todo.isInternal ? (
                         <Link
                           to={todo.actionUrl}
                           className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 transition"
-                          onClick={(e) => e.stopPropagation()}
+                          onClick={stopProp}
                         >
-                          {todo.category === 'document' ? 'Upload document →' : 'Take action →'}
+                          {todo.actionLabel ?? (todo.category === 'document' ? 'Upload document →' : 'Take action →')}
                         </Link>
                       ) : (
                         <a
@@ -164,9 +205,9 @@ export default function TodoList({ todos, onTodoComplete, onTodoDismiss }: Props
                           target="_blank"
                           rel="noopener noreferrer"
                           className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 transition"
-                          onClick={(e) => e.stopPropagation()}
+                          onClick={stopProp}
                         >
-                          Get started ↗
+                          {todo.actionLabel ?? 'Get started ↗'}
                         </a>
                       )
                     )}
@@ -189,6 +230,13 @@ export default function TodoList({ todos, onTodoComplete, onTodoDismiss }: Props
                       Dismiss
                     </button>
                   </div>
+
+                  {/* Affiliate disclosure for external links */}
+                  {todo.actionUrl && !todo.isInternal && (
+                    <p className="text-[10px] text-gray-300">
+                      Affiliate link — LegacyOS may earn a commission at no cost to you.
+                    </p>
+                  )}
                 </div>
               )}
             </div>

@@ -8,6 +8,7 @@ export interface TodoItem {
   priority: number;
   relatedWing: string | null;
   actionUrl: string | null;
+  actionLabel: string | null;
   isInternal: boolean;
   sourceKey: string | null;
   completedAt: string | null;
