@@ -329,6 +329,20 @@ router.post('/:id/confirm', requirePlan('core'), async (req: Request, res: Respo
       },
     });
 
+    // Auto-complete the corresponding upload todo (if any)
+    const DOC_TYPE_TODO_KEY: Partial<Record<string, string>> = {
+      mortgage_statement:    'upload_mortgage_statement',
+      auto_loan:             'upload_vehicle_loan',
+      bank_statement:        'upload_bank_statement',
+    };
+    const todoSourceKey = DOC_TYPE_TODO_KEY[document.documentType ?? ''];
+    if (todoSourceKey) {
+      await prisma.todoItem.updateMany({
+        where: { userId: req.user!.userId, sourceKey: todoSourceKey, completedAt: null },
+        data:  { completedAt: new Date() },
+      }).catch(() => {}); // non-fatal — todo may not exist
+    }
+
     res.json({
       message: 'Confirmed. Asset record updated.',
       anomalyFlags,
