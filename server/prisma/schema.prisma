@@ -205,7 +205,7 @@ model Document {
   filename       String    @db.VarChar(255)
   s3Key          String    @unique @map("s3_key") @db.VarChar(500)
   documentType   String?   @map("document_type") @db.VarChar(50)
-  parseStatus    String    @default("pending") @map("parse_status") @db.VarChar(20)
+  parseStatus    String    @default("pending") @map("parse_status") @db.VarChar(30)
   parsedData     Json?     @map("parsed_data")
   confirmedData  Json?     @map("confirmed_data")
   relatedAssetId String?   @map("related_asset_id") @db.Uuid
