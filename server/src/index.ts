@@ -20,6 +20,7 @@ import todoRoutes from './routes/todos';
 import twoFactorRoutes from './routes/twoFactor';
 import referralRoutes from './routes/referral';
 import analyticsRoutes from './routes/analytics';
+import metricsRoutes from './routes/metrics';
 
 import { startPriceRefreshCron } from './cron/priceRefresh';
 import { startMonthlySnapshotCron } from './cron/monthlySnapshot';
@@ -89,6 +90,7 @@ app.use('/api/todos', todoRoutes);
 app.use('/api/2fa', twoFactorRoutes);
 app.use('/api/referral', referralRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/metrics', metricsRoutes);
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 app.use((_req, res) => {

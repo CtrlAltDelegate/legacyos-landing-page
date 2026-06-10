@@ -7,6 +7,7 @@ import { requirePlan } from '../middleware/planGate';
 import { uploadToS3, getPresignedUrl, deleteFromS3 } from '../services/s3';
 import { parseDocument, checkForAnomalies } from '../services/papertrail/index';
 import { DocumentType, ParsedData } from '../services/papertrail/types';
+import { extractMetrics } from '../services/metrics';
 
 const router = Router();
 router.use(requireAuth);
@@ -328,6 +329,24 @@ router.post('/:id/confirm', requirePlan('core'), async (req: Request, res: Respo
         confirmedAt: new Date(),
       },
     });
+
+    // Write time-series metrics from confirmed data
+    const metricPoints = extractMetrics(
+      document.documentType as DocumentType,
+      confirmedData as Record<string, unknown>
+    );
+    if (metricPoints.length > 0) {
+      await prisma.financialMetric.createMany({
+        data: metricPoints.map((m) => ({
+          userId:           req.user!.userId,
+          sourceDocumentId: document.id,
+          metricType:       m.metricType,
+          metricLabel:      m.metricLabel,
+          value:            m.value,
+          recordedDate:     m.recordedDate,
+        })),
+      });
+    }
 
     // Auto-complete the corresponding upload todo (if any)
     const DOC_TYPE_TODO_KEY: Partial<Record<string, string>> = {

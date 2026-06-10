@@ -9,6 +9,7 @@ import {
   Sparkles,
   BarChart2,
   PieChart,
+  TrendingUp,
   User,
   ShieldCheck,
   LogOut,
@@ -22,6 +23,7 @@ const nav = [
   { to: '/documents',   label: 'Documents',   Icon: FileText        },
   { to: '/flo',         label: 'Flo',         Icon: Sparkles        },
   { to: '/analytics',   label: 'Analytics',   Icon: BarChart2       },
+  { to: '/trends',      label: 'Trends',      Icon: TrendingUp      },
 ];
 
 export default function Layout() {

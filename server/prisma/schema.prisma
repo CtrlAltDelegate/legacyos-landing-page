@@ -46,6 +46,7 @@ model User {
   referralCode       String?   @unique @map("referral_code") @db.VarChar(20)
   referredBy         String?   @map("referred_by") @db.Uuid
   referrals          Referral[] @relation("ReferrerReferrals")
+  financialMetrics   FinancialMetric[]
 
   @@map("users")
 }
@@ -215,10 +216,39 @@ model Document {
 
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   relatedAsset   Asset?    @relation(fields: [relatedAssetId], references: [id])
+  metrics        FinancialMetric[]
 
   @@index([userId])
   @@index([parseStatus])
   @@map("documents")
+}
+
+// ─── Financial Metrics (time-series from confirmed documents) ─────────────────
+// Every confirmed document writes one or more metric rows here.
+// This powers the Trends page, Flo context, and proactive nudges.
+model FinancialMetric {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  sourceDocumentId String?   @map("source_document_id") @db.Uuid
+  metricType       String    @map("metric_type") @db.VarChar(50)
+  // e.g. 'loan_balance' | 'gross_income' | 'net_income' | 'annual_income' |
+  //      'credit_card_balance' | 'bank_balance' | 'retirement_balance' |
+  //      'brokerage_value' | 'property_assessed_value' | 'annual_property_tax' |
+  //      'federal_tax_liability' | 'effective_tax_rate' | 'cash_value' |
+  //      'business_revenue' | 'business_net_income'
+  metricLabel      String?   @map("metric_label") @db.VarChar(150)
+  // Human-readable source label, e.g. "Wintrust Mortgage balance", "Chase Sapphire"
+  value            Decimal   @db.Decimal(14, 4)
+  recordedDate     DateTime  @map("recorded_date") @db.Date
+  // Date FROM the document (statement date, pay date, tax year end) — not upload date
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceDocument   Document? @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
+
+  @@index([userId, metricType, recordedDate])
+  @@index([sourceDocumentId])
+  @@map("financial_metrics")
 }
 
 // ─── Flo Conversations ────────────────────────────────────────────────────────
