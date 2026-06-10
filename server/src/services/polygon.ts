@@ -329,15 +329,20 @@ export async function fetchTickerPrices(tickers: string[]): Promise<Map<string, 
     const cached = cacheGet(ticker);
     if (cached) { results.set(ticker, cached); continue; }
 
-    let result = await fetchFromPolygon(ticker);
+    let result: TickerPrice | null = null;
+
+    if (POLYGON_KEY) {
+      result = await fetchFromPolygon(ticker);
+      // Polygon free tier: 5 req/min — only wait if we actually used it
+      if (i < unique.length - 1) await sleep(13_000);
+    }
+
     if (!result) {
-      await sleep(300); // small gap before Yahoo
+      if (POLYGON_KEY) await sleep(300); // small gap after Polygon fail
       result = await fetchFromYahoo(ticker);
     }
-    if (result) { results.set(ticker, result); cacheSet(ticker, result); }
 
-    // Polygon free tier: 5 req/min — wait between tickers
-    if (i < unique.length - 1) await sleep(13_000);
+    if (result) { results.set(ticker, result); cacheSet(ticker, result); }
   }
 
   return results;

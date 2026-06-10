@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { prisma } from '../lib/prisma';
-import { fetchTickerPrices, fetchEnrichmentFromYahoo } from '../services/polygon';
+import { fetchTickerPrices, fetchCryptoPrices, fetchEnrichmentFromYahoo } from '../services/polygon';
 
 /**
  * refreshPricesForAllUsers — the core refresh logic.
@@ -35,6 +35,7 @@ export async function refreshPricesForAllUsers(): Promise<{
         userId: true,
         ticker: true,
         assetType: true,
+        currentValueSource: true,
         sharesHeld: true,
         currentValue: true,
         name: true,
@@ -47,18 +48,27 @@ export async function refreshPricesForAllUsers(): Promise<{
       return { updated: 0, skipped: 0, errors: 0 };
     }
 
-    // Collect unique tickers
-    const tickers = [...new Set(
-      equityAssets
-        .map(a => a.ticker!)
-        .filter(Boolean)
-    )];
+    // Split into stocks/ETFs vs crypto — they use different price APIs
+    const isCrypto = (a: { assetType: string; currentValueSource: string | null }) =>
+      a.assetType === 'crypto' ||
+      ['coingecko', 'binance', 'coinbase'].some(s => a.currentValueSource?.includes(s));
 
-    console.log(`[priceRefresh] Fetching prices for ${tickers.length} unique tickers across ${equityAssets.length} assets...`);
+    const stockAssets  = equityAssets.filter(a => !isCrypto(a));
+    const cryptoAssets = equityAssets.filter(a =>  isCrypto(a));
 
-    // Batch fetch from Polygon.io
-    const priceMap = await fetchTickerPrices(tickers);
-    console.log(`[priceRefresh] Got prices for ${priceMap.size}/${tickers.length} tickers.`);
+    const stockTickers  = [...new Set(stockAssets.map(a => a.ticker!).filter(Boolean))];
+    const cryptoTickers = [...new Set(cryptoAssets.map(a => a.ticker!).filter(Boolean))];
+    const totalTickers  = stockTickers.length + cryptoTickers.length;
+
+    console.log(`[priceRefresh] Fetching prices for ${totalTickers} unique tickers across ${equityAssets.length} assets (${stockTickers.length} stocks, ${cryptoTickers.length} crypto)...`);
+
+    // Fetch stocks via Polygon → Yahoo; crypto via CoinGecko → Coinbase → Binance
+    const [stockPriceMap, cryptoPriceMap] = await Promise.all([
+      stockTickers.length  ? fetchTickerPrices(stockTickers)   : Promise.resolve(new Map()),
+      cryptoTickers.length ? fetchCryptoPrices(cryptoTickers)  : Promise.resolve(new Map()),
+    ]);
+    const priceMap = new Map([...stockPriceMap, ...cryptoPriceMap]);
+    console.log(`[priceRefresh] Got prices for ${priceMap.size}/${totalTickers} tickers.`);
 
     // Update each asset
     for (const asset of equityAssets) {
@@ -77,8 +87,7 @@ export async function refreshPricesForAllUsers(): Promise<{
         const oldValue = Number(asset.currentValue ?? 0);
 
         // For non-crypto stocks: fetch enrichment from Yahoo if not yet populated
-        const isStock = asset.assetType !== 'crypto';
-        const needsEnrichment = isStock && !asset.sector;
+        const needsEnrichment = !isCrypto(asset) && !asset.sector;
         const enrichment = needsEnrichment
           ? await fetchEnrichmentFromYahoo(asset.ticker!.toUpperCase())
           : null;
