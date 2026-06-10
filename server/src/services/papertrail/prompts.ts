@@ -177,6 +177,122 @@ If a field cannot be found, use null.
   "owners_equity": number | null
 }`,
 
+  paystub: `Extract the following fields from this pay stub / paycheck.
+Return ONLY valid JSON — no explanation, no markdown, no code fences.
+If a field cannot be found, use null.
+
+{
+  "employer_name": string | null,
+  "employee_name": string | null,
+  "pay_period_start": "YYYY-MM-DD" | null,
+  "pay_period_end": "YYYY-MM-DD" | null,
+  "pay_date": "YYYY-MM-DD" | null,
+  "gross_pay": number | null,
+  "net_pay": number | null,
+  "federal_tax_withheld": number | null,
+  "state_tax_withheld": number | null,
+  "social_security_withheld": number | null,
+  "medicare_withheld": number | null,
+  "retirement_contribution": number | null,
+  "ytd_gross": number | null
+}`,
+
+  w2: `Extract the following fields from this W-2 Wage and Tax Statement.
+Return ONLY valid JSON — no explanation, no markdown, no code fences.
+If a field cannot be found, use null.
+
+{
+  "employer_name": string | null,
+  "employee_name": string | null,
+  "tax_year": number | null,
+  "wages_tips": number | null,
+  "federal_income_tax_withheld": number | null,
+  "social_security_wages": number | null,
+  "social_security_tax_withheld": number | null,
+  "medicare_wages": number | null,
+  "medicare_tax_withheld": number | null,
+  "state_wages": number | null,
+  "state_income_tax": number | null
+}`,
+
+  form_1099: `Extract the following fields from this 1099 form (1099-NEC, 1099-DIV, 1099-INT, 1099-B, or similar).
+Return ONLY valid JSON — no explanation, no markdown, no code fences.
+If a field cannot be found, use null.
+
+{
+  "payer_name": string | null,
+  "recipient_name": string | null,
+  "tax_year": number | null,
+  "form_type": string | null,
+  "total_income": number | null,
+  "federal_tax_withheld": number | null,
+  "state_tax_withheld": number | null
+}`,
+
+  auto_loan: `Extract the following fields from this auto loan statement.
+Return ONLY valid JSON — no explanation, no markdown, no code fences.
+If a field cannot be found, use null.
+
+{
+  "lender_name": string | null,
+  "vehicle_description": string | null,
+  "statement_date": "YYYY-MM-DD" | null,
+  "remaining_balance": number | null,
+  "monthly_payment": number | null,
+  "interest_rate": number | null,
+  "next_payment_due": "YYYY-MM-DD" | null,
+  "payoff_amount": number | null,
+  "original_loan_amount": number | null
+}`,
+
+  student_loan: `Extract the following fields from this student loan statement.
+Return ONLY valid JSON — no explanation, no markdown, no code fences.
+If a field cannot be found, use null.
+
+{
+  "servicer_name": string | null,
+  "borrower_name": string | null,
+  "statement_date": "YYYY-MM-DD" | null,
+  "total_outstanding_balance": number | null,
+  "monthly_payment": number | null,
+  "interest_rate": number | null,
+  "next_payment_due": "YYYY-MM-DD" | null,
+  "repayment_plan": string | null,
+  "loan_forgiveness_eligible": boolean | null
+}`,
+
+  credit_card_statement: `Extract the following fields from this credit card statement.
+Return ONLY valid JSON — no explanation, no markdown, no code fences.
+If a field cannot be found, use null.
+
+{
+  "issuer_name": string | null,
+  "account_last_four": string | null,
+  "statement_date": "YYYY-MM-DD" | null,
+  "statement_balance": number | null,
+  "minimum_payment": number | null,
+  "payment_due_date": "YYYY-MM-DD" | null,
+  "credit_limit": number | null,
+  "available_credit": number | null,
+  "apr": number | null,
+  "rewards_balance": number | null
+}`,
+
+  property_tax: `Extract the following fields from this property tax bill or assessment.
+Return ONLY valid JSON — no explanation, no markdown, no code fences.
+If a field cannot be found, use null.
+
+{
+  "assessor_parcel_number": string | null,
+  "property_address": string | null,
+  "tax_year": number | null,
+  "assessed_value": number | null,
+  "annual_tax_amount": number | null,
+  "installment_amount": number | null,
+  "due_date": "YYYY-MM-DD" | null,
+  "tax_rate": number | null
+}`,
+
   unknown: `Extract any financially relevant information from this document.
 Return ONLY valid JSON — no explanation, no markdown, no code fences.
 Use whatever fields are present and relevant. Example structure:

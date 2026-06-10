@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { FileText, FileUp, AlertTriangle } from 'lucide-react';
+import { FileText, FileUp, AlertTriangle, Folder, FolderOpen, ChevronDown } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
 import Spinner from '@/components/Spinner';
 import PlanGateCard, { isPlanGateError } from '@/components/PlanGateCard';
@@ -20,18 +20,93 @@ interface ParsedData {
   [key: string]: unknown;
 }
 
-const DOC_TYPES = [
-  { value: 'mortgage_statement',  label: 'Mortgage statement' },
-  { value: 'brokerage_statement', label: 'Brokerage statement' },
-  { value: 'whole_life_statement',label: 'Whole life statement' },
-  { value: 'tax_return',          label: 'Tax return (1040)' },
-  { value: 'insurance_policy',    label: 'Insurance policy' },
-  { value: 'bank_statement',      label: 'Bank statement' },
-  { value: 'retirement_401k',     label: '401(k) / IRA statement' },
-  { value: 'trust_document',      label: 'Trust document' },
-  { value: 'business_financials', label: 'Business financials (P&L)' },
-  { value: 'unknown',             label: 'Other / unknown' },
+const DOC_CATEGORIES = [
+  {
+    label: 'Income',
+    emoji: '💰',
+    types: [
+      { value: 'paystub', label: 'Pay stub' },
+    ],
+  },
+  {
+    label: 'Tax',
+    emoji: '🧾',
+    types: [
+      { value: 'tax_return',  label: 'Tax return (1040)' },
+      { value: 'w2',          label: 'W-2' },
+      { value: 'form_1099',   label: '1099 (NEC, DIV, INT, B…)' },
+    ],
+  },
+  {
+    label: 'Debt & Loans',
+    emoji: '🏦',
+    types: [
+      { value: 'mortgage_statement',    label: 'Mortgage statement' },
+      { value: 'auto_loan',             label: 'Auto loan statement' },
+      { value: 'student_loan',          label: 'Student loan statement' },
+      { value: 'credit_card_statement', label: 'Credit card statement' },
+    ],
+  },
+  {
+    label: 'Investments',
+    emoji: '📈',
+    types: [
+      { value: 'brokerage_statement', label: 'Brokerage statement' },
+      { value: 'retirement_401k',     label: '401(k) / IRA statement' },
+    ],
+  },
+  {
+    label: 'Insurance',
+    emoji: '🛡️',
+    types: [
+      { value: 'whole_life_statement', label: 'Whole life statement' },
+      { value: 'insurance_policy',     label: 'Insurance policy' },
+    ],
+  },
+  {
+    label: 'Banking',
+    emoji: '🏧',
+    types: [
+      { value: 'bank_statement', label: 'Bank statement' },
+    ],
+  },
+  {
+    label: 'Real Estate',
+    emoji: '🏠',
+    types: [
+      { value: 'property_tax', label: 'Property tax bill' },
+    ],
+  },
+  {
+    label: 'Legal & Estate',
+    emoji: '📜',
+    types: [
+      { value: 'trust_document', label: 'Trust document' },
+    ],
+  },
+  {
+    label: 'Business',
+    emoji: '💼',
+    types: [
+      { value: 'business_financials', label: 'Business financials (P&L)' },
+    ],
+  },
+  {
+    label: 'Other',
+    emoji: '📁',
+    types: [
+      { value: 'unknown', label: 'Other / unknown' },
+    ],
+  },
 ];
+
+// Flat lookup maps derived from DOC_CATEGORIES
+const DOC_TYPE_LABEL: Record<string, string> = Object.fromEntries(
+  DOC_CATEGORIES.flatMap((c) => c.types.map((t) => [t.value, t.label]))
+);
+const DOC_TYPE_CATEGORY: Record<string, string> = Object.fromEntries(
+  DOC_CATEGORIES.flatMap((c) => c.types.map((t) => [t.value, c.label]))
+);
 
 const STATUS_COLORS: Record<string, string> = {
   pending:                'bg-gray-100 text-gray-600',
@@ -91,6 +166,16 @@ export default function Documents() {
   const [docType, setDocType] = useState(prefilledType);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+
+  // Folder collapse state
+  const [collapsedFolders, setCollapsedFolders] = useState<Set<string>>(new Set());
+  function toggleFolder(label: string) {
+    setCollapsedFolders((prev) => {
+      const next = new Set(prev);
+      next.has(label) ? next.delete(label) : next.add(label);
+      return next;
+    });
+  }
 
   // Parse / confirm state
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -234,7 +319,13 @@ export default function Documents() {
         <div>
           <label className="label">Document type</label>
           <select className="input" value={docType} onChange={(e) => setDocType(e.target.value)}>
-            {DOC_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+            {DOC_CATEGORIES.map((cat) => (
+              <optgroup key={cat.label} label={`${cat.emoji} ${cat.label}`}>
+                {cat.types.map((t) => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </optgroup>
+            ))}
           </select>
         </div>
 
@@ -286,7 +377,7 @@ export default function Documents() {
         </div>
       )}
 
-      {/* Document list */}
+      {/* Document list — grouped by category */}
       {docs.length === 0 ? (
         <div className="rounded-xl bg-white shadow-sm border border-gray-100 py-16 text-center">
           <FileText className="h-10 w-10 text-gray-200 mx-auto mb-3" />
@@ -294,109 +385,137 @@ export default function Documents() {
           <p className="text-sm text-gray-400 mt-1">Upload your first statement to let Flo extract the data.</p>
         </div>
       ) : (
-        <div className="rounded-xl bg-white shadow-sm border border-gray-100 divide-y divide-gray-100">
-          {docs.map((doc) => (
-            <div key={doc.id} className="px-6 py-4 space-y-3">
-              <div className="flex items-center justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-gray-900">{doc.filename}</p>
-                  <p className="text-xs text-gray-400">
-                    {DOC_TYPES.find((t) => t.value === doc.documentType)?.label ?? doc.documentType}
-                    {' · '}{fmtDate(doc.uploadedAt)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[doc.parseStatus] ?? 'bg-gray-100 text-gray-600'}`}>
-                    {doc.parseStatus.replace('_', ' ')}
-                  </span>
-                </div>
-              </div>
+        <div className="space-y-3">
+          {DOC_CATEGORIES.map((cat) => {
+            const catDocs = docs.filter((d) => DOC_TYPE_CATEGORY[d.documentType] === cat.label);
+            if (catDocs.length === 0) return null;
+            const isCollapsed = collapsedFolders.has(cat.label);
 
-              {/* Actions */}
-              <div className="flex flex-wrap gap-2">
+            return (
+              <div key={cat.label} className="rounded-xl bg-white shadow-sm border border-gray-100 overflow-hidden">
+                {/* Folder header */}
                 <button
-                  onClick={() => handleDownload(doc.id, doc.filename)}
-                  className="btn-secondary text-xs py-1.5 px-3"
+                  onClick={() => toggleFolder(cat.label)}
+                  className="w-full flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition"
                 >
-                  View PDF
+                  <div className="flex items-center gap-2">
+                    {isCollapsed
+                      ? <Folder className="h-4 w-4 text-brand-400" />
+                      : <FolderOpen className="h-4 w-4 text-brand-500" />
+                    }
+                    <span className="text-sm font-semibold text-gray-700">{cat.emoji} {cat.label}</span>
+                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500">
+                      {catDocs.length}
+                    </span>
+                  </div>
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
                 </button>
 
-                {(doc.parseStatus === 'pending' || doc.parseStatus === 'failed') && (
-                  <button
-                    onClick={() => handleParse(doc.id)}
-                    disabled={parsing && activeId === doc.id}
-                    className="btn-primary text-xs py-1.5 px-3"
-                  >
-                    {parsing && activeId === doc.id ? <Spinner className="h-3 w-3" /> : 'Extract data'}
-                  </button>
-                )}
+                {/* Folder contents */}
+                {!isCollapsed && (
+                  <div className="divide-y divide-gray-100 border-t border-gray-100">
+                    {catDocs.map((doc) => (
+                      <div key={doc.id} className="px-5 py-4 space-y-3">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-gray-900">{doc.filename}</p>
+                            <p className="text-xs text-gray-400">
+                              {DOC_TYPE_LABEL[doc.documentType] ?? doc.documentType}
+                              {' · '}{fmtDate(doc.uploadedAt)}
+                            </p>
+                          </div>
+                          <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[doc.parseStatus] ?? 'bg-gray-100 text-gray-600'}`}>
+                            {doc.parseStatus.replace(/_/g, ' ')}
+                          </span>
+                        </div>
 
-                {doc.parseStatus === 'awaiting_confirmation' && activeId !== doc.id && (
-                  <button
-                    onClick={async () => {
-                      setActiveId(doc.id);
-                      const detail = await api.get(`/documents/${doc.id}/parsed`);
-                      setParsedData(detail.data.document.parsedData);
-                      setCurrentAssetValue(detail.data.currentAssetValue);
-                    }}
-                    className="btn-primary text-xs py-1.5 px-3"
-                  >
-                    Review & confirm
-                  </button>
-                )}
+                        {/* Actions */}
+                        <div className="flex flex-wrap gap-2">
+                          <button onClick={() => handleDownload(doc.id, doc.filename)} className="btn-secondary text-xs py-1.5 px-3">
+                            View PDF
+                          </button>
 
-                {doc.parseStatus !== 'confirmed' && (
-                  <button
-                    onClick={() => handleDelete(doc.id)}
-                    className="text-xs text-gray-400 hover:text-red-600 transition px-2"
-                  >
-                    Delete
-                  </button>
-                )}
-              </div>
+                          {(doc.parseStatus === 'pending' || doc.parseStatus === 'failed') && (
+                            <button
+                              onClick={() => handleParse(doc.id)}
+                              disabled={parsing && activeId === doc.id}
+                              className="btn-primary text-xs py-1.5 px-3"
+                            >
+                              {parsing && activeId === doc.id ? <Spinner className="h-3 w-3" /> : 'Extract data'}
+                            </button>
+                          )}
 
-              {doc.parseError && (
-                <p className="text-xs text-red-600">Error: {doc.parseError}</p>
-              )}
+                          {doc.parseStatus === 'awaiting_confirmation' && activeId !== doc.id && (
+                            <button
+                              onClick={async () => {
+                                setActiveId(doc.id);
+                                const detail = await api.get(`/documents/${doc.id}/parsed`);
+                                setParsedData(detail.data.document.parsedData);
+                                setCurrentAssetValue(detail.data.currentAssetValue);
+                              }}
+                              className="btn-primary text-xs py-1.5 px-3"
+                            >
+                              Review & confirm
+                            </button>
+                          )}
 
-              {/* Parsed data review panel */}
-              {activeId === doc.id && parsedData && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-amber-900">Review extracted data</h3>
-                    {currentAssetValue != null && (
-                      <span className="text-xs text-amber-700">
-                        Asset current value: {currentAssetValue.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}
-                      </span>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {flattenForDisplay(parsedData).map(({ key, label, value }) => (
-                      <div key={key}>
-                        <label className="text-xs text-amber-700 capitalize">{label}</label>
-                        <input
-                          className="input text-sm mt-0.5"
-                          value={value}
-                          onChange={(e) =>
-                            setParsedData((prev) => setNestedValue(prev!, key, e.target.value))
-                          }
-                        />
+                          {doc.parseStatus !== 'confirmed' && (
+                            <button
+                              onClick={() => handleDelete(doc.id)}
+                              className="text-xs text-gray-400 hover:text-red-600 transition px-2"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
+
+                        {doc.parseError && (
+                          <p className="text-xs text-red-600">Error: {doc.parseError}</p>
+                        )}
+
+                        {/* Parsed data review panel */}
+                        {activeId === doc.id && parsedData && (
+                          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <h3 className="text-sm font-semibold text-amber-900">Review extracted data</h3>
+                              {currentAssetValue != null && (
+                                <span className="text-xs text-amber-700">
+                                  Asset current value: {currentAssetValue.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}
+                                </span>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              {flattenForDisplay(parsedData).map(({ key, label, value }) => (
+                                <div key={key}>
+                                  <label className="text-xs text-amber-700 capitalize">{label}</label>
+                                  <input
+                                    className="input text-sm mt-0.5"
+                                    value={value}
+                                    onChange={(e) =>
+                                      setParsedData((prev) => setNestedValue(prev!, key, e.target.value))
+                                    }
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                            {actionError && <p className="text-sm text-red-600">{actionError}</p>}
+                            <div className="flex gap-2">
+                              <button onClick={() => { setActiveId(null); setParsedData(null); }} className="btn-secondary text-sm py-1.5 flex-1">
+                                Cancel
+                              </button>
+                              <button onClick={() => handleConfirm(doc.id)} disabled={confirming} className="btn-primary text-sm py-1.5 flex-1">
+                                {confirming ? <Spinner className="h-4 w-4" /> : 'Confirm & save to asset'}
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
-                  {actionError && <p className="text-sm text-red-600">{actionError}</p>}
-                  <div className="flex gap-2">
-                    <button onClick={() => { setActiveId(null); setParsedData(null); }} className="btn-secondary text-sm py-1.5 flex-1">
-                      Cancel
-                    </button>
-                    <button onClick={() => handleConfirm(doc.id)} disabled={confirming} className="btn-primary text-sm py-1.5 flex-1">
-                      {confirming ? <Spinner className="h-4 w-4" /> : 'Confirm & save to asset'}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

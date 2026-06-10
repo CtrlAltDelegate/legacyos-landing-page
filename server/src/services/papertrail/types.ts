@@ -12,6 +12,13 @@ export type DocumentType =
   | 'retirement_401k'
   | 'trust_document'
   | 'business_financials'
+  | 'paystub'
+  | 'w2'
+  | 'form_1099'
+  | 'auto_loan'
+  | 'student_loan'
+  | 'credit_card_statement'
+  | 'property_tax'
   | 'unknown';
 
 // ─── Extracted data shapes per document type ──────────────────────────────────
@@ -144,6 +151,94 @@ export interface BusinessFinancialsExtraction {
   owners_equity: number | null;
 }
 
+export interface PaystubExtraction {
+  employer_name: string | null;
+  employee_name: string | null;
+  pay_period_start: string | null;    // YYYY-MM-DD
+  pay_period_end: string | null;      // YYYY-MM-DD
+  pay_date: string | null;            // YYYY-MM-DD
+  gross_pay: number | null;
+  net_pay: number | null;
+  federal_tax_withheld: number | null;
+  state_tax_withheld: number | null;
+  social_security_withheld: number | null;
+  medicare_withheld: number | null;
+  retirement_contribution: number | null;
+  ytd_gross: number | null;
+}
+
+export interface W2Extraction {
+  employer_name: string | null;
+  employee_name: string | null;
+  tax_year: number | null;
+  wages_tips: number | null;
+  federal_income_tax_withheld: number | null;
+  social_security_wages: number | null;
+  social_security_tax_withheld: number | null;
+  medicare_wages: number | null;
+  medicare_tax_withheld: number | null;
+  state_wages: number | null;
+  state_income_tax: number | null;
+}
+
+export interface Form1099Extraction {
+  payer_name: string | null;
+  recipient_name: string | null;
+  tax_year: number | null;
+  form_type: string | null;           // '1099-NEC', '1099-DIV', '1099-INT', '1099-B', etc.
+  total_income: number | null;
+  federal_tax_withheld: number | null;
+  state_tax_withheld: number | null;
+}
+
+export interface AutoLoanExtraction {
+  lender_name: string | null;
+  vehicle_description: string | null;
+  statement_date: string | null;      // YYYY-MM-DD
+  remaining_balance: number | null;
+  monthly_payment: number | null;
+  interest_rate: number | null;
+  next_payment_due: string | null;    // YYYY-MM-DD
+  payoff_amount: number | null;
+  original_loan_amount: number | null;
+}
+
+export interface StudentLoanExtraction {
+  servicer_name: string | null;
+  borrower_name: string | null;
+  statement_date: string | null;      // YYYY-MM-DD
+  total_outstanding_balance: number | null;
+  monthly_payment: number | null;
+  interest_rate: number | null;
+  next_payment_due: string | null;    // YYYY-MM-DD
+  repayment_plan: string | null;
+  loan_forgiveness_eligible: boolean | null;
+}
+
+export interface CreditCardExtraction {
+  issuer_name: string | null;
+  account_last_four: string | null;
+  statement_date: string | null;      // YYYY-MM-DD
+  statement_balance: number | null;
+  minimum_payment: number | null;
+  payment_due_date: string | null;    // YYYY-MM-DD
+  credit_limit: number | null;
+  available_credit: number | null;
+  apr: number | null;
+  rewards_balance: number | null;
+}
+
+export interface PropertyTaxExtraction {
+  assessor_parcel_number: string | null;
+  property_address: string | null;
+  tax_year: number | null;
+  assessed_value: number | null;
+  annual_tax_amount: number | null;
+  installment_amount: number | null;
+  due_date: string | null;            // YYYY-MM-DD
+  tax_rate: number | null;
+}
+
 export type ParsedData =
   | MortgageExtraction
   | BrokerageExtraction
@@ -154,6 +249,13 @@ export type ParsedData =
   | RetirementExtraction
   | TrustDocumentExtraction
   | BusinessFinancialsExtraction
+  | PaystubExtraction
+  | W2Extraction
+  | Form1099Extraction
+  | AutoLoanExtraction
+  | StudentLoanExtraction
+  | CreditCardExtraction
+  | PropertyTaxExtraction
   | Record<string, unknown>;
 
 // ─── Parse result ─────────────────────────────────────────────────────────────
