@@ -45,6 +45,36 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+/** Recursively flatten a parsed data object into { key, displayLabel, value } entries. */
+function flattenForDisplay(
+  data: ParsedData,
+  prefix = ''
+): Array<{ key: string; label: string; value: string }> {
+  const entries: Array<{ key: string; label: string; value: string }> = [];
+  for (const [k, v] of Object.entries(data)) {
+    if (k.startsWith('_') || Array.isArray(v)) continue;
+    const fullKey = prefix ? `${prefix}.${k}` : k;
+    if (v !== null && typeof v === 'object') {
+      entries.push(...flattenForDisplay(v as ParsedData, fullKey));
+    } else {
+      const label = fullKey.replace(/\./g, ' → ').replace(/_/g, ' ');
+      entries.push({ key: fullKey, label, value: v != null ? String(v) : '' });
+    }
+  }
+  return entries;
+}
+
+/** Set a nested value in parsedData using a dot-path key (e.g. "key_values.balance"). */
+function setNestedValue(obj: ParsedData, path: string, value: string): ParsedData {
+  const parts = path.split('.');
+  if (parts.length === 1) return { ...obj, [path]: value };
+  const [head, ...rest] = parts;
+  return {
+    ...obj,
+    [head]: setNestedValue((obj[head] as ParsedData) ?? {}, rest.join('.'), value),
+  };
+}
+
 export default function Documents() {
   const [searchParams] = useSearchParams();
   const prefilledType = searchParams.get('type') ?? 'unknown';
@@ -339,18 +369,18 @@ export default function Documents() {
                     )}
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    {Object.entries(parsedData)
-                      .filter(([k]) => !k.startsWith('_') && !Array.isArray(parsedData[k]))
-                      .map(([key, val]) => (
-                        <div key={key}>
-                          <label className="text-xs text-amber-700 capitalize">{key.replace(/_/g, ' ')}</label>
-                          <input
-                            className="input text-sm mt-0.5"
-                            value={val != null ? String(val) : ''}
-                            onChange={(e) => setParsedData((prev) => ({ ...prev!, [key]: e.target.value }))}
-                          />
-                        </div>
-                      ))}
+                    {flattenForDisplay(parsedData).map(({ key, label, value }) => (
+                      <div key={key}>
+                        <label className="text-xs text-amber-700 capitalize">{label}</label>
+                        <input
+                          className="input text-sm mt-0.5"
+                          value={value}
+                          onChange={(e) =>
+                            setParsedData((prev) => setNestedValue(prev!, key, e.target.value))
+                          }
+                        />
+                      </div>
+                    ))}
                   </div>
                   {actionError && <p className="text-sm text-red-600">{actionError}</p>}
                   <div className="flex gap-2">
