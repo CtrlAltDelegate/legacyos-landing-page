@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, ReferenceLine,
+  ResponsiveContainer,
 } from 'recharts';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { api } from '@/api/client';
@@ -220,7 +220,6 @@ export default function Trends() {
     api.get('/metrics')
       .then(({ data: d }) => setData(d))
       .catch((err) => {
-        const { isPlanGateError } = require('@/components/PlanGateCard');
         const gate = isPlanGateError(err);
         if (gate) setPlanGate(gate.requiredPlan);
       })
@@ -253,7 +252,7 @@ export default function Trends() {
 
   const tabs = ['All', ...presentCategories];
 
-  const filteredTypes = Object.entries(data.grouped).filter(([type, group]) => {
+  const filteredTypes = Object.entries(data.grouped).filter(([, group]) => {
     if (activeTab === 'All') return true;
     return (group.meta?.category ?? 'Other') === activeTab;
   });

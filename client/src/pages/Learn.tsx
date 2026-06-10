@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { ChevronDown, GraduationCap, Sparkles } from 'lucide-react';
 import { api } from '@/api/client';
-import Spinner from '@/components/Spinner';
 import {
   WEALTH_ARTICLES,
   CATEGORY_ORDER,
