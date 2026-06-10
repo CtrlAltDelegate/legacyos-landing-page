@@ -87,6 +87,7 @@ export default function Documents() {
 
   // Upload state
   const fileRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [docType, setDocType] = useState(prefilledType);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
@@ -129,6 +130,7 @@ export default function Documents() {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       if (fileRef.current) fileRef.current.value = '';
+      setSelectedFile(null);
       load();
     } catch (err) {
       setUploadError(getErrorMessage(err));
@@ -251,11 +253,11 @@ export default function Documents() {
             type="file"
             accept="application/pdf"
             className="hidden"
-            onChange={() => {/* file selected */}}
+            onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
           />
-          {fileRef.current?.files?.[0] && (
+          {selectedFile && (
             <span className="text-xs font-medium text-brand-600 bg-brand-50 rounded-full px-3 py-1 border border-brand-200">
-              {fileRef.current.files[0].name}
+              {selectedFile.name}
             </span>
           )}
         </div>
