@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, type FormEvent } from 'react';
-import { Sparkles, ChevronRight, Send, X } from 'lucide-react';
+import { Sparkles, ChevronRight, Send, X, BookOpen } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { api, getErrorMessage } from '@/api/client';
 import { getAllWings, type WingSummary } from '@/api/wings';
 import Spinner from '@/components/Spinner';
@@ -16,6 +17,33 @@ interface Signal {
   priority: 'high' | 'medium' | 'low';
   message: string;
 }
+
+interface Nudge {
+  key: string;
+  category: 'emergency_fund' | 'debt' | 'portfolio' | 'tax' | 'milestone';
+  title: string;
+  message: string;
+  severity: 'info' | 'tip' | 'warn';
+  learnMoreId?: string;
+}
+
+const NUDGE_STYLES: Record<string, string> = {
+  warn: 'border-amber-200 bg-amber-50 text-amber-900',
+  tip:  'border-blue-200 bg-blue-50 text-blue-900',
+  info: 'border-emerald-200 bg-emerald-50 text-emerald-900',
+};
+
+const NUDGE_BADGE: Record<string, string> = {
+  warn: 'bg-amber-100 text-amber-700',
+  tip:  'bg-blue-100 text-blue-700',
+  info: 'bg-emerald-100 text-emerald-700',
+};
+
+const NUDGE_LABEL: Record<string, string> = {
+  warn: 'Heads up',
+  tip:  'Insight',
+  info: 'Milestone',
+};
 
 const SIGNAL_COLORS: Record<string, string> = {
   high:   'border-red-200 bg-red-50 text-red-800',
@@ -60,8 +88,10 @@ function buildStarterPrompts(wings: WingSummary[]): string[] {
 }
 
 export default function Flo() {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [signals, setSignals] = useState<Signal[]>([]);
+  const [nudges, setNudges] = useState<Nudge[]>([]);
   const [wings, setWings] = useState<WingSummary[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
@@ -86,7 +116,11 @@ export default function Flo() {
 
     api.post('/flo/priority', {})
       .then((sigRes) => setSignals(sigRes.data.signals ?? []))
-      .catch(() => { /* signals are non-critical — silently ignore */ });
+      .catch(() => { /* non-critical */ });
+
+    api.get('/nudges')
+      .then((res) => setNudges(res.data.nudges ?? []))
+      .catch(() => { /* non-critical */ });
 
     getAllWings()
       .then(setWings)
@@ -142,6 +176,15 @@ export default function Flo() {
     setMessages([]);
   }
 
+  async function dismissNudge(key: string) {
+    setNudges((prev) => prev.filter((n) => n.key !== key));
+    try {
+      await api.post(`/nudges/${key}/dismiss`);
+    } catch {
+      // best-effort — local state already updated
+    }
+  }
+
   if (loading) {
     return <div className="flex h-full items-center justify-center"><Spinner className="h-8 w-8 text-brand-600" /></div>;
   }
@@ -186,6 +229,44 @@ export default function Flo() {
           <button onClick={() => setError('')} className="flex-shrink-0 text-amber-500 hover:text-amber-700 transition">
             <X className="h-4 w-4" />
           </button>
+        </div>
+      )}
+
+      {/* ── Nudge banners ───────────────────────────────────────────────────── */}
+      {nudges.length > 0 && (
+        <div className="border-b border-gray-100 bg-white px-6 py-3 space-y-2">
+          {nudges.map((n) => (
+            <div
+              key={n.key}
+              className={`flex items-start gap-3 rounded-lg border px-4 py-3 text-sm ${NUDGE_STYLES[n.severity]}`}
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${NUDGE_BADGE[n.severity]}`}>
+                    {NUDGE_LABEL[n.severity]}
+                  </span>
+                  <span className="font-semibold text-[13px]">{n.title}</span>
+                </div>
+                <p className="text-[13px] leading-relaxed opacity-90">{n.message}</p>
+                {n.learnMoreId && (
+                  <button
+                    onClick={() => navigate(`/learn#${n.learnMoreId}`)}
+                    className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium underline underline-offset-2 opacity-70 hover:opacity-100 transition"
+                  >
+                    <BookOpen className="h-3 w-3" />
+                    Learn more in Wealth Hub
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => dismissNudge(n.key)}
+                className="flex-shrink-0 mt-0.5 opacity-50 hover:opacity-100 transition"
+                title="Dismiss"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
         </div>
       )}
 

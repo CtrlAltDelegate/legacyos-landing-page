@@ -27,6 +27,7 @@ import Landing from '@/pages/Landing';
 import Analytics from '@/pages/Analytics';
 import Portfolio from '@/pages/Portfolio';
 import Trends from '@/pages/Trends';
+import Learn from '@/pages/Learn';
 
 export default function App() {
   const { initialize, isInitialized } = useAuthStore();
@@ -68,6 +69,7 @@ export default function App() {
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/portfolio" element={<Portfolio />} />
             <Route path="/trends"   element={<Trends />} />
+            <Route path="/learn"    element={<Learn />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/profile" element={<Profile />} />
           </Route>

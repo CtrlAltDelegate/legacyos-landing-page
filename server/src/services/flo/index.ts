@@ -3,6 +3,7 @@ import { prisma } from '../../lib/prisma';
 import { calculateNetWorth } from '../networth';
 import { buildFloSystemPrompt, FloUserContext, TaxSummary } from './systemPrompt';
 import { buildPrioritySignals, PrioritySignal } from './priorities';
+import { generateNudges } from '../nudges';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
@@ -80,6 +81,9 @@ async function loadUserContext(userId: string): Promise<FloUserContext> {
     }),
   ]);
 
+  // Load nudges using already-computed netWorth to avoid a duplicate query
+  const nudges = await generateNudges(userId, netWorth);
+
   // Build tax summary from extracted data if available
   let taxSummary: TaxSummary | null = null;
   if (taxDoc?.parsedData) {
@@ -113,6 +117,7 @@ async function loadUserContext(userId: string): Promise<FloUserContext> {
       ? (familyProfileRecord.answers as Record<string, unknown>)
       : null,
     taxSummary,
+    nudges,
   };
 }
 

@@ -10,6 +10,7 @@ import {
   BarChart2,
   PieChart,
   TrendingUp,
+  GraduationCap,
   User,
   ShieldCheck,
   LogOut,
@@ -24,6 +25,7 @@ const nav = [
   { to: '/flo',         label: 'Flo',         Icon: Sparkles        },
   { to: '/analytics',   label: 'Analytics',   Icon: BarChart2       },
   { to: '/trends',      label: 'Trends',      Icon: TrendingUp      },
+  { to: '/learn',       label: 'Wealth Hub',  Icon: GraduationCap   },
 ];
 
 export default function Layout() {

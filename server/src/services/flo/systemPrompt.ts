@@ -1,4 +1,5 @@
 import { NetWorthResult } from '../networth';
+import type { Nudge } from '../nudges';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -21,6 +22,7 @@ export interface FloUserContext {
   netWorth: NetWorthResult;
   familyProfile: Record<string, unknown> | null;
   taxSummary: TaxSummary | null;
+  nudges: Nudge[];
 }
 
 // ─── Family profile field labels ─────────────────────────────────────────────
@@ -66,7 +68,7 @@ const FAMILY_LABELS: Record<string, string> = {
  * never personalized investment advice. This is non-negotiable.
  */
 export function buildFloSystemPrompt(ctx: FloUserContext): string {
-  const { fullName, primaryGoal, targetMonthlyIncome, riskTolerance, assumedTaxRate, netWorth, familyProfile, taxSummary } = ctx;
+  const { fullName, primaryGoal, targetMonthlyIncome, riskTolerance, assumedTaxRate, netWorth, familyProfile, taxSummary, nudges } = ctx;
 
   const {
     netWorth: nw,
@@ -156,6 +158,15 @@ export function buildFloSystemPrompt(ctx: FloUserContext): string {
       taxLines.push(`  Est. quarterly payment (÷4):  ${fmt(taxSummary.estimatedQuarterlyPayment)}`);
   }
 
+  // ── Active nudges ──────────────────────────────────────────────────────────
+  const nudgeLines: string[] = [];
+  if (nudges.length > 0) {
+    nudgeLines.push(``, `Active insights (surface these proactively when relevant):`);
+    for (const n of nudges) {
+      nudgeLines.push(`  [${n.severity.toUpperCase()}] ${n.title}: ${n.message}`);
+    }
+  }
+
   const portfolioSnapshot = [
     ...portfolioLines,
     ...driftLines,
@@ -163,6 +174,7 @@ export function buildFloSystemPrompt(ctx: FloUserContext): string {
     ...goalLines,
     ...familyLines,
     ...taxLines,
+    ...nudgeLines,
   ].join('\n');
 
   // ── Full system prompt ─────────────────────────────────────────────────────
