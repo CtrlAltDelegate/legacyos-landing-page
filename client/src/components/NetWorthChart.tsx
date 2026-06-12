@@ -7,6 +7,7 @@ interface Snapshot {
 
 interface Props {
   snapshots: Snapshot[];
+  currentNetWorth?: number;
 }
 
 const fmt = (n: number) =>
@@ -27,9 +28,10 @@ function fmtMonth(dateStr: string) {
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   const value = Number(payload[0].value);
+  const isNow = payload[0].payload?.isNow;
   return (
     <div className="rounded-lg bg-white border border-gray-100 shadow-md px-3 py-2">
-      <p className="text-xs text-gray-400 mb-0.5">{label}</p>
+      <p className="text-xs text-gray-400 mb-0.5">{isNow ? 'Now (live)' : label}</p>
       <p className={`text-sm font-bold font-mono ${value >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
         {fmtFull(value)}
       </p>
@@ -37,13 +39,32 @@ function CustomTooltip({ active, payload, label }: any) {
   );
 }
 
-export default function NetWorthChart({ snapshots }: Props) {
-  if (snapshots.length < 2) return null;
+export default function NetWorthChart({ snapshots, currentNetWorth }: Props) {
+  // Need at least 1 snapshot OR a current value to be useful
+  if (snapshots.length === 0 && currentNetWorth == null) return null;
+  if (snapshots.length < 2 && currentNetWorth == null) return null;
 
-  const data = snapshots.map((s) => ({
+  const historicalData = snapshots.map((s) => ({
     label: fmtMonth(s.snapshotDate),
     value: Number(s.netWorth),
+    isNow: false,
   }));
+
+  // Append live current value as "Now" if it differs meaningfully from the last snapshot
+  const lastSnap = historicalData[historicalData.length - 1];
+  const data =
+    currentNetWorth != null && (lastSnap == null || Math.abs(currentNetWorth - lastSnap.value) > 1)
+      ? [
+          ...historicalData,
+          { label: 'Now', value: currentNetWorth, isNow: true },
+        ]
+      : historicalData;
+
+  // Show delta vs last snapshot
+  const deltaVsLastSnap =
+    currentNetWorth != null && lastSnap != null
+      ? currentNetWorth - lastSnap.value
+      : null;
 
   const values = data.map((d) => d.value);
   const min = Math.min(...values);
@@ -58,7 +79,15 @@ export default function NetWorthChart({ snapshots }: Props) {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="section-label">Net worth history</h2>
-          <p className="text-xs text-gray-400 mt-0.5">{snapshots.length} monthly snapshots</p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            {snapshots.length} monthly snapshot{snapshots.length !== 1 ? 's' : ''}
+            {currentNetWorth != null ? ' · live value included' : ''}
+          </p>
+          {deltaVsLastSnap != null && lastSnap && (
+            <p className={`text-xs font-semibold mt-0.5 ${deltaVsLastSnap >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+              {deltaVsLastSnap >= 0 ? '↑' : '↓'} {fmtFull(Math.abs(deltaVsLastSnap))} since {lastSnap.label}
+            </p>
+          )}
         </div>
         <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
           isPositiveTrend ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'

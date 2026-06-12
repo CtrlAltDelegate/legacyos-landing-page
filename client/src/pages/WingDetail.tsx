@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Sparkles, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Sparkles, CheckCircle2, ChevronDown, BookOpen } from 'lucide-react';
 import { getWing, submitAssessment, completeStep, uncompleteStep, type WingDetail, type WingId } from '@/api/wings';
 import { getErrorMessage } from '@/api/client';
 import Spinner from '@/components/Spinner';
 import StepCelebrationModal from '@/components/wings/StepCelebrationModal';
+import { WING_ARTICLES, type WingArticle, type WingId as ContentWingId } from '@/data/wingContent';
 
 // ─── Color map ────────────────────────────────────────────────────────────────
 
@@ -21,6 +22,56 @@ const COLOR: Record<string, {
 };
 
 const MAX_LEVEL = 3;
+
+// ─── Wing article card ────────────────────────────────────────────────────────
+
+function WingArticleCard({
+  article,
+  accentColor,
+  borderColor,
+  bgColor,
+}: {
+  article: WingArticle;
+  accentColor: string;
+  borderColor: string;
+  bgColor: string;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className={`rounded-xl border ${borderColor} overflow-hidden`}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between gap-4 px-5 py-3.5 text-left hover:bg-gray-50 transition-colors"
+      >
+        <div className="min-w-0">
+          <span className={`text-[10px] font-bold uppercase tracking-wider ${accentColor}`}>{article.tagline}</span>
+          <p className="text-sm font-semibold text-gray-900 leading-snug mt-0.5">{article.title}</p>
+        </div>
+        <ChevronDown className={`h-4 w-4 flex-shrink-0 text-gray-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="px-5 pb-5 border-t border-gray-50 space-y-4">
+          <div className="pt-4 space-y-3">
+            {article.body.map((para, i) => (
+              <p key={i} className="text-sm text-gray-700 leading-relaxed">{para}</p>
+            ))}
+          </div>
+          <div className={`rounded-lg ${bgColor} px-4 py-3`}>
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">Key Takeaways</p>
+            <ul className="space-y-1.5">
+              {article.keyTakeaways.map((t, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                  <span className={`mt-1.5 h-1.5 w-1.5 rounded-full flex-shrink-0 ${accentColor.replace('text-', 'bg-')}`} />
+                  {t}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function WingDetail() {
   const { wing: wingParam } = useParams<{ wing: string }>();
@@ -279,6 +330,25 @@ export default function WingDetail() {
           })}
         </div>
       </div>
+
+      {/* ── Key concepts ──────────────────────────────────────────────────── */}
+      {(() => {
+        const articles = WING_ARTICLES[wing.id as ContentWingId];
+        if (!articles?.length) return null;
+        return (
+          <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <BookOpen className={`h-4 w-4 ${c.text}`} />
+              <h2 className="section-label">Key concepts for this wing</h2>
+            </div>
+            <div className="space-y-2">
+              {articles.map((article) => (
+                <WingArticleCard key={article.id} article={article} accentColor={c.text} borderColor={c.border} bgColor={c.bg} />
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Assessment ────────────────────────────────────────────────────── */}
       <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6">

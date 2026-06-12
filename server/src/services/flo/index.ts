@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { prisma } from '../../lib/prisma';
 import { calculateNetWorth } from '../networth';
-import { buildFloSystemPrompt, FloUserContext, TaxSummary } from './systemPrompt';
+import { buildFloSystemPrompt, FloUserContext, TaxSummary, RecentMetricPoint } from './systemPrompt';
 import { buildPrioritySignals, PrioritySignal } from './priorities';
 import { generateNudges } from '../nudges';
 
@@ -59,7 +59,7 @@ async function saveMessages(userId: string, messages: FloMessage[]): Promise<voi
  * Runs in parallel where possible.
  */
 async function loadUserContext(userId: string): Promise<FloUserContext> {
-  const [user, goals, netWorth, familyProfileRecord, taxDoc] = await Promise.all([
+  const [user, goals, netWorth, familyProfileRecord, taxDoc, rawMetrics] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: { fullName: true, assumedTaxRate: true },
@@ -79,7 +79,21 @@ async function loadUserContext(userId: string): Promise<FloUserContext> {
       orderBy: { confirmedAt: 'desc' },
       select: { parsedData: true },
     }),
+    // Latest value for each metric type (deduplicated)
+    prisma.financialMetric.findMany({
+      where: { userId },
+      orderBy: [{ metricType: 'asc' }, { recordedDate: 'desc' }],
+      distinct: ['metricType'],
+      select: { metricType: true, value: true, recordedDate: true, metricLabel: true },
+    }),
   ]);
+
+  const recentMetrics: RecentMetricPoint[] = rawMetrics.map((m) => ({
+    metricType:   m.metricType,
+    value:        Number(m.value),
+    recordedDate: m.recordedDate,
+    metricLabel:  m.metricLabel,
+  }));
 
   // Load nudges using already-computed netWorth to avoid a duplicate query
   const nudges = await generateNudges(userId, netWorth);
@@ -118,6 +132,7 @@ async function loadUserContext(userId: string): Promise<FloUserContext> {
       : null,
     taxSummary,
     nudges,
+    recentMetrics,
   };
 }
 

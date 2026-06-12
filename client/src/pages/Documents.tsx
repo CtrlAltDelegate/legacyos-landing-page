@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { FileText, FileUp, AlertTriangle, Folder, FolderOpen, ChevronDown } from 'lucide-react';
+import { FileText, FileUp, AlertTriangle, Folder, FolderOpen, ChevronDown, Search, RefreshCw } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
 import Spinner from '@/components/Spinner';
 import PlanGateCard, { isPlanGateError } from '@/components/PlanGateCard';
@@ -159,6 +159,7 @@ export default function Documents() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [planGate, setPlanGate] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
 
   // Upload state
   const fileRef = useRef<HTMLInputElement>(null);
@@ -377,6 +378,20 @@ export default function Documents() {
         </div>
       )}
 
+      {/* Search */}
+      {docs.length > 0 && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search documents…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="input pl-9"
+          />
+        </div>
+      )}
+
       {/* Document list — grouped by category */}
       {docs.length === 0 ? (
         <div className="rounded-xl bg-white shadow-sm border border-gray-100 py-16 text-center">
@@ -387,7 +402,11 @@ export default function Documents() {
       ) : (
         <div className="space-y-3">
           {DOC_CATEGORIES.map((cat) => {
-            const catDocs = docs.filter((d) => DOC_TYPE_CATEGORY[d.documentType] === cat.label);
+            const q = search.trim().toLowerCase();
+            const catDocs = docs.filter((d) =>
+              DOC_TYPE_CATEGORY[d.documentType] === cat.label &&
+              (!q || d.filename.toLowerCase().includes(q) || (DOC_TYPE_LABEL[d.documentType] ?? '').toLowerCase().includes(q))
+            );
             if (catDocs.length === 0) return null;
             const isCollapsed = collapsedFolders.has(cat.label);
 
@@ -459,18 +478,37 @@ export default function Documents() {
                             </button>
                           )}
 
-                          {doc.parseStatus !== 'confirmed' && (
+                          {doc.parseStatus === 'confirmed' && (
                             <button
-                              onClick={() => handleDelete(doc.id)}
-                              className="text-xs text-gray-400 hover:text-red-600 transition px-2"
+                              onClick={() => handleParse(doc.id)}
+                              disabled={parsing && activeId === doc.id}
+                              className="btn-secondary text-xs py-1.5 px-3 gap-1.5"
                             >
-                              Delete
+                              {parsing && activeId === doc.id
+                                ? <Spinner className="h-3 w-3" />
+                                : <RefreshCw className="h-3 w-3" />
+                              }
+                              Re-parse
                             </button>
                           )}
+
+                          <button
+                            onClick={() => handleDelete(doc.id)}
+                            className="text-xs text-gray-400 hover:text-red-600 transition px-2"
+                          >
+                            Delete
+                          </button>
                         </div>
 
                         {doc.parseError && (
-                          <p className="text-xs text-red-600">Error: {doc.parseError}</p>
+                          <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+                            <AlertTriangle className="h-3.5 w-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+                            <div className="min-w-0">
+                              <p className="text-xs font-semibold text-red-700">Extraction failed</p>
+                              <p className="text-xs text-red-600 mt-0.5 break-words">{doc.parseError}</p>
+                              <p className="text-xs text-red-500 mt-1">Try uploading a cleaner copy, or use the Extract data button to retry.</p>
+                            </div>
+                          </div>
                         )}
 
                         {/* Parsed data review panel */}

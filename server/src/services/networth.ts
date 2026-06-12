@@ -247,7 +247,7 @@ export async function calculateNetWorth(userId: string): Promise<NetWorthResult>
  * Capture the current net worth as a monthly snapshot.
  * Uses upsert — if a snapshot already exists for today's date, it updates it.
  */
-export async function captureSnapshot(userId: string): Promise<void> {
+export async function captureSnapshot(userId: string): Promise<number> {
   const nw = await calculateNetWorth(userId);
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
@@ -279,4 +279,6 @@ export async function captureSnapshot(userId: string): Promise<void> {
       totalOtherDebt: nw.totalOtherDebt,
     },
   });
+
+  return nw.netWorth;
 }

@@ -75,8 +75,10 @@ export default function Analytics() {
             Premium
           </span>
         </div>
-        <p className="text-sm text-gray-500">
-          Portfolio benchmarking and net worth trajectory projections.
+        <p className="text-sm text-gray-500 max-w-2xl">
+          See how your total portfolio has grown vs. the S&P 500 since you joined, and project exactly when you'll hit your wealth goals.
+          Requires at least 2 monthly net worth snapshots — these are captured automatically on the 1st of each month.
+          Trends tracks individual metric history (income, loans, retirement balance); Analytics tracks portfolio-level performance over time.
         </p>
       </div>
 

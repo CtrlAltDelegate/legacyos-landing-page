@@ -77,6 +77,59 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
+// ─── POST /api/metrics/manual ────────────────────────────────────────────────
+// Manually enter a key metric value without uploading a document.
+// Allowed types: a curated subset of METRIC_META keys.
+
+const MANUAL_ALLOWED = new Set([
+  'annual_income',
+  'retirement_balance',
+  'credit_card_balance',
+  'bank_balance',
+  'loan_balance',
+  'brokerage_value',
+]);
+
+router.post('/manual', async (req: Request, res: Response) => {
+  const { metricType, value, label } = req.body as {
+    metricType?: string;
+    value?: number;
+    label?: string;
+  };
+
+  if (!metricType || !MANUAL_ALLOWED.has(metricType)) {
+    res.status(400).json({
+      error: `metricType must be one of: ${[...MANUAL_ALLOWED].join(', ')}`,
+    });
+    return;
+  }
+
+  const numValue = Number(value);
+  if (isNaN(numValue) || numValue < 0) {
+    res.status(400).json({ error: 'value must be a non-negative number.' });
+    return;
+  }
+
+  try {
+    const meta = METRIC_META[metricType];
+    const point = await prisma.financialMetric.create({
+      data: {
+        userId:      req.user!.userId,
+        metricType,
+        metricLabel: label ?? meta?.label ?? metricType,
+        value:       numValue,
+        recordedDate: new Date(),
+        sourceDocumentId: null,
+      },
+    });
+
+    res.status(201).json({ point });
+  } catch (err) {
+    console.error('[metrics POST /manual]', err);
+    res.status(500).json({ error: 'Failed to save metric.' });
+  }
+});
+
 // ─── GET /api/metrics/categories ─────────────────────────────────────────────
 // Returns which metric categories the user has data for (used to render tabs).
 

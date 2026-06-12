@@ -479,7 +479,7 @@ export default function Dashboard() {
 
       {/* ── Net Worth History Chart ─────────────────────────────────────── */}
       <Suspense fallback={null}>
-        <NetWorthChart snapshots={snapshots} />
+        <NetWorthChart snapshots={snapshots} currentNetWorth={netWorth?.netWorth} />
       </Suspense>
 
       {/* ── Family profile prompt ────────────────────────────────────────── */}

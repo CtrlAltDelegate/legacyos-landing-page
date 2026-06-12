@@ -64,6 +64,126 @@ export async function sendVerificationEmail(
   await getResend().emails.send({ from: FROM, to, subject: 'Verify your LegacyOS email', html });
 }
 
+// ─── Send document parse failure email ───────────────────────────────────────
+
+export async function sendDocumentParseFailed(
+  to: string,
+  filename: string,
+): Promise<void> {
+  const html = baseHtml('Document extraction failed — LegacyOS', `
+    <h2 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#111827;">We couldn't extract data from your document</h2>
+    <p style="margin:0 0 16px;font-size:14px;color:#6b7280;line-height:1.6;">
+      We were unable to automatically extract financial data from <strong>${filename}</strong>.
+      This can happen with scanned documents, password-protected PDFs, or unusual formatting.
+    </p>
+    <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6;">
+      You can retry the extraction from PaperTrail, or try uploading a clearer copy of the document.
+    </p>
+    <a href="${CLIENT}/documents" style="display:inline-block;background:#3a47ec;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;">
+      Go to PaperTrail
+    </a>
+  `);
+
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[email] RESEND_API_KEY not set — skipping parse failed email for ${filename}`);
+    return;
+  }
+
+  await getResend().emails.send({
+    from: FROM,
+    to,
+    subject: `Couldn't extract data from ${filename}`,
+    html,
+  });
+}
+
+// ─── Net worth milestone email ────────────────────────────────────────────────
+
+const MILESTONE_LABELS: Record<number, string> = {
+  100_000:   '$100,000',
+  250_000:   '$250,000',
+  500_000:   '$500,000',
+  1_000_000: '$1,000,000',
+};
+
+export async function sendNetWorthMilestone(
+  to: string,
+  fullName: string,
+  milestone: number,
+): Promise<void> {
+  const label = MILESTONE_LABELS[milestone] ?? `$${milestone.toLocaleString()}`;
+  const firstName = fullName.split(' ')[0] ?? fullName;
+
+  const html = baseHtml(`You hit ${label} net worth! — LegacyOS`, `
+    <h2 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827;">🎉 ${label} — milestone unlocked</h2>
+    <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
+      Congratulations, ${firstName}! Your net worth just crossed <strong>${label}</strong>. That's a significant milestone.
+    </p>
+    <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6;">
+      This is a good time to review your asset allocation, check your beneficiary designations,
+      and consider whether your insurance coverage still matches your wealth level.
+      Ask Flo for a personalized next-step recommendation.
+    </p>
+    <a href="${CLIENT}/flo" style="display:inline-block;background:#3a47ec;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;">
+      Ask Flo what to do next
+    </a>
+  `);
+
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[email] RESEND_API_KEY not set — skipping milestone email for ${to} (${label})`);
+    return;
+  }
+
+  await getResend().emails.send({
+    from: FROM,
+    to,
+    subject: `🎉 You hit ${label} net worth`,
+    html,
+  });
+}
+
+// ─── Quarterly tax reminder email ─────────────────────────────────────────────
+
+export async function sendQuarterlyTaxReminder(
+  to: string,
+  fullName: string,
+  quarter: string,
+  dueDate: string,
+  estimatedPayment: number | null,
+): Promise<void> {
+  const firstName = fullName.split(' ')[0] ?? fullName;
+  const paymentLine = estimatedPayment != null
+    ? `<p style="margin:0 0 16px;font-size:14px;color:#6b7280;line-height:1.6;">Based on your last confirmed tax return, your estimated quarterly payment is approximately <strong>$${Math.round(estimatedPayment).toLocaleString()}</strong>.</p>`
+    : '';
+
+  const html = baseHtml(`Quarterly tax reminder — ${quarter} due ${dueDate}`, `
+    <h2 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#111827;">⏰ Quarterly estimated tax — ${quarter}</h2>
+    <p style="margin:0 0 16px;font-size:14px;color:#6b7280;line-height:1.6;">
+      Hi ${firstName}, your next estimated tax payment is due on <strong>${dueDate}</strong>.
+    </p>
+    ${paymentLine}
+    <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6;">
+      Pay via the IRS Direct Pay portal or EFTPS. Missing a quarterly payment can result in underpayment penalties.
+      Always consult your CPA for amounts specific to your situation.
+    </p>
+    <a href="${CLIENT}/flo" style="display:inline-block;background:#3a47ec;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;">
+      Review tax context with Flo
+    </a>
+  `);
+
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[email] RESEND_API_KEY not set — skipping quarterly tax reminder for ${to}`);
+    return;
+  }
+
+  await getResend().emails.send({
+    from: FROM,
+    to,
+    subject: `⏰ Quarterly estimated tax due ${dueDate}`,
+    html,
+  });
+}
+
 // ─── Send password reset email ────────────────────────────────────────────────
 
 export async function sendPasswordResetEmail(

@@ -8,6 +8,7 @@ import { uploadToS3, getPresignedUrl, deleteFromS3 } from '../services/s3';
 import { parseDocument, checkForAnomalies } from '../services/papertrail/index';
 import { DocumentType, ParsedData } from '../services/papertrail/types';
 import { extractMetrics } from '../services/metrics';
+import { sendDocumentParseFailed } from '../services/email';
 
 const router = Router();
 router.use(requireAuth);
@@ -122,36 +123,32 @@ router.post(
 // Trigger Claude API extraction. Does NOT write to assets — awaits user confirmation.
 
 router.post('/:id/parse', requirePlan('core'), async (req: Request, res: Response) => {
+  let doc: Awaited<ReturnType<typeof prisma.document.findFirst>> | null = null;
   try {
-    const document = await prisma.document.findFirst({
+    doc = await prisma.document.findFirst({
       where: { id: req.params.id, userId: req.user!.userId },
     });
 
-    if (!document) {
+    if (!doc) {
       res.status(404).json({ error: 'Document not found.' });
-      return;
-    }
-
-    if (document.parseStatus === 'confirmed') {
-      res.status(409).json({ error: 'Document already confirmed.' });
       return;
     }
 
     // Mark as parsing
     await prisma.document.update({
-      where: { id: document.id },
+      where: { id: doc.id },
       data: { parseStatus: 'parsing', parseError: null },
     });
 
     // Run PaperTrail extraction
     const result = await parseDocument(
-      document.s3Key,
-      (document.documentType as DocumentType) ?? 'unknown'
+      doc.s3Key,
+      (doc.documentType as DocumentType) ?? 'unknown'
     );
 
     // Store raw extraction, set awaiting_confirmation
     const updated = await prisma.document.update({
-      where: { id: document.id },
+      where: { id: doc.id },
       data: {
         parseStatus: 'awaiting_confirmation',
         parsedData: result.parsedData as object,
@@ -174,7 +171,16 @@ router.post('/:id/parse', requirePlan('core'), async (req: Request, res: Respons
         parseStatus: 'failed',
         parseError: err instanceof Error ? err.message : 'Unknown parse error',
       },
-    }).catch(() => {}); // swallow update error
+    }).catch(() => {});
+
+    // Send parse failure email (non-fatal)
+    const failedUser = await prisma.user.findUnique({
+      where: { id: req.user!.userId },
+      select: { email: true },
+    }).catch(() => null);
+    if (failedUser?.email) {
+      sendDocumentParseFailed(failedUser.email, doc?.filename ?? 'document').catch(() => {});
+    }
 
     res.status(500).json({ error: 'Document parsing failed. Please try again.' });
   }

@@ -1,5 +1,6 @@
 import { NetWorthResult } from '../networth';
 import type { Nudge } from '../nudges';
+import { METRIC_META } from '../metrics';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -13,6 +14,13 @@ export interface TaxSummary {
   estimatedQuarterlyPayment: number | null;
 }
 
+export interface RecentMetricPoint {
+  metricType: string;
+  value: number;
+  recordedDate: Date;
+  metricLabel: string | null;
+}
+
 export interface FloUserContext {
   fullName: string;
   primaryGoal: string | null;
@@ -23,6 +31,7 @@ export interface FloUserContext {
   familyProfile: Record<string, unknown> | null;
   taxSummary: TaxSummary | null;
   nudges: Nudge[];
+  recentMetrics: RecentMetricPoint[];
 }
 
 // ─── Family profile field labels ─────────────────────────────────────────────
@@ -68,7 +77,7 @@ const FAMILY_LABELS: Record<string, string> = {
  * never personalized investment advice. This is non-negotiable.
  */
 export function buildFloSystemPrompt(ctx: FloUserContext): string {
-  const { fullName, primaryGoal, targetMonthlyIncome, riskTolerance, assumedTaxRate, netWorth, familyProfile, taxSummary, nudges } = ctx;
+  const { fullName, primaryGoal, targetMonthlyIncome, riskTolerance, assumedTaxRate, netWorth, familyProfile, taxSummary, nudges, recentMetrics } = ctx;
 
   const {
     netWorth: nw,
@@ -158,6 +167,22 @@ export function buildFloSystemPrompt(ctx: FloUserContext): string {
       taxLines.push(`  Est. quarterly payment (÷4):  ${fmt(taxSummary.estimatedQuarterlyPayment)}`);
   }
 
+  // ── Recent confirmed metrics ───────────────────────────────────────────────
+  const metricsLines: string[] = [];
+  if (recentMetrics.length > 0) {
+    metricsLines.push(``, `Recent financial metrics (from confirmed documents):`);
+    for (const m of recentMetrics) {
+      const meta = METRIC_META[m.metricType];
+      const label = m.metricLabel ?? meta?.label ?? m.metricType.replace(/_/g, ' ');
+      const dateStr = m.recordedDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      const formatted =
+        meta?.format === 'percent'
+          ? `${m.value.toFixed(1)}%`
+          : fmt(m.value);
+      metricsLines.push(`  ${label}: ${formatted} (${dateStr})`);
+    }
+  }
+
   // ── Active nudges ──────────────────────────────────────────────────────────
   const nudgeLines: string[] = [];
   if (nudges.length > 0) {
@@ -174,6 +199,7 @@ export function buildFloSystemPrompt(ctx: FloUserContext): string {
     ...goalLines,
     ...familyLines,
     ...taxLines,
+    ...metricsLines,
     ...nudgeLines,
   ].join('\n');
 

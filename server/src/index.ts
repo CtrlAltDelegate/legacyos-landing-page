@@ -26,6 +26,7 @@ import nudgesRoutes from './routes/nudges';
 import { startPriceRefreshCron } from './cron/priceRefresh';
 import { startMonthlySnapshotCron } from './cron/monthlySnapshot';
 import { startWeeklyDigestCron } from './cron/weeklyDigestCron';
+import { startQuarterlyTaxReminderCron } from './cron/quarterlyTaxReminder';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -110,6 +111,7 @@ app.listen(PORT, () => {
   startPriceRefreshCron();
   startMonthlySnapshotCron();
   startWeeklyDigestCron();
+  startQuarterlyTaxReminderCron();
 });
 
 export default app;

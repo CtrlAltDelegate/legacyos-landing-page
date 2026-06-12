@@ -1,9 +1,13 @@
 import cron from 'node-cron';
 import { prisma } from '../lib/prisma';
 import { captureSnapshot } from '../services/networth';
+import { sendNetWorthMilestone } from '../services/email';
+
+const NW_MILESTONES = [100_000, 250_000, 500_000, 1_000_000];
 
 /**
  * Capture monthly net worth snapshots for all users.
+ * Also checks for net worth milestone crossings and sends emails.
  * Called by cron on the 1st of each month.
  */
 async function captureSnapshotsForAllUsers(): Promise<void> {
@@ -14,13 +18,30 @@ async function captureSnapshotsForAllUsers(): Promise<void> {
 
   try {
     const users = await prisma.user.findMany({
-      select: { id: true, email: true },
+      select: { id: true, email: true, fullName: true },
     });
 
     for (const user of users) {
       try {
-        await captureSnapshot(user.id);
+        // Get previous snapshot for milestone detection
+        const prevSnapshot = await prisma.netWorthSnapshot.findFirst({
+          where: { userId: user.id },
+          orderBy: { snapshotDate: 'desc' },
+          select: { netWorth: true },
+        });
+        const prevNW = prevSnapshot ? Number(prevSnapshot.netWorth) : 0;
+
+        const newNW = await captureSnapshot(user.id);
         succeeded++;
+
+        // Check for milestone crossings
+        for (const milestone of NW_MILESTONES) {
+          if (prevNW < milestone && newNW >= milestone) {
+            await sendNetWorthMilestone(user.email, user.fullName ?? '', milestone).catch((e) => {
+              console.error(`[monthlySnapshot] Milestone email failed for ${user.id}:`, e);
+            });
+          }
+        }
       } catch (err) {
         console.error(`[monthlySnapshot] Failed for user ${user.id}:`, err);
         failed++;

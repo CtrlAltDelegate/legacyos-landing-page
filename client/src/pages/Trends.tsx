@@ -3,7 +3,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, PlusCircle, X } from 'lucide-react';
 import { api } from '@/api/client';
 import Spinner from '@/components/Spinner';
 import PlanGateCard, { isPlanGateError } from '@/components/PlanGateCard';
@@ -207,6 +207,94 @@ function MetricDetail({ metricType, group }: { metricType: string; group: Metric
   );
 }
 
+// ─── Manual entry types ───────────────────────────────────────────────────────
+
+const MANUAL_OPTIONS: Array<{ value: string; label: string; placeholder: string }> = [
+  { value: 'annual_income',      label: 'Annual income',        placeholder: '120000' },
+  { value: 'retirement_balance', label: 'Retirement balance',   placeholder: '85000'  },
+  { value: 'credit_card_balance',label: 'Credit card balance',  placeholder: '4200'   },
+  { value: 'bank_balance',       label: 'Bank / cash balance',  placeholder: '25000'  },
+  { value: 'brokerage_value',    label: 'Brokerage value',      placeholder: '50000'  },
+  { value: 'loan_balance',       label: 'Loan balance',         placeholder: '18000'  },
+];
+
+function ManualEntryForm({ onSaved }: { onSaved: () => void }) {
+  const [open, setOpen]         = useState(false);
+  const [type, setType]         = useState(MANUAL_OPTIONS[0].value);
+  const [value, setValue]       = useState('');
+  const [saving, setSaving]     = useState(false);
+  const [err, setErr]           = useState('');
+
+  async function handleSave() {
+    const num = parseFloat(value.replace(/,/g, ''));
+    if (isNaN(num) || num < 0) { setErr('Enter a valid dollar amount.'); return; }
+    setSaving(true);
+    setErr('');
+    try {
+      await api.post('/metrics/manual', { metricType: type, value: num });
+      setValue('');
+      setOpen(false);
+      onSaved();
+    } catch {
+      setErr('Could not save. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const placeholder = MANUAL_OPTIONS.find((o) => o.value === type)?.placeholder ?? '0';
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="flex items-center gap-2 rounded-lg border border-dashed border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-500 hover:border-brand-400 hover:text-brand-600 transition w-full sm:w-auto"
+      >
+        <PlusCircle className="h-4 w-4" />
+        Add a metric manually
+      </button>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-brand-200 bg-brand-50 p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-brand-900">Add metric manually</p>
+        <button onClick={() => setOpen(false)} className="text-brand-400 hover:text-brand-600">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <select
+          value={type}
+          onChange={(e) => setType(e.target.value)}
+          className="input flex-1 text-sm"
+        >
+          {MANUAL_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+        <div className="relative flex-1">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+          <input
+            type="number"
+            min="0"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder={placeholder}
+            className="input pl-7 text-sm"
+          />
+        </div>
+        <button onClick={handleSave} disabled={saving || !value} className="btn-primary text-sm px-4 flex-shrink-0">
+          {saving ? <Spinner className="h-4 w-4" /> : 'Save'}
+        </button>
+      </div>
+      {err && <p className="text-xs text-red-600">{err}</p>}
+      <p className="text-xs text-brand-700 opacity-75">Saved as today's date. You can upload a document later to build a history.</p>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Trends() {
@@ -216,7 +304,7 @@ export default function Trends() {
   const [activeTab, setActiveTab] = useState<string>('All');
   const [expanded, setExpanded]   = useState<string | null>(null);
 
-  useEffect(() => {
+  function load() {
     api.get('/metrics')
       .then(({ data: d }) => setData(d))
       .catch((err) => {
@@ -224,7 +312,9 @@ export default function Trends() {
         if (gate) setPlanGate(gate.requiredPlan);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }
+
+  useEffect(() => { load(); }, []);
 
   if (loading) return <div className="flex h-full items-center justify-center"><Spinner className="h-8 w-8" /></div>;
 
@@ -267,12 +357,15 @@ export default function Trends() {
         </p>
       </div>
 
+      {/* Manual entry — always visible */}
+      <ManualEntryForm onSaved={() => { setLoading(true); setData(null); load(); }} />
+
       {!hasData ? (
-        <div className="rounded-xl bg-white border border-gray-100 py-20 text-center">
+        <div className="rounded-xl bg-white border border-gray-100 py-16 text-center">
           <TrendingUp className="h-10 w-10 text-gray-200 mx-auto mb-3" />
           <p className="text-base font-semibold text-gray-600">No tracked data yet</p>
           <p className="text-sm text-gray-400 mt-1 max-w-sm mx-auto">
-            Upload and confirm documents in PaperTrail — each confirmation automatically creates trend data here.
+            Add a metric above to get started, or upload and confirm documents in PaperTrail — each confirmation automatically creates trend data here.
           </p>
         </div>
       ) : (
