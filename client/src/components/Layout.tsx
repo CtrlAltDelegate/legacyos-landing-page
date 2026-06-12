@@ -12,6 +12,7 @@ import {
   PieChart,
   TrendingUp,
   GraduationCap,
+  Calculator,
   User,
   ShieldCheck,
   LogOut,
@@ -29,6 +30,7 @@ const nav = [
   { to: '/analytics',   label: 'Analytics',   Icon: BarChart2       },
   { to: '/trends',      label: 'Trends',      Icon: TrendingUp      },
   { to: '/learn',       label: 'Wealth Hub',  Icon: GraduationCap   },
+  { to: '/tools',       label: 'Tools',       Icon: Calculator      },
 ];
 
 // Primary 4 items always visible in the bottom bar + the More button as 5th slot

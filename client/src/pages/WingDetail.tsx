@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Sparkles, CheckCircle2, ChevronDown, BookOpen } from 'lucide-react';
+import { ArrowLeft, Sparkles, CheckCircle2, ChevronDown, BookOpen, ClipboardList, ExternalLink } from 'lucide-react';
 import { getWing, submitAssessment, completeStep, uncompleteStep, type WingDetail, type WingId } from '@/api/wings';
 import { getErrorMessage } from '@/api/client';
+import { useAuthStore } from '@/store/auth';
 import Spinner from '@/components/Spinner';
 import StepCelebrationModal from '@/components/wings/StepCelebrationModal';
 import { WING_ARTICLES, type WingArticle, type WingId as ContentWingId } from '@/data/wingContent';
@@ -73,9 +74,111 @@ function WingArticleCard({
   );
 }
 
+// ─── Estate planning checklist ───────────────────────────────────────────────
+
+const ESTATE_ITEMS: { id: string; label: string; detail: string }[] = [
+  { id: 'will',           label: 'Will / Last Testament',           detail: 'Names executor, distributes assets, designates guardian for minor children' },
+  { id: 'poa',            label: 'Durable Power of Attorney',       detail: 'Authorizes someone to manage your finances if you\'re incapacitated' },
+  { id: 'healthcare',     label: 'Healthcare Proxy / Medical POA',  detail: 'Designates who makes medical decisions on your behalf' },
+  { id: 'advance',        label: 'Advance Directive / Living Will', detail: 'Specifies your wishes for end-of-life care and life support' },
+  { id: 'beneficiaries',  label: 'Beneficiary Designations Updated', detail: 'Retirement accounts and life insurance — these override your will' },
+  { id: 'trust',          label: 'Trust (if applicable)',           detail: 'Avoids probate for assets ≥$1M, blended families, or multi-state real estate' },
+  { id: 'life-insurance', label: 'Life Insurance Policy',           detail: 'Term life to cover income replacement for dependents' },
+  { id: 'digital',        label: 'Digital Asset Instructions',      detail: 'Passwords, crypto keys, account access for executor' },
+  { id: 'letter',         label: 'Letter of Instruction',           detail: 'Funeral wishes, personal notes, location of key documents' },
+];
+
+function EstateChecklist({ accentColor, borderColor, bgColor, userId }: {
+  accentColor: string; borderColor: string; bgColor: string; userId: string;
+}) {
+  const storageKey = `estate_checklist_${userId}`;
+  const [checked, setChecked] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem(storageKey);
+      return stored ? new Set(JSON.parse(stored) as string[]) : new Set();
+    } catch { return new Set(); }
+  });
+
+  function toggle(id: string) {
+    setChecked(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      try { localStorage.setItem(storageKey, JSON.stringify([...next])); } catch {}
+      return next;
+    });
+  }
+
+  const completedCount = checked.size;
+  const pct = Math.round(completedCount / ESTATE_ITEMS.length * 100);
+
+  return (
+    <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6 space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <ClipboardList className={`h-4 w-4 ${accentColor}`} />
+          <h2 className="section-label">Estate planning checklist</h2>
+        </div>
+        <span className="text-xs font-bold text-gray-500">{completedCount}/{ESTATE_ITEMS.length} done</span>
+      </div>
+
+      {/* Progress bar */}
+      <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${accentColor.replace('text-', 'bg-')}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+
+      <div className="space-y-1">
+        {ESTATE_ITEMS.map((item) => {
+          const done = checked.has(item.id);
+          return (
+            <label
+              key={item.id}
+              className={`flex items-start gap-3 rounded-lg px-3 py-2.5 cursor-pointer transition-colors hover:bg-gray-50 ${done ? bgColor : ''}`}
+            >
+              <div className={`mt-0.5 h-4 w-4 flex-shrink-0 rounded border-2 transition-colors flex items-center justify-center ${
+                done ? `${accentColor.replace('text-', 'bg-')} border-transparent` : `border-gray-300`
+              }`}>
+                {done && <svg viewBox="0 0 10 8" className="h-2.5 w-2.5 text-white fill-white"><path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>}
+              </div>
+              <input type="checkbox" checked={done} onChange={() => toggle(item.id)} className="sr-only" />
+              <div className="min-w-0">
+                <p className={`text-sm font-medium leading-snug ${done ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                  {item.label}
+                </p>
+                <p className="text-[11px] text-gray-400 leading-snug mt-0.5">{item.detail}</p>
+              </div>
+            </label>
+          );
+        })}
+      </div>
+
+      {pct === 100 && (
+        <div className={`rounded-lg ${bgColor} px-4 py-3 flex items-start gap-2`}>
+          <CheckCircle2 className={`h-4 w-4 flex-shrink-0 mt-0.5 ${accentColor}`} />
+          <p className="text-sm font-semibold text-gray-800">
+            Your estate plan is complete. Review it every 3–5 years or after any major life event.
+          </p>
+        </div>
+      )}
+
+      <a
+        href="https://nolo.com/legal-encyclopedia/estate-planning"
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`inline-flex items-center gap-1 text-xs font-medium ${accentColor} hover:underline`}
+      >
+        Learn more at Nolo.com <ExternalLink className="h-3 w-3" />
+      </a>
+    </div>
+  );
+}
+
 export default function WingDetail() {
   const { wing: wingParam } = useParams<{ wing: string }>();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
 
   const [wing, setWing] = useState<WingDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -349,6 +452,16 @@ export default function WingDetail() {
           </div>
         );
       })()}
+
+      {/* ── Estate checklist (Legacy wing only) ───────────────────────────── */}
+      {wing.id === 'legacy' && user?.id && (
+        <EstateChecklist
+          accentColor={c.text}
+          borderColor={c.border}
+          bgColor={c.bg}
+          userId={user.id}
+        />
+      )}
 
       {/* ── Assessment ────────────────────────────────────────────────────── */}
       <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6">
