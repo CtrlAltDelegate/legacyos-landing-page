@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, type FormEvent } from 'react';
 import { Sparkles, ChevronRight, Send, X, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { api, getErrorMessage } from '@/api/client';
+import { api, API_BASE, tokenStore, getErrorMessage } from '@/api/client';
 import { getAllWings, type WingSummary } from '@/api/wings';
 import Spinner from '@/components/Spinner';
 import PlanGateCard, { isPlanGateError } from '@/components/PlanGateCard';
@@ -96,6 +96,7 @@ export default function Flo() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [streamingContent, setStreamingContent] = useState('');
   const [error, setError] = useState('');
   const [planGate, setPlanGate] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -135,23 +136,70 @@ export default function Flo() {
     if (!text.trim() || sending) return;
     setError('');
     setSending(true);
+    setStreamingContent('');
     setInput('');
 
     const optimistic: Message = { role: 'user', content: text.trim(), timestamp: new Date().toISOString() };
     setMessages((prev) => [...prev, optimistic]);
 
     try {
-      const { data } = await api.post('/flo/chat', { message: text.trim() });
-      setMessages(data.messages);
-    } catch (err) {
-      const gate = isPlanGateError(err);
-      if (gate) {
-        setPlanGate(gate.requiredPlan);
-        setMessages((prev) => prev.filter((m) => m !== optimistic));
-      } else {
-        setError(getErrorMessage(err));
-        setMessages((prev) => prev.filter((m) => m !== optimistic));
+      const response = await fetch(`${API_BASE}/flo/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${tokenStore.getAccess()}`,
+        },
+        body: JSON.stringify({ message: text.trim() }),
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({})) as { error?: string; requiredPlan?: string };
+        if (response.status === 403 && body.requiredPlan) {
+          setPlanGate(body.requiredPlan);
+          setMessages((prev) => prev.filter((m) => m !== optimistic));
+          return;
+        }
+        throw new Error(body.error ?? `HTTP ${response.status}`);
       }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() ?? '';
+
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            const json = line.slice(6).trim();
+            if (!json) continue;
+
+            const event = JSON.parse(json) as
+              | { type: 'chunk'; text: string }
+              | { type: 'done'; messages: Message[] }
+              | { type: 'error'; message: string };
+
+            if (event.type === 'chunk') {
+              setStreamingContent((prev) => prev + event.text);
+            } else if (event.type === 'done') {
+              setMessages(event.messages);
+              setStreamingContent('');
+            } else if (event.type === 'error') {
+              throw new Error(event.message);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      setMessages((prev) => prev.filter((m) => m !== optimistic));
+      setStreamingContent('');
+      setError(err instanceof Error ? err.message : 'Something went wrong.');
     } finally {
       setSending(false);
       inputRef.current?.focus();
@@ -342,8 +390,17 @@ export default function Flo() {
             <div className="mr-2 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-brand-600">
               <Sparkles className="h-3.5 w-3.5 text-white" />
             </div>
-            <div className="rounded-xl rounded-tl-sm bg-white border border-gray-100 px-4 py-3 shadow-sm">
-              <Spinner className="h-4 w-4 text-brand-400" />
+            <div className="max-w-[75%] rounded-xl rounded-tl-sm bg-white border border-gray-100 px-4 py-3 text-sm leading-relaxed text-gray-800 shadow-sm">
+              {streamingContent ? (
+                <>
+                  {streamingContent.split('\n').map((line, j, arr) => (
+                    <span key={j}>{line}{j < arr.length - 1 && <br />}</span>
+                  ))}
+                  <span className="inline-block w-1.5 h-3.5 bg-brand-400 animate-pulse ml-0.5 align-middle" />
+                </>
+              ) : (
+                <Spinner className="h-4 w-4 text-brand-400" />
+              )}
             </div>
           </div>
         )}

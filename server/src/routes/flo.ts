@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { requireAuth } from '../middleware/auth';
 import { requirePlan } from '../middleware/planGate';
 import {
-  sendFloMessage,
+  sendFloMessageStream,
   getOrCreateConversation,
   clearFloConversation,
   getFloSignals,
@@ -28,7 +28,11 @@ router.get('/conversation', requireCore, async (req: Request, res: Response) => 
 });
 
 // ─── POST /api/flo/chat ───────────────────────────────────────────────────────
-// Send a message to Flo and receive a response. Core+ only (Operations Wing).
+// Stream a Flo response via SSE. Core+ only (Operations Wing).
+// SSE events:
+//   data: {"type":"chunk","text":"..."}   — each text token
+//   data: {"type":"done","messages":[...]} — final event with persisted history
+//   data: {"type":"error","message":"..."}  — on failure
 
 router.post('/chat', requireCore, async (req: Request, res: Response) => {
   const { message } = req.body as { message?: string };
@@ -43,16 +47,26 @@ router.post('/chat', requireCore, async (req: Request, res: Response) => {
     return;
   }
 
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
   try {
-    const { response, messages } = await sendFloMessage(
+    const messages = await sendFloMessageStream(
       req.user!.userId,
-      message.trim()
+      message.trim(),
+      (text) => {
+        res.write(`data: ${JSON.stringify({ type: 'chunk', text })}\n\n`);
+      }
     );
 
-    res.json({ response, messages });
+    res.write(`data: ${JSON.stringify({ type: 'done', messages })}\n\n`);
   } catch (err) {
     console.error('[flo/chat POST]', err);
-    res.status(500).json({ error: 'Flo is temporarily unavailable. Please try again.' });
+    res.write(`data: ${JSON.stringify({ type: 'error', message: 'Flo is temporarily unavailable. Please try again.' })}\n\n`);
+  } finally {
+    res.end();
   }
 });
 

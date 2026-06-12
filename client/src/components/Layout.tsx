@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth';
 import {
@@ -14,6 +15,8 @@ import {
   User,
   ShieldCheck,
   LogOut,
+  MoreHorizontal,
+  X,
 } from 'lucide-react';
 
 const nav = [
@@ -28,9 +31,13 @@ const nav = [
   { to: '/learn',       label: 'Wealth Hub',  Icon: GraduationCap   },
 ];
 
+// Primary 4 items always visible in the bottom bar + the More button as 5th slot
+const BOTTOM_NAV_PRIMARY = ['/dashboard', '/flo', '/documents', '/assets'];
+
 export default function Layout() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const [moreOpen, setMoreOpen] = useState(false);
 
   async function handleLogout() {
     await logout();
@@ -134,7 +141,7 @@ export default function Layout() {
 
       {/* ── Mobile bottom nav ─────────────────────────────────────────────── */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 flex items-stretch">
-        {nav.map(({ to, label, Icon }) => (
+        {nav.filter(({ to }) => BOTTOM_NAV_PRIMARY.includes(to)).map(({ to, label, Icon }) => (
           <NavLink
             key={to}
             to={to}
@@ -152,23 +159,88 @@ export default function Layout() {
             )}
           </NavLink>
         ))}
-        {/* Profile link in bottom nav */}
-        <NavLink
-          to="/profile"
-          className={({ isActive }) =>
-            `flex-1 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
-              isActive ? 'text-brand-600' : 'text-gray-400'
-            }`
-          }
+
+        {/* More button — opens drawer */}
+        <button
+          onClick={() => setMoreOpen(true)}
+          className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
+            moreOpen ? 'text-brand-600' : 'text-gray-400'
+          }`}
         >
-          {({ isActive }) => (
-            <>
-              <User className={`h-5 w-5 ${isActive ? 'text-brand-600' : 'text-gray-400'}`} />
-              <span className="leading-tight">Profile</span>
-            </>
-          )}
-        </NavLink>
+          <MoreHorizontal className={`h-5 w-5 ${moreOpen ? 'text-brand-600' : 'text-gray-400'}`} />
+          <span className="leading-tight">More</span>
+        </button>
       </nav>
+
+      {/* ── Mobile More drawer ────────────────────────────────────────────── */}
+      {moreOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="md:hidden fixed inset-0 z-40 bg-black/20"
+            onClick={() => setMoreOpen(false)}
+          />
+          {/* Sheet */}
+          <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-xl pb-safe">
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100">
+              <span className="text-sm font-bold text-gray-800">More</span>
+              <button onClick={() => setMoreOpen(false)} className="text-gray-400 hover:text-gray-600 transition">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="px-4 py-3 space-y-0.5">
+              {/* Secondary nav items */}
+              {nav.filter(({ to }) => !BOTTOM_NAV_PRIMARY.includes(to)).map(({ to, label, Icon }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  onClick={() => setMoreOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors ${
+                      isActive ? 'bg-brand-50 text-brand-700' : 'text-gray-700 hover:bg-gray-50'
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Icon className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-brand-600' : 'text-gray-400'}`} />
+                      {label}
+                    </>
+                  )}
+                </NavLink>
+              ))}
+
+              <div className="border-t border-gray-100 my-1 pt-1">
+                <NavLink
+                  to="/profile"
+                  onClick={() => setMoreOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors ${
+                      isActive ? 'bg-brand-50 text-brand-700' : 'text-gray-700 hover:bg-gray-50'
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <User className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-brand-600' : 'text-gray-400'}`} />
+                      Profile &amp; Goals
+                    </>
+                  )}
+                </NavLink>
+
+                <button
+                  onClick={async () => { setMoreOpen(false); await handleLogout(); }}
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <LogOut className="h-5 w-5 flex-shrink-0 text-gray-400" />
+                  Sign out
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

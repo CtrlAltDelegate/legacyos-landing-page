@@ -121,28 +121,11 @@ async function loadUserContext(userId: string): Promise<FloUserContext> {
   };
 }
 
-// ─── Core chat function ───────────────────────────────────────────────────────
+// ─── Shared message prep ─────────────────────────────────────────────────────
 
-/**
- * Send a message to Flo and get a response.
- *
- * Flow:
- * 1. Load current conversation history + user context
- * 2. Build a fresh system prompt with live portfolio data
- * 3. Call Claude API with full history + new user message
- * 4. Append both messages to history and persist
- * 5. Return assistant response
- *
- * History is capped at 50 messages (25 turns) to stay within context limits.
- * Oldest messages are dropped from the start if the cap is hit.
- */
-export async function sendFloMessage(
-  userId: string,
-  userMessage: string
-): Promise<{ response: string; messages: FloMessage[] }> {
-  const MAX_HISTORY = 50;
+const MAX_HISTORY = 50;
 
-  // Load context and history in parallel
+async function prepareFloCall(userId: string, userMessage: string) {
   const [ctx, state] = await Promise.all([
     loadUserContext(userId),
     getOrCreateConversation(userId),
@@ -150,7 +133,6 @@ export async function sendFloMessage(
 
   const systemPrompt = buildFloSystemPrompt(ctx);
 
-  // Append the new user message
   const newUserMsg: FloMessage = {
     role: 'user',
     content: userMessage,
@@ -159,13 +141,76 @@ export async function sendFloMessage(
 
   const allMessages = [...state.messages, newUserMsg];
 
-  // Build the API message array (Claude format — no timestamps)
   const apiMessages: Anthropic.MessageParam[] = allMessages.map((m) => ({
     role: m.role,
     content: m.content,
   }));
 
-  // Call Claude
+  return { systemPrompt, allMessages, apiMessages };
+}
+
+async function finalizeFloCall(
+  userId: string,
+  allMessages: FloMessage[],
+  assistantContent: string
+): Promise<FloMessage[]> {
+  const newAssistantMsg: FloMessage = {
+    role: 'assistant',
+    content: assistantContent,
+    timestamp: new Date().toISOString(),
+  };
+
+  let updatedMessages = [...allMessages, newAssistantMsg];
+  if (updatedMessages.length > MAX_HISTORY) {
+    updatedMessages = updatedMessages.slice(updatedMessages.length - MAX_HISTORY);
+  }
+
+  await saveMessages(userId, updatedMessages);
+  return updatedMessages;
+}
+
+// ─── Streaming chat ───────────────────────────────────────────────────────────
+
+/**
+ * Stream a Flo response token-by-token via onChunk callback.
+ * Persists the full message to DB when complete and returns updated history.
+ */
+export async function sendFloMessageStream(
+  userId: string,
+  userMessage: string,
+  onChunk: (text: string) => void
+): Promise<FloMessage[]> {
+  const { systemPrompt, allMessages, apiMessages } = await prepareFloCall(userId, userMessage);
+
+  const stream = client.messages.stream({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 1024,
+    system: systemPrompt,
+    messages: apiMessages,
+  });
+
+  let fullText = '';
+  for await (const event of stream) {
+    if (
+      event.type === 'content_block_delta' &&
+      event.delta.type === 'text_delta'
+    ) {
+      onChunk(event.delta.text);
+      fullText += event.delta.text;
+    }
+  }
+
+  return finalizeFloCall(userId, allMessages, fullText);
+}
+
+// ─── Non-streaming fallback (kept for internal use / testing) ─────────────────
+
+export async function sendFloMessage(
+  userId: string,
+  userMessage: string
+): Promise<{ response: string; messages: FloMessage[] }> {
+  const { systemPrompt, allMessages, apiMessages } = await prepareFloCall(userId, userMessage);
+
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 1024,
@@ -176,23 +221,8 @@ export async function sendFloMessage(
   const assistantContent =
     response.content[0]?.type === 'text' ? response.content[0].text : '';
 
-  // Append assistant response
-  const newAssistantMsg: FloMessage = {
-    role: 'assistant',
-    content: assistantContent,
-    timestamp: new Date().toISOString(),
-  };
-
-  let updatedMessages = [...allMessages, newAssistantMsg];
-
-  // Cap history to avoid unbounded growth
-  if (updatedMessages.length > MAX_HISTORY) {
-    updatedMessages = updatedMessages.slice(updatedMessages.length - MAX_HISTORY);
-  }
-
-  await saveMessages(userId, updatedMessages);
-
-  return { response: assistantContent, messages: updatedMessages };
+  const messages = await finalizeFloCall(userId, allMessages, assistantContent);
+  return { response: assistantContent, messages };
 }
 
 // ─── Priority signals ─────────────────────────────────────────────────────────

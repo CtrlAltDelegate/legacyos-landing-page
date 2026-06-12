@@ -353,6 +353,19 @@ router.post('/:id/confirm', requirePlan('core'), async (req: Request, res: Respo
       mortgage_statement:    'upload_mortgage_statement',
       auto_loan:             'upload_vehicle_loan',
       bank_statement:        'upload_bank_statement',
+      brokerage_statement:   'upload_brokerage_statement',
+      whole_life_statement:  'upload_whole_life_statement',
+      retirement_401k:       'upload_retirement_statement',
+      tax_return:            'upload_tax_return',
+      trust_document:        'upload_trust_document',
+      paystub:               'upload_paystub',
+      w2:                    'upload_w2',
+      form_1099:             'upload_1099',
+      student_loan:          'upload_student_loan',
+      credit_card_statement: 'upload_credit_card_statement',
+      property_tax:          'upload_property_tax',
+      insurance_policy:      'upload_insurance_policy',
+      business_financials:   'upload_business_financials',
     };
     const todoSourceKey = DOC_TYPE_TODO_KEY[document.documentType ?? ''];
     if (todoSourceKey) {
@@ -508,6 +521,33 @@ function buildAssetUpdates(
         ...(d.cash_surrender_value != null && { currentValue: d.cash_surrender_value }),
       };
 
+    case 'retirement_401k': {
+      const retVal = d.vested_balance ?? d.total_value;
+      return {
+        ...(retVal != null && { currentValue: retVal }),
+      };
+    }
+
+    case 'bank_statement':
+      return {
+        ...(d.ending_balance != null && { currentValue: d.ending_balance }),
+      };
+
+    case 'auto_loan':
+      return {
+        ...(d.remaining_balance != null && { currentValue: d.remaining_balance }),
+      };
+
+    case 'student_loan':
+      return {
+        ...(d.total_outstanding_balance != null && { currentValue: d.total_outstanding_balance }),
+      };
+
+    case 'credit_card_statement':
+      return {
+        ...(d.statement_balance != null && { currentValue: d.statement_balance }),
+      };
+
     default:
       return {};
   }
@@ -526,6 +566,18 @@ function getConfirmedValue(documentType: DocumentType, data: ParsedData): number
       return d.total_value != null ? Number(d.total_value) : null;
     case 'whole_life_statement':
       return d.cash_surrender_value != null ? Number(d.cash_surrender_value) : null;
+    case 'retirement_401k': {
+      const retVal = d.vested_balance ?? d.total_value;
+      return retVal != null ? Number(retVal) : null;
+    }
+    case 'bank_statement':
+      return d.ending_balance != null ? Number(d.ending_balance) : null;
+    case 'auto_loan':
+      return d.remaining_balance != null ? Number(d.remaining_balance) : null;
+    case 'student_loan':
+      return d.total_outstanding_balance != null ? Number(d.total_outstanding_balance) : null;
+    case 'credit_card_statement':
+      return d.statement_balance != null ? Number(d.statement_balance) : null;
     default:
       return null;
   }

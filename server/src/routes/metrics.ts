@@ -1,10 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { requireAuth } from '../middleware/auth';
+import { requirePlan } from '../middleware/planGate';
 import { METRIC_META } from '../services/metrics';
 
 const router = Router();
 router.use(requireAuth);
+router.use(requirePlan('core'));
 
 // ─── GET /api/metrics ─────────────────────────────────────────────────────────
 // Returns all financial metric time-series for the user, grouped by metricType.
