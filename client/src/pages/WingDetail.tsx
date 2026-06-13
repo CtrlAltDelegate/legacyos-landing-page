@@ -88,8 +88,8 @@ const ESTATE_ITEMS: { id: string; label: string; detail: string }[] = [
   { id: 'letter',         label: 'Letter of Instruction',           detail: 'Funeral wishes, personal notes, location of key documents' },
 ];
 
-function EstateChecklist({ accentColor, borderColor, bgColor, userId }: {
-  accentColor: string; borderColor: string; bgColor: string; userId: string;
+function EstateChecklist({ accentColor, bgColor, userId }: {
+  accentColor: string; bgColor: string; userId: string;
 }) {
   const storageKey = `estate_checklist_${userId}`;
   const [checked, setChecked] = useState<Set<string>>(() => {
@@ -457,7 +457,6 @@ export default function WingDetail() {
       {wing.id === 'legacy' && user?.id && (
         <EstateChecklist
           accentColor={c.text}
-          borderColor={c.border}
           bgColor={c.bg}
           userId={user.id}
         />

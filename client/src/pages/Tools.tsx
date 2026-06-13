@@ -3,7 +3,7 @@ import {
   ComposedChart, Area, XAxis, YAxis, Tooltip,
   ResponsiveContainer, ReferenceLine, Line,
 } from 'recharts';
-import { Calculator, Flame, PiggyBank, CreditCard, Plus, Trash2, ChevronDown } from 'lucide-react';
+import { Calculator, Flame, PiggyBank, CreditCard, Plus, Trash2 } from 'lucide-react';
 import { api } from '@/api/client';
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
@@ -319,7 +319,6 @@ function RetirementCalculator({ prefillRetirementBalance }: { prefillRetirementB
   const employerAnnual = salary > 0 ? Math.min(yourAnnual * mRate, salary * mCap) : 0;
   const totalAnnual    = yourAnnual + employerAnnual;
   const years          = Math.max(0, (Number(retireAge) || 65) - (Number(currentAge) || 35));
-  const r              = returnRate / 100;
 
   // Build annual chart data: your contributions, employer, growth
   type RetRow = { age: string; yours: number; employer: number; growth: number; total: number };
@@ -770,8 +769,6 @@ export default function Tools() {
       })
       .catch(() => {});
   }, []);
-
-  const activeTabMeta = TABS.find(t => t.id === activeTab)!;
 
   return (
     <div className="p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
