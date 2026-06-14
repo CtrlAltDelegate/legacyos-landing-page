@@ -122,8 +122,11 @@ export default function ExportReport() {
   const [goal, setGoal] = useState<Goal | null>(null);
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errors, setErrors] = useState<string[]>([]);
 
-  useEffect(() => {
+  const loadData = () => {
+    setLoading(true);
+    setErrors([]);
     Promise.allSettled([
       getAllWings(),
       api.get('/networth/current'),
@@ -133,15 +136,26 @@ export default function ExportReport() {
       api.get('/goals'),
       getTodos(),
     ]).then(([w, nwRes, snapRes, assetsRes, liabRes, goalRes, t]) => {
+      const errs: string[] = [];
       if (w.status === 'fulfilled') setWings(w.value);
+      else errs.push(`Wings: ${(w.reason as Error)?.message ?? 'failed'}`);
       if (nwRes.status === 'fulfilled') setNw(nwRes.value.data);
+      else errs.push(`Net worth: ${(nwRes.reason as Error)?.message ?? 'failed'}`);
       if (snapRes.status === 'fulfilled') setSnapshots(snapRes.value.data.snapshots ?? []);
+      else errs.push(`Snapshots: ${(snapRes.reason as Error)?.message ?? 'failed'}`);
       if (assetsRes.status === 'fulfilled') setAssets(assetsRes.value.data.assets ?? []);
+      else errs.push(`Assets: ${(assetsRes.reason as Error)?.message ?? 'failed'}`);
       if (liabRes.status === 'fulfilled') setLiabilities(liabRes.value.data.liabilities ?? []);
+      else errs.push(`Liabilities: ${(liabRes.reason as Error)?.message ?? 'failed'}`);
       if (goalRes.status === 'fulfilled') setGoal(goalRes.value.data.goal ?? null);
+      else errs.push(`Goals: ${(goalRes.reason as Error)?.message ?? 'failed'}`);
       if (t.status === 'fulfilled') setTodos(t.value.slice(0, 12));
+      else errs.push(`Action items: ${(t.reason as Error)?.message ?? 'failed'}`);
+      setErrors(errs);
     }).finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { loadData(); }, []);
 
   if (loading) {
     return (
@@ -234,6 +248,26 @@ export default function ExportReport() {
           </button>
         </div>
       </div>
+
+      {/* ── Error banner (screen only) ───────────────────────────────────── */}
+      {errors.length > 0 && (
+        <div className="print:hidden bg-red-50 border-b border-red-200 px-4 py-3">
+          <div className="flex items-start justify-between gap-4 max-w-3xl mx-auto">
+            <div>
+              <p className="text-sm font-semibold text-red-700 mb-1">Some data failed to load:</p>
+              <ul className="text-xs text-red-600 space-y-0.5">
+                {errors.map(e => <li key={e}>· {e}</li>)}
+              </ul>
+            </div>
+            <button
+              onClick={loadData}
+              className="text-xs font-semibold text-red-700 border border-red-300 rounded px-3 py-1.5 hover:bg-red-100 whitespace-nowrap"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Report body ──────────────────────────────────────────────────── */}
       <div className="max-w-3xl mx-auto px-8 py-10 bg-white min-h-screen print:p-0 print:max-w-none font-sans text-gray-900">
