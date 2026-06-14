@@ -43,7 +43,7 @@ const PRICING = [
     price: '$49',
     period: '/month',
     desc: 'For families managing significant wealth.',
-    features: ['Everything in Core', 'Spouse / partner access', 'Priority support', 'Custom affiliate link overrides', 'Early access to new features'],
+    features: ['Everything in Core', 'Spouse / partner access', 'Custom affiliate link overrides', 'Early access to new features'],
     cta: 'Start Premium',
     href: '/register',
     highlight: false,

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, Printer, Users, Copy, CheckCircle2, TrendingUp, HeadphonesIcon, Mail, Calendar } from 'lucide-react';
+import { Shield, Printer, Users, Copy, CheckCircle2, TrendingUp } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
 import { useAuthStore } from '@/store/auth';
 import Spinner from '@/components/Spinner';
@@ -170,12 +170,12 @@ export default function Profile() {
           setRiskTolerance(g.riskTolerance ?? '');
           setTargetDate(g.targetDate ?? null);
           setAlloc({
-            targetEquityPct:     g.targetEquityPct     ?? 30,
-            targetRealEstatePct: g.targetRealEstatePct ?? 40,
-            targetCashPct:       g.targetCashPct       ?? 10,
-            targetBusinessPct:   g.targetBusinessPct   ?? 10,
-            targetInsurancePct:  g.targetInsurancePct  ?? 5,
-            targetOtherPct:      g.targetOtherPct      ?? 5,
+            targetEquityPct:     Number(g.targetEquityPct     ?? 30),
+            targetRealEstatePct: Number(g.targetRealEstatePct ?? 40),
+            targetCashPct:       Number(g.targetCashPct       ?? 10),
+            targetBusinessPct:   Number(g.targetBusinessPct   ?? 10),
+            targetInsurancePct:  Number(g.targetInsurancePct  ?? 5),
+            targetOtherPct:      Number(g.targetOtherPct      ?? 5),
           });
         }
 
@@ -492,50 +492,6 @@ export default function Profile() {
           </div>
         </div>
       </div>
-
-      {/* Priority Support — Premium only */}
-      {(user?.plan === 'premium' || user?.isAdmin) && (
-        <div className="rounded-xl bg-white shadow-sm border border-amber-100 p-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <HeadphonesIcon className="h-4 w-4 text-amber-600" />
-            <h2 className="section-label mb-0">Priority Support</h2>
-            <span className="ml-auto inline-flex items-center rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-xs font-semibold text-amber-700">
-              Premium
-            </span>
-          </div>
-          <p className="text-sm text-gray-500">
-            As a Premium member you get direct access to our team — not a help-desk queue.
-          </p>
-          <div className="space-y-3">
-            <a
-              href="mailto:premium@legacyos.com"
-              className="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 hover:border-brand-300 hover:bg-brand-50 transition group"
-            >
-              <div className="h-8 w-8 rounded-lg bg-brand-50 border border-brand-100 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-100 transition">
-                <Mail className="h-4 w-4 text-brand-600" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-900">Email support</p>
-                <p className="text-xs text-gray-500">premium@legacyos.com · Response within 24 hours</p>
-              </div>
-            </a>
-            <a
-              href="https://calendly.com/legacyos/premium-support"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 hover:border-brand-300 hover:bg-brand-50 transition group"
-            >
-              <div className="h-8 w-8 rounded-lg bg-brand-50 border border-brand-100 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-100 transition">
-                <Calendar className="h-4 w-4 text-brand-600" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-900">Book a call</p>
-                <p className="text-xs text-gray-500">30-min screenshare with the LegacyOS team</p>
-              </div>
-            </a>
-          </div>
-        </div>
-      )}
 
       {/* Security */}
       <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6 space-y-4">
