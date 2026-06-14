@@ -623,21 +623,25 @@ export default function FinancialReportPDF({
             const isRE = cls === 'real_estate';
 
             return (
-              <View key={cls} wrap={false}>
-                {/* Section heading is anchored inside the first group — can never orphan */}
-                {groupIndex === 0 && <Text style={s.secHeading}>Asset Detail</Text>}
-                <View style={s.assetGroupRow}>
-                  <Text style={s.assetGroupLabel}>{ASSET_CLASS_LABEL[cls] ?? cls}</Text>
-                  <Text style={s.assetGroupLabel}>{fmt(clsTotal)}</Text>
+              // NO wrap={false} on the whole group — rows flow freely across pages
+              <View key={cls}>
+                {/* Anchor: heading (first group only) + subheading + table header stay together */}
+                <View wrap={false}>
+                  {groupIndex === 0 && <Text style={s.secHeading}>Asset Detail</Text>}
+                  <View style={s.assetGroupRow}>
+                    <Text style={s.assetGroupLabel}>{ASSET_CLASS_LABEL[cls] ?? cls}</Text>
+                    <Text style={s.assetGroupLabel}>{fmt(clsTotal)}</Text>
+                  </View>
+                  <View style={s.tableHeader}>
+                    <Text style={{ ...s.thText, flex: isEq ? 3 : 4 }}>Name</Text>
+                    {isEq && <Text style={{ ...s.thText, flex: 1.5 }}>Ticker</Text>}
+                    {isEq && <Text style={{ ...s.thText, flex: 2 }}>Sector</Text>}
+                    {isRE && <Text style={{ ...s.thText, flex: 3 }}>Address</Text>}
+                    <Text style={{ ...s.thText, flex: 1.5, textAlign: 'right' }}>Value</Text>
+                    <Text style={{ ...s.thText, width: 32, textAlign: 'right' }}>%</Text>
+                  </View>
                 </View>
-                <View style={s.tableHeader}>
-                  <Text style={{ ...s.thText, flex: isEq ? 3 : 4 }}>Name</Text>
-                  {isEq && <Text style={{ ...s.thText, flex: 1.5 }}>Ticker</Text>}
-                  {isEq && <Text style={{ ...s.thText, flex: 2 }}>Sector</Text>}
-                  {isRE && <Text style={{ ...s.thText, flex: 3 }}>Address</Text>}
-                  <Text style={{ ...s.thText, flex: 1.5, textAlign: 'right' }}>Value</Text>
-                  <Text style={{ ...s.thText, width: 32, textAlign: 'right' }}>%</Text>
-                </View>
+                {/* Rows flow freely — no wrap={false} here */}
                 {clsAssets.map((a, i) => {
                   const val = assetValue(a);
                   return (
@@ -675,15 +679,17 @@ export default function FinancialReportPDF({
 
         {/* Liabilities */}
         <View style={s.sec}>
-          <Text style={s.secHeading}>Liabilities Detail</Text>
           {liabilities.length > 0 ? (
             <View>
-              <View style={s.tableHeader} wrap={false}>
-                <Text style={{ ...s.thText, flex: 3 }}>Name</Text>
-                <Text style={{ ...s.thText, flex: 2 }}>Type</Text>
-                <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Balance</Text>
-                <Text style={{ ...s.thText, flex: 1.5, textAlign: 'right' }}>Rate</Text>
-                <Text style={{ ...s.thText, flex: 1.5, textAlign: 'right' }}>Monthly</Text>
+              <View wrap={false}>
+                <Text style={s.secHeading}>Liabilities Detail</Text>
+                <View style={s.tableHeader}>
+                  <Text style={{ ...s.thText, flex: 3 }}>Name</Text>
+                  <Text style={{ ...s.thText, flex: 2 }}>Type</Text>
+                  <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Balance</Text>
+                  <Text style={{ ...s.thText, flex: 1.5, textAlign: 'right' }}>Rate</Text>
+                  <Text style={{ ...s.thText, flex: 1.5, textAlign: 'right' }}>Monthly</Text>
+                </View>
               </View>
               {liabilities.map((l, i) => (
                 <View key={l.id} style={i === liabilities.length - 1 ? { ...s.tableRow, borderBottomWidth: 0 } : s.tableRow}>
@@ -718,13 +724,15 @@ export default function FinancialReportPDF({
         {/* Net Worth Trend */}
         {trendSnaps.length >= 2 && (
           <View style={s.sec}>
-            <Text style={s.secHeading}>Net Worth Trend — Last 12 Months</Text>
-            <View style={s.tableHeader} wrap={false}>
-              <Text style={{ ...s.thText, flex: 2 }}>Month</Text>
-              <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Net Worth</Text>
-              <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Total Assets</Text>
-              <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Total Liab.</Text>
-              <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Change</Text>
+            <View wrap={false}>
+              <Text style={s.secHeading}>Net Worth Trend — Last 12 Months</Text>
+              <View style={s.tableHeader}>
+                <Text style={{ ...s.thText, flex: 2 }}>Month</Text>
+                <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Net Worth</Text>
+                <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Total Assets</Text>
+                <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Total Liab.</Text>
+                <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Change</Text>
+              </View>
             </View>
             {trendSnaps.map((snap, i) => {
               const p      = trendSnaps[i - 1];
@@ -751,13 +759,14 @@ export default function FinancialReportPDF({
 
         {/* Portfolio Allocation table */}
         {goal && (goal.targetEquityPct != null || goal.targetRealEstatePct != null) && (
-          <View style={s.sec} wrap={false}>
-            <Text style={s.secHeading}>Portfolio Allocation — Target vs. Actual</Text>
-            <View style={s.tableHeader}>
-              <Text style={{ ...s.thText, flex: 3 }}>Asset Class</Text>
+          <View style={s.sec}>
+            <View wrap={false}>
+              <Text style={s.secHeading}>Portfolio Allocation — Target vs. Actual</Text>
+                <Text style={{ ...s.thText, flex: 3 }}>Asset Class</Text>
               <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Target</Text>
               <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Actual</Text>
               <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Delta</Text>
+            </View>
             </View>
             {[
               { label: 'Equities',     target: goal.targetEquityPct,     actual: equityActual },
@@ -785,8 +794,10 @@ export default function FinancialReportPDF({
 
         {/* Goals */}
         {goal && (
-          <View style={s.sec} wrap={false}>
-            <Text style={s.secHeading}>Financial Goals</Text>
+          <View style={s.sec}>
+            <View wrap={false}>
+              <Text style={s.secHeading}>Financial Goals</Text>
+            </View>
             <View style={s.goalGrid}>
               {[
                 { label: 'Primary Goal',
@@ -831,8 +842,10 @@ export default function FinancialReportPDF({
 
         {/* Six Wing Assessment */}
         {assessedWings.length > 0 && (
-          <View style={s.sec} wrap={false}>
-            <Text style={s.secHeading}>Six Wing Assessment</Text>
+          <View style={s.sec}>
+            <View wrap={false}>
+              <Text style={s.secHeading}>Six Wing Assessment</Text>
+            </View>
             {wings.map(wing => {
               const color = WING_COLOR[wing.color] ?? C.g700;
               const pct   = wing.assessed ? wing.level / 5 : 0;
@@ -936,12 +949,14 @@ export default function FinancialReportPDF({
 
         {/* Retirement assets breakdown (if any) */}
         {pretaxAssets.length > 0 && (
-          <View style={s.sec} wrap={false}>
-            <Text style={s.secHeading}>Retirement Account Detail</Text>
-            <View style={s.tableHeader}>
-              <Text style={{ ...s.thText, flex: 4 }}>Account</Text>
-              <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Value</Text>
-              <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>% of Retirement</Text>
+          <View style={s.sec}>
+            <View wrap={false}>
+              <Text style={s.secHeading}>Retirement Account Detail</Text>
+              <View style={s.tableHeader}>
+                <Text style={{ ...s.thText, flex: 4 }}>Account</Text>
+                <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Value</Text>
+                <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>% of Retirement</Text>
+              </View>
             </View>
             {pretaxAssets.map((a, i) => {
               const val = assetValue(a);
@@ -960,8 +975,10 @@ export default function FinancialReportPDF({
 
         {/* Goal Milestones */}
         {milestones.length > 0 && (
-          <View style={s.sec} wrap={false}>
-            <Text style={s.secHeading}>Financial Milestones</Text>
+          <View style={s.sec}>
+            <View wrap={false}>
+              <Text style={s.secHeading}>Financial Milestones</Text>
+            </View>
             {milestones.map(m => (
               <ProgressBar
                 key={m.label}
@@ -978,7 +995,9 @@ export default function FinancialReportPDF({
         {/* Priority Action Items */}
         {todos.length > 0 && (
           <View style={s.sec}>
-            <Text style={s.secHeading}>Priority Action Items</Text>
+            <View wrap={false}>
+              <Text style={s.secHeading}>Priority Action Items</Text>
+            </View>
             {todos.map((todo, i) => {
               const badge =
                 todo.category === 'document' ? { bg: '#eff6ff', color: '#1d4ed8' } :
