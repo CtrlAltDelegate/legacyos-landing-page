@@ -50,7 +50,7 @@ export default function Layout() {
     <div className="flex h-screen overflow-hidden bg-surface-1">
 
       {/* ── Desktop sidebar ──────────────────────────────────────────────── */}
-      <aside className="hidden md:flex w-56 flex-col bg-surface-1 border-r border-gray-100 shadow-sidebar flex-shrink-0">
+      <aside className="print:hidden hidden md:flex w-56 flex-col bg-surface-1 border-r border-gray-100 shadow-sidebar flex-shrink-0">
 
         {/* Logo */}
         <div className="flex h-16 items-center gap-2.5 px-5 border-b border-gray-100">
@@ -137,12 +137,12 @@ export default function Layout() {
 
       {/* ── Main content ─────────────────────────────────────────────────── */}
       {/* On mobile: add bottom padding so content clears the bottom nav */}
-      <main className="flex-1 overflow-y-auto bg-surface-1 pb-16 md:pb-0">
+      <main className="flex-1 overflow-y-auto bg-surface-1 pb-16 md:pb-0 print:pb-0">
         <Outlet />
       </main>
 
       {/* ── Mobile bottom nav ─────────────────────────────────────────────── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 flex items-stretch">
+      <nav className="print:hidden md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 flex items-stretch">
         {nav.filter(({ to }) => BOTTOM_NAV_PRIMARY.includes(to)).map(({ to, label, Icon }) => (
           <NavLink
             key={to}
@@ -179,7 +179,7 @@ export default function Layout() {
         <>
           {/* Backdrop */}
           <div
-            className="md:hidden fixed inset-0 z-40 bg-black/20"
+            className="print:hidden md:hidden fixed inset-0 z-40 bg-black/20"
             onClick={() => setMoreOpen(false)}
           />
           {/* Sheet */}
