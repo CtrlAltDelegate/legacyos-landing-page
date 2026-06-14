@@ -124,7 +124,7 @@ export default function ExportReport() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
+    Promise.allSettled([
       getAllWings(),
       api.get('/networth/current'),
       api.get('/networth/snapshots?limit=13'),
@@ -132,17 +132,15 @@ export default function ExportReport() {
       api.get('/liabilities'),
       api.get('/goals'),
       getTodos(),
-    ])
-      .then(([w, nwRes, snapRes, assetsRes, liabRes, goalRes, t]) => {
-        setWings(w);
-        setNw(nwRes.data);
-        setSnapshots(snapRes.data.snapshots ?? []);
-        setAssets(assetsRes.data.assets ?? []);
-        setLiabilities(liabRes.data.liabilities ?? []);
-        setGoal(goalRes.data.goal ?? null);
-        setTodos(t.slice(0, 12));
-      })
-      .finally(() => setLoading(false));
+    ]).then(([w, nwRes, snapRes, assetsRes, liabRes, goalRes, t]) => {
+      if (w.status === 'fulfilled') setWings(w.value);
+      if (nwRes.status === 'fulfilled') setNw(nwRes.value.data);
+      if (snapRes.status === 'fulfilled') setSnapshots(snapRes.value.data.snapshots ?? []);
+      if (assetsRes.status === 'fulfilled') setAssets(assetsRes.value.data.assets ?? []);
+      if (liabRes.status === 'fulfilled') setLiabilities(liabRes.value.data.liabilities ?? []);
+      if (goalRes.status === 'fulfilled') setGoal(goalRes.value.data.goal ?? null);
+      if (t.status === 'fulfilled') setTodos(t.value.slice(0, 12));
+    }).finally(() => setLoading(false));
   }, []);
 
   if (loading) {
