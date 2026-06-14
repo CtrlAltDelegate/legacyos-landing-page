@@ -246,21 +246,7 @@ function assetValue(a: ReportAsset): number {
   return Number(a.currentValue ?? 0);
 }
 
-// ─── Section anchor — heading glued to first row so it can't orphan ───────────
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    // outer wrap={true} lets long sections flow across pages
-    <View style={s.sectionAnchor}>
-      {/* inner wrap={false} keeps just the heading + first-row together */}
-      <View wrap={false}>
-        <Text style={s.sectionHeading}>{title}</Text>
-        {/* children slot 0 renders alongside the heading in the no-wrap zone */}
-      </View>
-      {children}
-    </View>
-  );
-}
 
 // ─── Footer ───────────────────────────────────────────────────────────────────
 
