@@ -130,6 +130,13 @@ function FireCalculator({ prefillNW }: { prefillNW: number | null }) {
   const [retireAge,      setRetireAge]      = useState('55');
   const [returnRate,     setReturnRate]     = useState(7);
 
+  useEffect(() => {
+    if (prefillNW != null && currentNW === '') {
+      setCurrentNW(String(Math.round(prefillNW)));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillNW]);
+
   const pv          = Number(currentNW)      || 0;
   const pmt         = (Number(monthlySavings) || 0) * 12;
   const target      = (Number(targetIncome)   || 0) * 300; // 4% SWR = 25× annual = monthly × 300
@@ -303,6 +310,13 @@ function FireCalculator({ prefillNW }: { prefillNW: number | null }) {
 
 function RetirementCalculator({ prefillRetirementBalance }: { prefillRetirementBalance: number | null }) {
   const [currentBalance,  setCurrentBalance]  = useState(prefillRetirementBalance != null ? String(Math.round(prefillRetirementBalance)) : '');
+
+  useEffect(() => {
+    if (prefillRetirementBalance != null && currentBalance === '') {
+      setCurrentBalance(String(Math.round(prefillRetirementBalance)));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillRetirementBalance]);
   const [monthlyContrib,  setMonthlyContrib]  = useState('');
   const [annualSalary,    setAnnualSalary]    = useState('');
   const [matchRate,       setMatchRate]       = useState('50');   // employer matches 50% of contributions
