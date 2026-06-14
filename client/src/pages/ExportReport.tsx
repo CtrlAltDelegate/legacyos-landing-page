@@ -241,9 +241,19 @@ export default function ExportReport() {
         </button>
         <div className="flex items-center gap-3">
           <p className="text-xs text-gray-400">
-            Tip: In the print dialog, choose "Save as PDF" and set margins to "Default"
+            In the print dialog, choose <strong>Save as PDF</strong> · Destination → PDF
           </p>
-          <button onClick={() => window.print()} className="btn-primary gap-2">
+          <button
+            onClick={() => {
+              const slug = (user?.fullName ?? 'Financial').replace(/\s+/g, '-');
+              const date = new Date().toISOString().slice(0, 10);
+              const prev = document.title;
+              document.title = `${slug}-financial-report-${date}`;
+              window.print();
+              document.title = prev;
+            }}
+            className="btn-primary gap-2"
+          >
             <Printer className="h-4 w-4" /> Download PDF
           </button>
         </div>
@@ -270,7 +280,7 @@ export default function ExportReport() {
       )}
 
       {/* ── Report body ──────────────────────────────────────────────────── */}
-      <div className="max-w-3xl mx-auto px-8 py-10 bg-white min-h-screen print:p-0 print:max-w-none font-sans text-gray-900">
+      <div className="print-report max-w-3xl mx-auto px-8 py-10 bg-white min-h-screen print:p-0 print:max-w-none font-sans text-gray-900">
 
         {/* ── Cover / Header ─────────────────────────────────────────────── */}
         <div className="flex items-start justify-between mb-10 pb-6 border-b-2 border-gray-900">
@@ -378,7 +388,7 @@ export default function ExportReport() {
           const clsAssets = assetsByClass[cls];
           const clsTotal = clsAssets.reduce((s, a) => s + assetValue(a), 0);
           return (
-            <div key={cls} className="mb-5">
+            <div key={cls} className="asset-group mb-5">
               <div className="flex items-center justify-between mb-1.5">
                 <p className="text-xs font-bold text-gray-700">{ASSET_CLASS_LABEL[cls] ?? cls}</p>
                 <p className="text-xs font-bold font-mono text-gray-700">{fmt(clsTotal)}</p>
@@ -692,12 +702,104 @@ export default function ExportReport() {
         </div>
       </div>
 
-      {/* Print styles */}
+      {/* ── Print stylesheet ──────────────────────────────────────────────
+           All 5 issues addressed:
+           1. Filename → set via document.title before window.print()
+           2. App chrome → every nav/sidebar/fixed element hidden
+           3. Letter-size viewport + full-width layout (no mobile max-w)
+           4. Full content, no cutoff: avoid page-break inside tables/sections
+           5. Clean document styles: white bg, black text, visible borders
+      ─────────────────────────────────────────────────────────────────── */}
       <style>{`
         @media print {
-          @page { margin: 1.5cm; size: letter; }
-          body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          .print\\:hidden { display: none !important; }
+          /* ── Page setup: Letter, 1.5 cm margins ── */
+          @page {
+            size: letter;
+            margin: 1.5cm 1.8cm;
+          }
+
+          /* ── Strip all screen chrome ── */
+          *,
+          *::before,
+          *::after {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          /* Hide every nav, sidebar, toolbar, drawer, scrollbar */
+          nav, aside, header,
+          [class*="sidebar"],
+          [class*="bottom-nav"],
+          [class*="toolbar"],
+          [class*="sticky"],
+          [class*="fixed"],
+          .print\\:hidden {
+            display: none !important;
+          }
+
+          /* No scroll, no overflow clipping */
+          html, body {
+            overflow: visible !important;
+            height: auto !important;
+            background: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+
+          /* ── Full-width document layout (override mobile max-w) ── */
+          #root, #root > * {
+            all: unset;
+            display: block;
+          }
+
+          .print-report {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+          }
+
+          /* ── Typography ── */
+          body { font-family: -apple-system, Arial, sans-serif; color: #111; font-size: 11pt; }
+          h1 { font-size: 22pt; }
+          h2 { font-size: 8pt; }
+          p, td, th, li { font-size: 9pt; line-height: 1.4; }
+
+          /* ── Tables: visible borders, no cutoff ── */
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            break-inside: auto;
+          }
+          thead { display: table-header-group; }
+          tr {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+          td, th {
+            padding: 4px 6px;
+            border-bottom: 1px solid #e5e7eb;
+          }
+
+          /* ── Sections: avoid cutting a heading from its content ── */
+          section, .report-section {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+
+          /* Keep asset-class groups together when they're small ── */
+          .asset-group {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+
+          /* ── Ensure backgrounds & colors print (cards, pills, bars) ── */
+          [style*="background-color"],
+          [style*="backgroundColor"] {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
         }
       `}</style>
     </>
