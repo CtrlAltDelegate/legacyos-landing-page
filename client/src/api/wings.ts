@@ -30,6 +30,7 @@ export interface WingSummary {
   tagline: string;
   philosophy: string;
   color: string;
+  beyondExpert: string;
   level: number;
   levelLabel: string;
   assessed: boolean;

@@ -22,7 +22,7 @@ const COLOR: Record<string, {
   slate:   { bg: 'bg-teal-50',    border: 'border-teal-200',    accentBorder: 'border-l-teal-600',    badge: 'bg-teal-100 text-teal-800',    text: 'text-teal-700',    btn: 'bg-teal-600 hover:bg-teal-700',    dot: 'bg-teal-500',    ring: 'ring-teal-400' },
 };
 
-const MAX_LEVEL = 3;
+const MAX_LEVEL = 5;
 
 // ─── Wing article card ────────────────────────────────────────────────────────
 
@@ -332,9 +332,18 @@ export default function WingDetail() {
           <p className="text-sm text-gray-600 leading-relaxed">{currentStep.description}</p>
 
           {wing.level >= MAX_LEVEL ? (
-            <div className={`rounded-lg ${c.bg} ${c.border} border px-4 py-3 flex items-center gap-2`}>
-              <CheckCircle2 className={`h-4 w-4 ${c.text} flex-shrink-0`} />
-              <p className={`text-sm font-semibold ${c.text}`}>You've reached Advanced level. Mastery unlocked.</p>
+            <div className="space-y-3">
+              <div className={`rounded-lg ${c.bg} ${c.border} border px-4 py-3 flex items-center gap-2`}>
+                <CheckCircle2 className={`h-4 w-4 ${c.text} flex-shrink-0`} />
+                <p className={`text-sm font-semibold ${c.text}`}>Expert level reached. Revisit this step annually — life changes, and so should your strategy.</p>
+              </div>
+              <button
+                onClick={handleCompleteStep}
+                disabled={completingStep}
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 transition"
+              >
+                <CheckCircle2 className="h-4 w-4" /> Mark annual review done
+              </button>
             </div>
           ) : (
             <div className="flex flex-wrap items-center gap-3 pt-1">
@@ -452,6 +461,23 @@ export default function WingDetail() {
           </div>
         );
       })()}
+
+      {/* ── Beyond Expert panel (level 5 only) ───────────────────────────── */}
+      {wing.level >= MAX_LEVEL && wing.beyondExpert && (
+        <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white shadow-sm p-6 space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">🏦</span>
+            <h2 className="text-sm font-bold text-gray-800">What a Family Office Adds at $25M+</h2>
+          </div>
+          <p className="text-sm text-gray-600 leading-relaxed">{wing.beyondExpert}</p>
+          <div className="rounded-lg bg-gray-100 px-4 py-3">
+            <p className="text-xs font-semibold text-gray-600">
+              Not there yet? Keep building. Most fractional family offices have $10M–$25M minimums.
+              LegacyOS exists to get you there with the same systems the ultra-wealthy use — without the overhead.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ── Estate checklist (Legacy wing only) ───────────────────────────── */}
       {wing.id === 'legacy' && user?.id && (

@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { requireAuth } from '../middleware/auth';
 import { prisma } from '../lib/prisma';
-import { WINGS, WING_ORDER, calculateLevel, WingId, WingStep } from '../config/wingSteps';
+import { WINGS, WING_ORDER, LEVEL_LABELS, calculateLevel, WingId, WingStep } from '../config/wingSteps';
 
 /** Apply any admin-managed affiliate link overrides to a step array. */
 async function applyAffiliateOverrides(wingId: string, steps: WingStep[]): Promise<WingStep[]> {
@@ -53,8 +53,9 @@ router.get('/', async (req: Request, res: Response) => {
         tagline: cfg.tagline,
         philosophy: cfg.philosophy,
         color: cfg.color,
+        beyondExpert: cfg.beyondExpert,
         level,
-        levelLabel: ['Foundation', 'Building', 'Established', 'Advanced'][level] ?? 'Advanced',
+        levelLabel: LEVEL_LABELS[level] ?? LEVEL_LABELS[LEVEL_LABELS.length - 1],
         assessed: !!saved?.completedAt,
         stepCompletedAt: saved?.stepCompletedAt ?? null,
         nextStep: step,
@@ -98,8 +99,9 @@ router.get('/:wing', async (req: Request, res: Response) => {
       tagline: cfg.tagline,
       philosophy: cfg.philosophy,
       color: cfg.color,
+      beyondExpert: cfg.beyondExpert,
       level,
-      levelLabel: ['Foundation', 'Building', 'Established', 'Advanced'][level] ?? 'Advanced',
+      levelLabel: LEVEL_LABELS[level] ?? LEVEL_LABELS[LEVEL_LABELS.length - 1],
       assessed: !!saved?.completedAt,
       stepCompletedAt: saved?.stepCompletedAt ?? null,
       steps,
@@ -161,7 +163,7 @@ router.post('/:wing/assess', async (req: Request, res: Response) => {
 
     res.json({
       level,
-      levelLabel: ['Foundation', 'Building', 'Established', 'Advanced'][level] ?? 'Advanced',
+      levelLabel: LEVEL_LABELS[level] ?? LEVEL_LABELS[LEVEL_LABELS.length - 1],
       nextStep: step,
       assessment,
     });
