@@ -158,10 +158,11 @@ export default function ExportReport() {
   });
 
   // ── Derived figures ──────────────────────────────────────────────────────────
+  // Prisma Decimal fields serialize as strings over JSON — always wrap in Number()
 
-  const totalAssets = nw?.totalAssets ?? 0;
-  const totalLiab = nw?.totalLiabilities ?? 0;
-  const netWorth = nw?.netWorth ?? 0;
+  const totalAssets = Number(nw?.totalAssets ?? 0);
+  const totalLiab = Number(nw?.totalLiabilities ?? 0);
+  const netWorth = Number(nw?.netWorth ?? 0);
   const debtToAsset = totalAssets > 0 ? (totalLiab / totalAssets) * 100 : 0;
   const leverageRatio = totalLiab > 0 ? netWorth / totalLiab : null;
 
@@ -207,9 +208,9 @@ export default function ExportReport() {
   const weightedAvgRate = totalLiab > 0 ? totalWeightedRate / totalLiab : 0;
 
   // Allocation actuals
-  const equityActual = totalAssets > 0 ? (nw?.breakdown.equityValue ?? 0) / totalAssets * 100 : 0;
-  const reActual     = totalAssets > 0 ? (nw?.breakdown.realEstateValue ?? 0) / totalAssets * 100 : 0;
-  const otherActual  = totalAssets > 0 ? (nw?.breakdown.otherValue ?? 0) / totalAssets * 100 : 0;
+  const equityActual = totalAssets > 0 ? Number(nw?.breakdown.equityValue ?? 0) / totalAssets * 100 : 0;
+  const reActual     = totalAssets > 0 ? Number(nw?.breakdown.realEstateValue ?? 0) / totalAssets * 100 : 0;
+  const otherActual  = totalAssets > 0 ? Number(nw?.breakdown.otherValue ?? 0) / totalAssets * 100 : 0;
 
   const assessedWings = wings.filter(w => w.assessed);
   const avgWingLevel = assessedWings.length
@@ -504,11 +505,12 @@ export default function ExportReport() {
                   { label: 'Cash & Other', target: goal.targetCashPct ?? goal.targetOtherPct, actual: otherActual },
                 ].map(({ label, target, actual }) => {
                   if (target == null) return null;
-                  const delta = actual - target;
+                  const t = Number(target); // Prisma Decimal arrives as string
+                  const delta = actual - t;
                   return (
                     <tr key={label} className="border-b border-gray-50">
                       <td className="py-1 text-gray-700">{label}</td>
-                      <td className="py-1 text-right text-gray-500">{fmtPct(target)}</td>
+                      <td className="py-1 text-right text-gray-500">{fmtPct(t)}</td>
                       <td className="py-1 text-right font-mono text-gray-800">{fmtPct(actual)}</td>
                       <td className={`py-1 text-right font-mono ${
                         Math.abs(delta) < 2 ? 'text-gray-400'
@@ -545,7 +547,7 @@ export default function ExportReport() {
                 },
                 {
                   label: 'Monthly Income Target',
-                  value: goal.targetMonthlyIncome ? fmt(goal.targetMonthlyIncome) : '—',
+                  value: goal.targetMonthlyIncome ? fmt(Number(goal.targetMonthlyIncome)) : '—',
                 },
                 {
                   label: 'Target Date',
@@ -562,12 +564,20 @@ export default function ExportReport() {
             </div>
             {goal.targetMonthlyIncome && (
               <div className="border border-gray-100 rounded-lg p-3 bg-amber-50 text-xs text-amber-800 mb-2">
-                <span className="font-bold">FIRE Number:</span>{' '}
-                {fmt(goal.targetMonthlyIncome * 12 * 25)} &nbsp;(25× annual income at 4% SWR)
-                &nbsp;·&nbsp;
-                {netWorth > 0
-                  ? `You are ${fmtPct(netWorth / (goal.targetMonthlyIncome * 12 * 25) * 100)} of the way there`
-                  : 'Track net worth growth to see progress'}
+                {(() => {
+                  const monthlyIncome = Number(goal.targetMonthlyIncome);
+                  const fireNumber = monthlyIncome * 12 * 25;
+                  return (
+                    <>
+                      <span className="font-bold">FIRE Number:</span>{' '}
+                      {fmt(fireNumber)} &nbsp;(25× annual income at 4% SWR)
+                      &nbsp;·&nbsp;
+                      {netWorth > 0
+                        ? `You are ${fmtPct(netWorth / fireNumber * 100)} of the way there`
+                        : 'Track net worth growth to see progress'}
+                    </>
+                  );
+                })()}
               </div>
             )}
           </>
