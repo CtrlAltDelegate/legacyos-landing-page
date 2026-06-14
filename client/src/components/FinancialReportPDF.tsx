@@ -762,11 +762,12 @@ export default function FinancialReportPDF({
           <View style={s.sec}>
             <View wrap={false}>
               <Text style={s.secHeading}>Portfolio Allocation — Target vs. Actual</Text>
+              <View style={s.tableHeader}>
                 <Text style={{ ...s.thText, flex: 3 }}>Asset Class</Text>
-              <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Target</Text>
-              <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Actual</Text>
-              <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Delta</Text>
-            </View>
+                <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Target</Text>
+                <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Actual</Text>
+                <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Delta</Text>
+              </View>
             </View>
             {[
               { label: 'Equities',     target: goal.targetEquityPct,     actual: equityActual },
