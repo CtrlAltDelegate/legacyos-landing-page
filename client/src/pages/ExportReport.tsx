@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Printer, ArrowLeft } from 'lucide-react';
+import { pdf } from '@react-pdf/renderer';
 import { api } from '@/api/client';
 import { getAllWings, type WingSummary } from '@/api/wings';
 import { getTodos, type TodoItem } from '@/api/todos';
 import { useAuthStore } from '@/store/auth';
 import Spinner from '@/components/Spinner';
+import FinancialReportPDF from '@/components/FinancialReportPDF';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -122,6 +124,7 @@ export default function ExportReport() {
   const [goal, setGoal] = useState<Goal | null>(null);
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
 
   const loadData = () => {
@@ -241,20 +244,42 @@ export default function ExportReport() {
         </button>
         <div className="flex items-center gap-3">
           <p className="text-xs text-gray-400">
-            In the print dialog, choose <strong>Save as PDF</strong> · Destination → PDF
+            Downloads a proper PDF document — no print dialog needed
           </p>
           <button
-            onClick={() => {
-              const slug = (user?.fullName ?? 'Financial').replace(/\s+/g, '-');
-              const date = new Date().toISOString().slice(0, 10);
-              const prev = document.title;
-              document.title = `${slug}-financial-report-${date}`;
-              window.print();
-              document.title = prev;
+            disabled={downloading}
+            onClick={async () => {
+              setDownloading(true);
+              try {
+                const slug = (user?.fullName ?? 'Financial').replace(/\s+/g, '-');
+                const date = new Date().toISOString().slice(0, 10);
+                const blob = await pdf(
+                  <FinancialReportPDF
+                    userName={user?.fullName ?? 'Client'}
+                    reportDate={reportDate}
+                    nw={nw}
+                    snapshots={snapshots}
+                    assets={assets}
+                    liabilities={liabilities}
+                    goal={goal}
+                    wings={wings}
+                    todos={todos}
+                  />
+                ).toBlob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${slug}-financial-report-${date}.pdf`;
+                a.click();
+                URL.revokeObjectURL(url);
+              } finally {
+                setDownloading(false);
+              }
             }}
-            className="btn-primary gap-2"
+            className="btn-primary gap-2 disabled:opacity-60"
           >
-            <Printer className="h-4 w-4" /> Download PDF
+            <Printer className="h-4 w-4" />
+            {downloading ? 'Generating…' : 'Download PDF'}
           </button>
         </div>
       </div>
