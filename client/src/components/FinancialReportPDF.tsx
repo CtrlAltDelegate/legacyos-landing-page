@@ -655,7 +655,7 @@ export default function FinancialReportPDF({
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
                 {goal.monthlyCryptoBudget != null && (
                   <View style={{ flex: 1, backgroundColor: C.g50, borderRadius: 6, padding: 8 }}>
-                    <Text style={s.goalCardLabel}>Monthly Crypto Budget</Text>
+                    <Text style={s.goalCardLabel}>Monthly Accumulation Budget</Text>
                     <Text style={s.goalCardValue}>{fmt(Number(goal.monthlyCryptoBudget))}/mo</Text>
                   </View>
                 )}

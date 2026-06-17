@@ -318,10 +318,10 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Monthly Crypto Budget */}
+      {/* Monthly Accumulation Budget */}
       <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6 space-y-4">
-        <h2 className="section-label">Monthly Crypto Budget</h2>
-        <p className="text-sm text-gray-500">Fixed dollar amount allocated to crypto purchases each month. Reflects the planned DCA buy amount, not actual purchases made.</p>
+        <h2 className="section-label">Monthly Accumulation Budget</h2>
+        <p className="text-sm text-gray-500">Fixed dollar amount allocated to your active investment pool each month — crypto, brokerage, or whatever you're currently accumulating. Reflects the planned amount, not actual purchases made.</p>
         <div>
           <label className="label" htmlFor="cryptoBudget">Amount ($)</label>
           <input

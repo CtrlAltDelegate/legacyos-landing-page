@@ -635,7 +635,7 @@ export default function ExportReport() {
               <div className="grid grid-cols-2 gap-4 mb-2">
                 {goal.monthlyCryptoBudget != null && (
                   <div className="border border-gray-100 rounded-lg p-3 bg-gray-50">
-                    <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Monthly Crypto Budget</p>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Monthly Accumulation Budget</p>
                     <p className="text-sm font-semibold text-gray-800">{fmt(Number(goal.monthlyCryptoBudget))}/mo</p>
                   </div>
                 )}
