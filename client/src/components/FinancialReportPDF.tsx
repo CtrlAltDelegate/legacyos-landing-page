@@ -30,6 +30,8 @@ export interface ReportGoal {
   riskTolerance: string | null;
   targetEquityPct: number | null; targetRealEstatePct: number | null;
   targetCashPct: number | null; targetOtherPct: number | null;
+  monthlyCryptoBudget: number | null;
+  financialMode: string | null;
 }
 export interface FinancialReportPDFProps {
   userName: string; reportDate: string;
@@ -649,6 +651,22 @@ export default function FinancialReportPDF({
                 ))}
               </View>
             </View>
+            {(goal.monthlyCryptoBudget != null || goal.financialMode) && (
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+                {goal.monthlyCryptoBudget != null && (
+                  <View style={{ flex: 1, backgroundColor: C.g50, borderRadius: 6, padding: 8 }}>
+                    <Text style={s.goalCardLabel}>Monthly Crypto Budget</Text>
+                    <Text style={s.goalCardValue}>{fmt(Number(goal.monthlyCryptoBudget))}/mo</Text>
+                  </View>
+                )}
+                {goal.financialMode && (
+                  <View style={{ flex: 2, backgroundColor: '#f5f3ff', borderRadius: 6, padding: 8 }}>
+                    <Text style={s.goalCardLabel}>Current Strategy</Text>
+                    <Text style={{ fontSize: 8, color: C.g700, lineHeight: 1.4 }}>{goal.financialMode}</Text>
+                  </View>
+                )}
+              </View>
+            )}
             {goal.targetMonthlyIncome && (() => {
               const monthly = Number(goal.targetMonthlyIncome);
               const fn = monthly * 12 * 25;

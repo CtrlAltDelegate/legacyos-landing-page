@@ -61,6 +61,8 @@ interface Goal {
   targetCashPct: number | null;
   targetBusinessPct: number | null;
   targetOtherPct: number | null;
+  monthlyCryptoBudget: number | null;
+  financialMode: string | null;
 }
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
@@ -629,6 +631,22 @@ export default function ExportReport() {
                 </div>
               ))}
             </div>
+            {(goal.monthlyCryptoBudget != null || goal.financialMode) && (
+              <div className="grid grid-cols-2 gap-4 mb-2">
+                {goal.monthlyCryptoBudget != null && (
+                  <div className="border border-gray-100 rounded-lg p-3 bg-gray-50">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Monthly Crypto Budget</p>
+                    <p className="text-sm font-semibold text-gray-800">{fmt(Number(goal.monthlyCryptoBudget))}/mo</p>
+                  </div>
+                )}
+                {goal.financialMode && (
+                  <div className="border border-gray-100 rounded-lg p-3 bg-violet-50 col-span-2">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Current Strategy</p>
+                    <p className="text-xs text-gray-700 leading-relaxed">{goal.financialMode}</p>
+                  </div>
+                )}
+              </div>
+            )}
             {goal.targetMonthlyIncome && (
               <div className="border border-gray-100 rounded-lg p-3 bg-amber-50 text-xs text-amber-800 mb-2">
                 {(() => {

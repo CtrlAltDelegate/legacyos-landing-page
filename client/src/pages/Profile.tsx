@@ -23,6 +23,8 @@ interface Goal {
   targetBusinessPct: number;
   targetInsurancePct: number;
   targetOtherPct: number;
+  monthlyCryptoBudget: number | null;
+  financialMode: string | null;
 }
 
 // ─── Projection helpers ───────────────────────────────────────────────────────
@@ -138,6 +140,8 @@ export default function Profile() {
   const [primaryGoal, setPrimaryGoal]               = useState('');
   const [targetMonthlyIncome, setTargetMonthlyIncome] = useState('');
   const [riskTolerance, setRiskTolerance]           = useState('');
+  const [monthlyCryptoBudget, setMonthlyCryptoBudget] = useState('');
+  const [financialMode, setFinancialMode]           = useState('');
   const [alloc, setAlloc] = useState({
     targetEquityPct:     30,
     targetRealEstatePct: 40,
@@ -169,6 +173,8 @@ export default function Profile() {
           setTargetMonthlyIncome(g.targetMonthlyIncome != null ? String(g.targetMonthlyIncome) : '');
           setRiskTolerance(g.riskTolerance ?? '');
           setTargetDate(g.targetDate ?? null);
+          setMonthlyCryptoBudget(g.monthlyCryptoBudget != null ? String(g.monthlyCryptoBudget) : '');
+          setFinancialMode(g.financialMode ?? '');
           setAlloc({
             targetEquityPct:     Number(g.targetEquityPct     ?? 30),
             targetRealEstatePct: Number(g.targetRealEstatePct ?? 40),
@@ -208,6 +214,8 @@ export default function Profile() {
         targetMonthlyIncome: targetMonthlyIncome ? Number(targetMonthlyIncome) : null,
         targetDate: targetDate || null,
         riskTolerance: riskTolerance || null,
+        monthlyCryptoBudget: monthlyCryptoBudget ? Number(monthlyCryptoBudget) : null,
+        financialMode: financialMode || null,
         ...alloc,
       });
       setSuccess('Profile saved.');
@@ -307,6 +315,43 @@ export default function Profile() {
               onChange={(e) => setTargetDate(e.target.value || null)}
             />
           </div>
+        </div>
+      </div>
+
+      {/* Monthly Crypto Budget */}
+      <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6 space-y-4">
+        <h2 className="section-label">Monthly Crypto Budget</h2>
+        <p className="text-sm text-gray-500">Fixed dollar amount allocated to crypto purchases each month. Reflects the planned DCA buy amount, not actual purchases made.</p>
+        <div>
+          <label className="label" htmlFor="cryptoBudget">Amount ($)</label>
+          <input
+            id="cryptoBudget"
+            type="number"
+            min={0}
+            className="input max-w-xs"
+            placeholder="e.g. 500"
+            value={monthlyCryptoBudget}
+            onChange={(e) => setMonthlyCryptoBudget(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Financial Mode */}
+      <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6 space-y-4">
+        <h2 className="section-label">Current Financial Strategy</h2>
+        <p className="text-sm text-gray-500">Describe your active capital priority in 1–2 sentences. Update this whenever your strategy shifts — Flo and your report will reflect it.</p>
+        <div>
+          <label className="label" htmlFor="financialMode">Strategy note</label>
+          <textarea
+            id="financialMode"
+            rows={3}
+            className="input resize-none"
+            placeholder="e.g. Crypto accumulation phase — $500/month DCA, not actively deploying into acquisitions."
+            value={financialMode}
+            onChange={(e) => setFinancialMode(e.target.value)}
+            maxLength={500}
+          />
+          <p className="text-xs text-gray-400 mt-1 text-right">{financialMode.length}/500</p>
         </div>
       </div>
 
