@@ -29,6 +29,7 @@ import Portfolio from '@/pages/Portfolio';
 import Trends from '@/pages/Trends';
 import Learn from '@/pages/Learn';
 import Tools from '@/pages/Tools';
+import Import from '@/pages/Import';
 
 export default function App() {
   const { initialize, isInitialized } = useAuthStore();
@@ -72,6 +73,7 @@ export default function App() {
             <Route path="/trends"   element={<Trends />} />
             <Route path="/learn"    element={<Learn />} />
             <Route path="/tools"   element={<Tools />} />
+            <Route path="/import"  element={<Import />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/profile" element={<Profile />} />
           </Route>

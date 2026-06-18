@@ -22,6 +22,7 @@ import referralRoutes from './routes/referral';
 import analyticsRoutes from './routes/analytics';
 import metricsRoutes from './routes/metrics';
 import nudgesRoutes from './routes/nudges';
+import importsRoutes from './routes/imports';
 
 import { startPriceRefreshCron } from './cron/priceRefresh';
 import { startMonthlySnapshotCron } from './cron/monthlySnapshot';
@@ -94,6 +95,7 @@ app.use('/api/referral', referralRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/metrics', metricsRoutes);
 app.use('/api/nudges', nudgesRoutes);
+app.use('/api/imports', importsRoutes);
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 app.use((_req, res) => {

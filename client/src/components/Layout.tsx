@@ -13,6 +13,7 @@ import {
   TrendingUp,
   GraduationCap,
   Calculator,
+  FileUp,
   User,
   ShieldCheck,
   LogOut,
@@ -31,6 +32,7 @@ const nav = [
   { to: '/trends',      label: 'Trends',      Icon: TrendingUp      },
   { to: '/learn',       label: 'Wealth Hub',  Icon: GraduationCap   },
   { to: '/tools',       label: 'Tools',       Icon: Calculator      },
+  { to: '/import',      label: 'Import Data', Icon: FileUp          },
 ];
 
 // Primary 4 items always visible in the bottom bar + the More button as 5th slot
