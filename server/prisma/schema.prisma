@@ -81,6 +81,7 @@ model Goal {
   targetInsurancePct  Decimal   @default(5) @map("target_insurance_pct") @db.Decimal(5, 2)
   targetOtherPct      Decimal   @default(5) @map("target_other_pct") @db.Decimal(5, 2)
   monthlyCryptoBudget Decimal?  @map("monthly_crypto_budget") @db.Decimal(12, 2)
+  monthlyIncome       Decimal?  @map("monthly_income") @db.Decimal(12, 2)
   financialMode       String?   @map("financial_mode")
   createdAt           DateTime  @default(now()) @map("created_at")
   updatedAt           DateTime  @updatedAt @map("updated_at")

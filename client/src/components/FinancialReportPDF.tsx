@@ -31,6 +31,7 @@ export interface ReportGoal {
   targetEquityPct: number | null; targetRealEstatePct: number | null;
   targetCashPct: number | null; targetOtherPct: number | null;
   monthlyCryptoBudget: number | null;
+  monthlyIncome: number | null;
   financialMode: string | null;
 }
 export interface FinancialReportPDFProps {
@@ -470,29 +471,40 @@ export default function FinancialReportPDF({
                       <Text style={s.assetGroupLabel}>{fmt(clsTotal)}</Text>
                     </View>
                     <View style={s.tableHeader}>
-                      <Text style={{ ...s.thText, flex: isEq ? 3 : 4 }}>Name</Text>
+                      <Text style={{ ...s.thText, flex: isEq ? 3 : isRE ? 2 : 4 }}>Name</Text>
                       {isEq && <Text style={{ ...s.thText, flex: 1.5 }}>Ticker</Text>}
                       {isEq && <Text style={{ ...s.thText, flex: 2 }}>Sector</Text>}
                       {isRE && <Text style={{ ...s.thText, flex: 3 }}>Address</Text>}
-                      <Text style={{ ...s.thText, flex: 1.5, textAlign: 'right' }}>Value</Text>
+                      {isRE && <Text style={{ ...s.thText, flex: 1.5, textAlign: 'right' }}>Gross Value</Text>}
+                      {isRE && <Text style={{ ...s.thText, flex: 1.5, textAlign: 'right' }}>Mortgage</Text>}
+                      <Text style={{ ...s.thText, flex: 1.5, textAlign: 'right' }}>{isRE ? 'Equity' : 'Value'}</Text>
                       <Text style={{ ...s.thText, width: 32, textAlign: 'right' }}>%</Text>
                     </View>
                   </View>
                   {/* Rows flow freely */}
                   {clsAssets.map((a, i) => {
-                    const val = assetValue(a);
+                    const equity   = assetValue(a);
+                    const grossVal = isRE ? Number(a.adjustedValue ?? a.estimatedValue ?? 0) : Number(a.currentValue ?? 0);
+                    const mortgage = isRE ? Number(a.mortgageBalance ?? 0) : 0;
+                    const hasMortgage = isRE && mortgage > 0;
                     return (
                       <View key={a.id} style={i === clsAssets.length - 1 ? { ...s.tableRow, borderBottomWidth: 0 } : s.tableRow}>
-                        <View style={{ flex: isEq ? 3 : 4, flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={{ flex: isEq ? 3 : isRE ? 2 : 4, flexDirection: 'row', alignItems: 'center' }}>
                           <Text style={s.tdText}>{a.name}</Text>
                           {a.isPretax && <Text style={{ fontSize: 6, color: C.violet, fontFamily: 'Helvetica-Bold', marginLeft: 3 }}>PRE-TAX</Text>}
                         </View>
                         {isEq && <Text style={{ ...s.tdGray, flex: 1.5 }}>{a.ticker ?? '—'}</Text>}
                         {isEq && <Text style={{ ...s.tdGray, flex: 2 }}>{a.sector ?? '—'}</Text>}
                         {isRE && <Text style={{ ...s.tdGray, flex: 3 }}>{a.propertyAddress ?? '—'}</Text>}
-                        <Text style={{ ...s.tdBold, flex: 1.5, textAlign: 'right' }}>{val > 0 ? fmt(val) : '—'}</Text>
+                        {isRE && <Text style={{ ...s.tdGray, flex: 1.5, textAlign: 'right' }}>{grossVal > 0 ? fmt(grossVal) : '—'}</Text>}
+                        {isRE && (
+                          <Text style={{ ...s.tdGray, flex: 1.5, textAlign: 'right', color: hasMortgage ? C.red : C.green }}>
+                            {hasMortgage ? fmt(mortgage) : 'Paid off'}
+                          </Text>
+                        )}
+                        <Text style={{ ...s.tdBold, flex: 1.5, textAlign: 'right' }}>{equity > 0 ? fmt(equity) : '—'}</Text>
                         <Text style={{ ...s.tdSmall, width: 32, textAlign: 'right' }}>
-                          {totalAssets > 0 && val > 0 ? fmtPct(val / totalAssets * 100) : '—'}
+                          {totalAssets > 0 && equity > 0 ? fmtPct(equity / totalAssets * 100) : '—'}
                         </Text>
                       </View>
                     );
@@ -682,6 +694,55 @@ export default function FinancialReportPDF({
                 </View>
               );
             })()}
+          </View>
+        )}
+
+        {/* ── Cash Flow Overview ───────────────────────────────────── */}
+        {(goal?.monthlyIncome != null || monthlyDebt > 0 || goal?.monthlyCryptoBudget != null) && (
+          <View style={s.sec} wrap={false}>
+            <Text style={s.secHeading}>Cash Flow Overview</Text>
+            <View style={s.tableHeader}>
+              <Text style={{ ...s.thText, flex: 4 }}>Item</Text>
+              <Text style={{ ...s.thText, flex: 2, textAlign: 'right' }}>Monthly</Text>
+              <Text style={{ ...s.thText, flex: 3 }}>Notes</Text>
+            </View>
+            {goal?.monthlyIncome != null && (
+              <View style={s.tableRow}>
+                <Text style={{ ...s.tdBold, flex: 4 }}>Current Income</Text>
+                <Text style={{ ...s.tdBold, flex: 2, textAlign: 'right', color: C.green }}>{fmt(Number(goal.monthlyIncome))}</Text>
+                <Text style={{ ...s.tdGray, flex: 3 }}>All sources (W-2, business, rental)</Text>
+              </View>
+            )}
+            <View style={s.tableRow}>
+              <Text style={{ ...s.tdText, flex: 4 }}>Debt Obligations</Text>
+              <Text style={{ ...s.tdText, flex: 2, textAlign: 'right', color: monthlyDebt > 0 ? C.red : C.g400 }}>
+                {monthlyDebt > 0 ? fmt(monthlyDebt) : '$0'}
+              </Text>
+              <Text style={{ ...s.tdGray, flex: 3 }}>
+                {monthlyDebt > 0 ? `${liabilities.length} liabilit${liabilities.length === 1 ? 'y' : 'ies'} · min. payments` : 'No active liabilities'}
+              </Text>
+            </View>
+            {goal?.monthlyCryptoBudget != null && (
+              <View style={s.tableRow}>
+                <Text style={{ ...s.tdText, flex: 4 }}>Accumulation Budget</Text>
+                <Text style={{ ...s.tdText, flex: 2, textAlign: 'right', color: C.blue }}>{fmt(Number(goal.monthlyCryptoBudget))}</Text>
+                <Text style={{ ...s.tdGray, flex: 3 }}>Planned monthly investment (current strategy)</Text>
+              </View>
+            )}
+            {goal?.monthlyIncome != null && (
+              (() => {
+                const income = Number(goal.monthlyIncome);
+                const obligations = monthlyDebt + Number(goal?.monthlyCryptoBudget ?? 0);
+                const net = income - obligations;
+                return (
+                  <View style={{ ...s.tableRowLast }}>
+                    <Text style={{ ...s.tdBold, flex: 4 }}>Net Available Cash Flow</Text>
+                    <Text style={{ ...s.tdBold, flex: 2, textAlign: 'right', color: net >= 0 ? C.green : C.red }}>{fmt(net)}</Text>
+                    <Text style={{ ...s.tdGray, flex: 3 }}>After obligations &amp; accumulation budget</Text>
+                  </View>
+                );
+              })()
+            )}
           </View>
         )}
 

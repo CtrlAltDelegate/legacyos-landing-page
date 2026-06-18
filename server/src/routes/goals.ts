@@ -61,6 +61,7 @@ const updateGoalSchema = Joi.object({
     .allow(null),
   emergencyFundMonths: Joi.number().min(0).max(60).optional().allow(null),
   monthlyCryptoBudget: Joi.number().min(0).max(10_000_000).optional().allow(null),
+  monthlyIncome: Joi.number().min(0).max(10_000_000).optional().allow(null),
   financialMode: Joi.string().max(500).optional().allow('', null),
   ...allocationFields,
 }).min(1); // at least one field required for an update
@@ -218,6 +219,7 @@ router.put('/', validate(updateGoalSchema), async (req: Request, res: Response) 
       riskTolerance,
       emergencyFundMonths,
       monthlyCryptoBudget,
+      monthlyIncome,
       financialMode,
       targetEquityPct,
       targetRealEstatePct,
@@ -237,6 +239,7 @@ router.put('/', validate(updateGoalSchema), async (req: Request, res: Response) 
         ...(riskTolerance !== undefined && { riskTolerance: riskTolerance ?? null }),
         ...(emergencyFundMonths !== undefined && { emergencyFundMonths: emergencyFundMonths ?? null }),
         ...(monthlyCryptoBudget !== undefined && { monthlyCryptoBudget: monthlyCryptoBudget ?? null }),
+        ...(monthlyIncome !== undefined && { monthlyIncome: monthlyIncome ?? null }),
         ...(financialMode !== undefined && { financialMode: financialMode || null }),
         ...(targetEquityPct != null && { targetEquityPct }),
         ...(targetRealEstatePct != null && { targetRealEstatePct }),

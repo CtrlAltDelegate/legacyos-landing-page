@@ -24,6 +24,7 @@ interface Goal {
   targetInsurancePct: number;
   targetOtherPct: number;
   monthlyCryptoBudget: number | null;
+  monthlyIncome: number | null;
   financialMode: string | null;
 }
 
@@ -141,6 +142,7 @@ export default function Profile() {
   const [targetMonthlyIncome, setTargetMonthlyIncome] = useState('');
   const [riskTolerance, setRiskTolerance]           = useState('');
   const [monthlyCryptoBudget, setMonthlyCryptoBudget] = useState('');
+  const [monthlyIncome, setMonthlyIncome]           = useState('');
   const [financialMode, setFinancialMode]           = useState('');
   const [alloc, setAlloc] = useState({
     targetEquityPct:     30,
@@ -174,6 +176,7 @@ export default function Profile() {
           setRiskTolerance(g.riskTolerance ?? '');
           setTargetDate(g.targetDate ?? null);
           setMonthlyCryptoBudget(g.monthlyCryptoBudget != null ? String(g.monthlyCryptoBudget) : '');
+          setMonthlyIncome(g.monthlyIncome != null ? String(g.monthlyIncome) : '');
           setFinancialMode(g.financialMode ?? '');
           setAlloc({
             targetEquityPct:     Number(g.targetEquityPct     ?? 30),
@@ -215,6 +218,7 @@ export default function Profile() {
         targetDate: targetDate || null,
         riskTolerance: riskTolerance || null,
         monthlyCryptoBudget: monthlyCryptoBudget ? Number(monthlyCryptoBudget) : null,
+        monthlyIncome: monthlyIncome ? Number(monthlyIncome) : null,
         financialMode: financialMode || null,
         ...alloc,
       });
@@ -288,13 +292,25 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Income target */}
+      {/* Income */}
       <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-6 space-y-4">
-        <h2 className="section-label">Monthly Income Target</h2>
-        <p className="text-sm text-gray-500">The monthly passive / total income you're working toward.</p>
+        <h2 className="section-label">Income</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="label" htmlFor="income">Amount ($)</label>
+            <label className="label" htmlFor="monthlyIncome">Current monthly income ($)</label>
+            <input
+              id="monthlyIncome"
+              type="number"
+              min={0}
+              className="input"
+              placeholder="e.g. 8000"
+              value={monthlyIncome}
+              onChange={(e) => setMonthlyIncome(e.target.value)}
+            />
+            <p className="text-xs text-gray-400 mt-1">All sources — W-2, business, rental, etc.</p>
+          </div>
+          <div>
+            <label className="label" htmlFor="income">Monthly income target ($)</label>
             <input
               id="income"
               type="number"
@@ -304,6 +320,7 @@ export default function Profile() {
               value={targetMonthlyIncome}
               onChange={(e) => setTargetMonthlyIncome(e.target.value)}
             />
+            <p className="text-xs text-gray-400 mt-1">The passive / total income you're working toward.</p>
           </div>
           <div>
             <label className="label" htmlFor="targetDate">Target date</label>

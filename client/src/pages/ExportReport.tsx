@@ -62,6 +62,7 @@ interface Goal {
   targetBusinessPct: number | null;
   targetOtherPct: number | null;
   monthlyCryptoBudget: number | null;
+  monthlyIncome: number | null;
   financialMode: string | null;
 }
 
@@ -423,20 +424,26 @@ export default function ExportReport() {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-gray-100">
-                    <th className="text-left pb-1 font-medium text-gray-400 w-5/12">Name</th>
+                    <th className="text-left pb-1 font-medium text-gray-400 w-4/12">Name</th>
                     {cls === 'equity' && <th className="text-left pb-1 font-medium text-gray-400 w-2/12">Ticker</th>}
                     {cls === 'equity' && <th className="text-left pb-1 font-medium text-gray-400 w-2/12">Sector</th>}
-                    {cls === 'real_estate' && <th className="text-left pb-1 font-medium text-gray-400 w-4/12">Address</th>}
-                    <th className="text-right pb-1 font-medium text-gray-400">Value</th>
+                    {cls === 'real_estate' && <th className="text-left pb-1 font-medium text-gray-400 w-3/12">Address</th>}
+                    {cls === 'real_estate' && <th className="text-right pb-1 font-medium text-gray-400">Gross Value</th>}
+                    {cls === 'real_estate' && <th className="text-right pb-1 font-medium text-gray-400">Mortgage</th>}
+                    <th className="text-right pb-1 font-medium text-gray-400">{cls === 'real_estate' ? 'Equity' : 'Value'}</th>
                     <th className="text-right pb-1 font-medium text-gray-400 w-1/12">%</th>
                   </tr>
                 </thead>
                 <tbody>
                   {clsAssets.map(a => {
-                    const val = assetValue(a);
+                    const equity = assetValue(a);
+                    const grossVal = cls === 'real_estate'
+                      ? Number(a.adjustedValue ?? a.estimatedValue ?? 0)
+                      : Number(a.currentValue ?? 0);
+                    const mortgage = cls === 'real_estate' ? Number(a.mortgageBalance ?? 0) : 0;
                     return (
                       <tr key={a.id} className="border-b border-gray-50">
-                        <td className="py-1 text-gray-700 truncate max-w-0 w-5/12 pr-2">
+                        <td className="py-1 text-gray-700 truncate max-w-0 w-4/12 pr-2">
                           {a.name}{a.isPretax && <span className="ml-1 text-[9px] text-violet-500 font-bold">PRE-TAX</span>}
                         </td>
                         {cls === 'equity' && (
@@ -446,13 +453,21 @@ export default function ExportReport() {
                           <td className="py-1 text-gray-400">{a.sector ?? '—'}</td>
                         )}
                         {cls === 'real_estate' && (
-                          <td className="py-1 text-gray-400 truncate max-w-0 w-4/12 pr-2">
+                          <td className="py-1 text-gray-400 truncate max-w-0 w-3/12 pr-2">
                             {a.propertyAddress ?? '—'}
                           </td>
                         )}
-                        <td className="py-1 text-right font-mono text-gray-800">{val > 0 ? fmt(val) : '—'}</td>
+                        {cls === 'real_estate' && (
+                          <td className="py-1 text-right font-mono text-gray-600">{grossVal > 0 ? fmt(grossVal) : '—'}</td>
+                        )}
+                        {cls === 'real_estate' && (
+                          <td className={`py-1 text-right font-mono ${mortgage > 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+                            {mortgage > 0 ? fmt(mortgage) : 'Paid off'}
+                          </td>
+                        )}
+                        <td className="py-1 text-right font-mono text-gray-800">{equity > 0 ? fmt(equity) : '—'}</td>
                         <td className="py-1 text-right text-gray-400">
-                          {totalAssets > 0 && val > 0 ? fmtPct(val / totalAssets * 100) : '—'}
+                          {totalAssets > 0 && equity > 0 ? fmtPct(equity / totalAssets * 100) : '—'}
                         </td>
                       </tr>
                     );
@@ -668,7 +683,62 @@ export default function ExportReport() {
           </>
         )}
 
-        {/* ── 8. Six Wing Assessment ───────────────────────────────────── */}
+        {/* ── 8. Cash Flow Overview ────────────────────────────────────── */}
+        {goal && (goal.monthlyIncome != null || monthlyDebtService > 0 || goal.monthlyCryptoBudget != null) && (
+          <>
+            <SectionHeading>Cash Flow Overview</SectionHeading>
+            <table className="w-full text-xs mb-2">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="text-left pb-1 font-medium text-gray-400 w-5/12">Item</th>
+                  <th className="text-right pb-1 font-medium text-gray-400">Monthly</th>
+                  <th className="text-left pb-1 font-medium text-gray-400 pl-4">Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {goal.monthlyIncome != null && (
+                  <tr className="border-b border-gray-50">
+                    <td className="py-1 font-semibold text-gray-800">Current Income</td>
+                    <td className="py-1 text-right font-mono text-emerald-600 font-bold">{fmt(Number(goal.monthlyIncome))}</td>
+                    <td className="py-1 text-gray-400 pl-4">All sources (W-2, business, rental)</td>
+                  </tr>
+                )}
+                <tr className="border-b border-gray-50">
+                  <td className="py-1 text-gray-700">Debt Obligations</td>
+                  <td className={`py-1 text-right font-mono ${monthlyDebtService > 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                    {monthlyDebtService > 0 ? fmt(monthlyDebtService) : '$0'}
+                  </td>
+                  <td className="py-1 text-gray-400 pl-4">
+                    {monthlyDebtService > 0
+                      ? `${liabilities.length} liabilit${liabilities.length === 1 ? 'y' : 'ies'} · minimum payments`
+                      : 'No active liabilities'}
+                  </td>
+                </tr>
+                {goal.monthlyCryptoBudget != null && (
+                  <tr className="border-b border-gray-50">
+                    <td className="py-1 text-gray-700">Accumulation Budget</td>
+                    <td className="py-1 text-right font-mono text-blue-600">{fmt(Number(goal.monthlyCryptoBudget))}</td>
+                    <td className="py-1 text-gray-400 pl-4">Planned monthly investment (current strategy)</td>
+                  </tr>
+                )}
+                {goal.monthlyIncome != null && (() => {
+                  const income = Number(goal.monthlyIncome);
+                  const obligations = monthlyDebtService + Number(goal.monthlyCryptoBudget ?? 0);
+                  const net = income - obligations;
+                  return (
+                    <tr className="font-bold border-t border-gray-200">
+                      <td className="pt-2 text-gray-800">Net Available Cash Flow</td>
+                      <td className={`pt-2 text-right font-mono ${net >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{fmt(net)}</td>
+                      <td className="pt-2 text-gray-400 pl-4">After obligations &amp; accumulation budget</td>
+                    </tr>
+                  );
+                })()}
+              </tbody>
+            </table>
+          </>
+        )}
+
+        {/* ── 9. Six Wing Assessment ───────────────────────────────────── */}
         {assessedWings.length > 0 && (
           <>
             <SectionHeading>Six Wing Assessment</SectionHeading>
