@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Printer, ArrowLeft } from 'lucide-react';
+import { Printer, ArrowLeft, FileBarChart } from 'lucide-react';
 import { pdf } from '@react-pdf/renderer';
 import { api } from '@/api/client';
 import { getAllWings, type WingSummary } from '@/api/wings';
@@ -8,6 +8,7 @@ import { getTodos, type TodoItem } from '@/api/todos';
 import { useAuthStore } from '@/store/auth';
 import Spinner from '@/components/Spinner';
 import FinancialReportPDF from '@/components/FinancialReportPDF';
+import CFOBriefPDF from '@/components/CFOBriefPDF';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -128,6 +129,7 @@ export default function ExportReport() {
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
+  const [downloadingBrief, setDownloadingBrief] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
 
   const loadData = () => {
@@ -246,9 +248,47 @@ export default function ExportReport() {
           <ArrowLeft className="h-4 w-4" /> Back
         </button>
         <div className="flex items-center gap-3">
-          <p className="text-xs text-gray-400">
-            Downloads a proper PDF document — no print dialog needed
+          <p className="text-xs text-gray-400 hidden md:block">
+            Downloads a proper PDF — no print dialog needed
           </p>
+
+          {/* CFO Brief */}
+          <button
+            disabled={downloadingBrief}
+            onClick={async () => {
+              setDownloadingBrief(true);
+              try {
+                const slug = (user?.fullName ?? 'Financial').replace(/\s+/g, '-');
+                const date = new Date().toISOString().slice(0, 10);
+                const blob = await pdf(
+                  <CFOBriefPDF
+                    userName={user?.fullName ?? 'Client'}
+                    reportDate={reportDate}
+                    nw={nw}
+                    snapshots={snapshots}
+                    assets={assets}
+                    liabilities={liabilities}
+                    goal={goal}
+                    wings={wings}
+                  />
+                ).toBlob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${slug}-cfo-brief-${date}.pdf`;
+                a.click();
+                URL.revokeObjectURL(url);
+              } finally {
+                setDownloadingBrief(false);
+              }
+            }}
+            className="inline-flex items-center gap-2 rounded-lg border border-brand-200 bg-brand-50 px-4 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-100 transition disabled:opacity-60"
+          >
+            <FileBarChart className="h-4 w-4" />
+            {downloadingBrief ? 'Generating…' : 'CFO Brief'}
+          </button>
+
+          {/* Full Report */}
           <button
             disabled={downloading}
             onClick={async () => {
@@ -282,7 +322,7 @@ export default function ExportReport() {
             className="btn-primary gap-2 disabled:opacity-60"
           >
             <Printer className="h-4 w-4" />
-            {downloading ? 'Generating…' : 'Download PDF'}
+            {downloading ? 'Generating…' : 'Full Report'}
           </button>
         </div>
       </div>
