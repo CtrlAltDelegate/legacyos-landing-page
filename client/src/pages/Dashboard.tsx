@@ -194,7 +194,7 @@ interface WingCardProps {
 function WingCard({ wing, isPriority, onCompleteStep, onUncompleteStep }: WingCardProps) {
   const navigate = useNavigate();
   const c = WING_COLOR[wing.color] ?? WING_COLOR.slate;
-  const MAX_LEVEL = 3;
+  const MAX_LEVEL = 5;
   const isDone = !!wing.stepCompletedAt;
 
   return (

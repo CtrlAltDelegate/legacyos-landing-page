@@ -275,6 +275,7 @@ model WingAssessment {
   wing             String    @db.VarChar(30) // 'growth'|'preservation'|'philanthropy'|'experiences'|'legacy'|'operations'
   level            Int       @default(0)    // 0=Foundation 1=Building 2=Established 3=Advanced
   answers          Json      @default("{}") // { question_id: boolean }
+  stepNotes        Json      @default("{}") @map("step_notes") // { "0": "user text", "3": "..." }
   completedAt      DateTime? @map("completed_at")
   stepCompletedAt  DateTime? @map("step_completed_at") // When the current next step was marked done
   createdAt        DateTime  @default(now()) @map("created_at")

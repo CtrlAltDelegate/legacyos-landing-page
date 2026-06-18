@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Sparkles, CheckCircle2, ChevronDown, BookOpen, ClipboardList, ExternalLink } from 'lucide-react';
-import { getWing, submitAssessment, completeStep, uncompleteStep, type WingDetail, type WingId } from '@/api/wings';
+import { ArrowLeft, Sparkles, CheckCircle2, ChevronDown, BookOpen, ClipboardList, ExternalLink, Save, Upload } from 'lucide-react';
+import { getWing, submitAssessment, completeStep, uncompleteStep, saveStepNote, type WingDetail, type WingId } from '@/api/wings';
 import { getErrorMessage } from '@/api/client';
 import { useAuthStore } from '@/store/auth';
 import Spinner from '@/components/Spinner';
@@ -193,6 +193,11 @@ export default function WingDetail() {
   const [stepCompletedAt, setStepCompletedAt] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
 
+  const [stepNotes, setStepNotes] = useState<Record<string, string>>({});
+  const [noteText, setNoteText] = useState('');
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteSaved, setNoteSaved] = useState(false);
+
   useEffect(() => {
     if (!wingParam) return;
     getWing(wingParam as WingId)
@@ -204,6 +209,8 @@ export default function WingDetail() {
           setResult({ level: data.level, levelLabel: data.levelLabel });
         }
         if (data.stepCompletedAt) setStepCompletedAt(data.stepCompletedAt);
+        setStepNotes(data.stepNotes ?? {});
+        setNoteText(data.stepNotes?.[String(data.level)] ?? '');
       })
       .catch((err) => setError(getErrorMessage(err)))
       .finally(() => setLoading(false));
@@ -247,6 +254,21 @@ export default function WingDetail() {
       setStepCompletedAt(null);
     } catch (err) {
       setError(getErrorMessage(err));
+    }
+  }
+
+  async function handleSaveNote() {
+    if (!wing) return;
+    setNoteSaving(true);
+    try {
+      const updated = await saveStepNote(wing.id as WingId, wing.level, noteText);
+      setStepNotes(updated);
+      setNoteSaved(true);
+      setTimeout(() => setNoteSaved(false), 2500);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setNoteSaving(false);
     }
   }
 
@@ -344,6 +366,69 @@ export default function WingDetail() {
               >
                 <CheckCircle2 className="h-4 w-4" /> Mark annual review done
               </button>
+            </div>
+          ) : currentStep.actionType === 'write' ? (
+            <div className="space-y-3 pt-1">
+              {stepCompletedAt ? (
+                <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-2.5">
+                  <p className="text-sm font-semibold text-green-700">
+                    ✓ Completed {new Date(stepCompletedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </p>
+                  <p className="text-xs text-green-600 mt-0.5">Re-assess this wing to unlock your next step.</p>
+                </div>
+              ) : (
+                <>
+                  <textarea
+                    rows={6}
+                    className="input resize-y text-sm leading-relaxed w-full"
+                    placeholder={currentStep.placeholder ?? 'Write your thoughts here...'}
+                    value={noteText}
+                    onChange={(e) => { setNoteText(e.target.value); setNoteSaved(false); }}
+                  />
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      onClick={handleSaveNote}
+                      disabled={noteSaving || noteText === (stepNotes[String(wing.level)] ?? '')}
+                      className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition disabled:opacity-40 ${c.btn}`}
+                    >
+                      {noteSaving ? <Spinner className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+                      {noteSaved ? 'Saved ✓' : noteSaving ? 'Saving…' : 'Save'}
+                    </button>
+                    <label className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 transition cursor-pointer">
+                      <Upload className="h-4 w-4" />
+                      Upload document
+                      <input type="file" accept=".pdf,.doc,.docx,.txt" className="sr-only" onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          const text = ev.target?.result as string;
+                          if (text) setNoteText((prev) => prev ? `${prev}\n\n---\n${text}` : text);
+                        };
+                        if (file.type === 'text/plain') reader.readAsText(file);
+                        else setNoteText((prev) => prev ? `${prev}\n\n[Attached: ${file.name}]` : `[Attached: ${file.name}]`);
+                      }} />
+                    </label>
+                    <Link
+                      to="/flo"
+                      className={`inline-flex items-center gap-1.5 text-sm font-medium ${c.text} hover:underline`}
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Not sure where to start? Ask Flo
+                    </Link>
+                  </div>
+                  {noteText.trim().length > 0 && (
+                    <button
+                      onClick={handleCompleteStep}
+                      disabled={completingStep}
+                      className="inline-flex items-center gap-2 rounded-lg border border-green-300 bg-green-50 px-4 py-2 text-sm font-semibold text-green-700 hover:bg-green-100 transition disabled:opacity-50"
+                    >
+                      {completingStep ? <Spinner className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+                      Mark as complete
+                    </button>
+                  )}
+                </>
+              )}
             </div>
           ) : (
             <div className="flex flex-wrap items-center gap-3 pt-1">

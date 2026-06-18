@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { requireAuth } from '../middleware/auth';
 import { prisma } from '../lib/prisma';
-import { WINGS, WING_ORDER, LEVEL_LABELS, calculateLevel, WingId, WingStep } from '../config/wingSteps';
+import { WINGS, WING_ORDER, LEVEL_LABELS, MAX_WING_LEVEL, calculateLevel, WingId, WingStep } from '../config/wingSteps';
 
 /** Apply any admin-managed affiliate link overrides to a step array. */
 async function applyAffiliateOverrides(wingId: string, steps: WingStep[]): Promise<WingStep[]> {
@@ -36,6 +36,7 @@ router.get('/', async (req: Request, res: Response) => {
         answers: a.answers,
         completedAt: a.completedAt,
         stepCompletedAt: a.stepCompletedAt ?? null,
+        stepNotes: a.stepNotes,
       }])
     );
 
@@ -61,6 +62,7 @@ router.get('/', async (req: Request, res: Response) => {
         nextStep: step,
         questions: cfg.questions,
         answers: (saved?.answers as Record<string, boolean>) ?? {},
+        stepNotes: (saved?.stepNotes as Record<string, string>) ?? {},
       };
     }));
 
@@ -108,6 +110,7 @@ router.get('/:wing', async (req: Request, res: Response) => {
       nextStep: step,
       questions: cfg.questions,
       answers: (saved?.answers as Record<string, boolean>) ?? {},
+      stepNotes: (saved?.stepNotes as Record<string, string>) ?? {},
     });
   } catch (err) {
     console.error('[wings GET /:wing]', err);
@@ -230,6 +233,58 @@ router.delete('/:wing/complete-step', async (req: Request, res: Response) => {
   } catch (err) {
     console.error('[wings DELETE /:wing/complete-step]', err);
     res.status(500).json({ error: 'Failed to clear step completion.' });
+  }
+});
+
+// ─── PUT /api/wings/:wing/notes ───────────────────────────────────────────────
+// Save a step note (plain text written by the user for a write-type step).
+
+router.put('/:wing/notes', async (req: Request, res: Response) => {
+  const wingId = req.params.wing as WingId;
+
+  if (!WINGS[wingId]) {
+    res.status(404).json({ error: 'Wing not found.' });
+    return;
+  }
+
+  const { level, note } = req.body as { level?: number; note?: string };
+
+  if (typeof level !== 'number' || level < 0 || level > MAX_WING_LEVEL) {
+    res.status(400).json({ error: 'level must be a number 0–5.' });
+    return;
+  }
+  if (typeof note !== 'string') {
+    res.status(400).json({ error: 'note must be a string.' });
+    return;
+  }
+
+  const now = new Date();
+
+  try {
+    const existing = await prisma.wingAssessment.findUnique({
+      where: { userId_wing: { userId: req.user!.userId, wing: wingId } },
+    });
+
+    const currentNotes = (existing?.stepNotes as Record<string, string>) ?? {};
+    const updatedNotes = { ...currentNotes, [String(level)]: note };
+
+    await prisma.wingAssessment.upsert({
+      where: { userId_wing: { userId: req.user!.userId, wing: wingId } },
+      create: {
+        userId: req.user!.userId,
+        wing: wingId,
+        level: 0,
+        answers: {},
+        completedAt: now,
+        stepNotes: updatedNotes,
+      },
+      update: { stepNotes: updatedNotes },
+    });
+
+    res.json({ message: 'Note saved.', stepNotes: updatedNotes });
+  } catch (err) {
+    console.error('[wings PUT /:wing/notes]', err);
+    res.status(500).json({ error: 'Failed to save note.' });
   }
 });
 

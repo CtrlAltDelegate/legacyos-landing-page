@@ -36,6 +36,8 @@ export interface WingStep {
   actionUrl: string;
   isInternal?: boolean; // true = React Router link, false = external (open new tab)
   isAffiliate?: boolean;
+  actionType?: 'write'; // 'write' = inline textarea instead of a link button
+  placeholder?: string; // hint text for the textarea
 }
 
 export interface WingConfig {
@@ -234,9 +236,11 @@ export const WINGS: Record<WingId, WingConfig> = {
         title: 'Define what your family stands for',
         description:
           "Giving without intention is giving without impact. Before you write a single check, answer these three questions:\n\n1. What problem do I care most about solving? (education, hunger, environment, housing, arts, healthcare, community)\n2. Where do I want to see the change? (local community, national, global)\n3. How do I want to give? (direct service, funding organizations, time and skills, or capital)\n\nThis takes 30 minutes and changes everything. Flo can guide you through it interactively — ask it to help you write your \"family giving philosophy\" in one paragraph. Once written, revisit and refine it annually.",
-        actionLabel: 'Write your philosophy with Flo',
+        actionLabel: 'Write your giving philosophy',
         actionUrl: '/flo',
         isInternal: true,
+        actionType: 'write',
+        placeholder: 'Our family cares most about [cause — education, housing, environment...]. We want to see change [locally / nationally / globally]. We believe the most impactful way to give is [direct funding / hands-on service / capital]...',
       },
       {
         level: 1,
@@ -279,9 +283,11 @@ export const WINGS: Record<WingId, WingConfig> = {
         title: 'Write your family giving policy statement and build a legacy philanthropy plan',
         description:
           "Expert philanthropists don't just give — they build a giving infrastructure that outlasts them.\n\nFamily Giving Policy Statement: A formal document (2-5 pages) that articulates your family's giving values, the causes you prioritize, the criteria for funding organizations, how giving decisions are made (who has a vote, what thresholds require consensus), and what you explicitly don't fund. This document guides your DAF grants, governs your family foundation if you establish one, and ensures continuity when future generations inherit giving responsibility.\n\nPrivate Foundation vs. Large DAF: At $5M+ in giving assets, a private foundation offers more control, staffing capacity, and the ability to fund individuals (scholarships, emergency grants). The tradeoff: administrative burden (Form 990-PF, 5% annual distribution requirement, excise taxes). Most families are better served by a large DAF until giving assets exceed $10-15M.\n\nMulti-generational legacy: Define explicitly how and when the next generation takes over giving decisions. Create a family philanthropy council. Document the origin story of your giving — why these causes, from when, with what results.\n\nFlo can help you draft this document interactively.\n\nOngoing: Annual giving review. Update giving policy every 3 years.",
-        actionLabel: 'Draft your giving policy with Flo',
+        actionLabel: 'Write your giving policy statement',
         actionUrl: '/flo',
         isInternal: true,
+        actionType: 'write',
+        placeholder: 'Our family giving policy:\n\nCauses we prioritize: ...\nGeographic focus: ...\nHow we evaluate organizations: ...\nAnnual giving goal: $...\nHow giving decisions are made: ...\nWhat we explicitly do not fund: ...',
       },
     ],
   },
@@ -312,9 +318,11 @@ export const WINGS: Record<WingId, WingConfig> = {
         title: 'Set a family experience budget and make it non-negotiable',
         description:
           "Most families spend on experiences reactively — a vacation when there's time, an activity when the kids ask. The families who build the richest lives treat experiences as a line item in the budget, not an afterthought.\n\nThe framework: Decide annually how much your family will invest in experiences. Start with 5-10% of your take-home income dedicated to intentional experiences. Break it into three buckets:\n\n1. Weekly/monthly micro-experiences ($50-$300): museum visits, outdoor adventures, cooking a new cuisine, day trips. These are the high-frequency, low-cost touches that build family culture.\n2. Annual major experiences ($1,000-$10,000): a summer trip, a family learning adventure, a milestone celebration. One per year minimum.\n3. Multi-year bucket list experiences ($10,000+): a trip abroad, an immersive learning program, a family reunion trip. Plan these 1-2 years in advance.\n\nTarget: Annual experience budget set and funded. First experience planned.",
-        actionLabel: 'Plan it with Flo',
+        actionLabel: 'Set your experience budget',
         actionUrl: '/flo',
         isInternal: true,
+        actionType: 'write',
+        placeholder: 'Our annual experience budget: $...\n\nMonthly micro-experiences ($50–$300): ...\nAnnual major experience: ...\nBucket list experience (multi-year): ...\n\nFirst experience we are planning: ...',
       },
       {
         level: 1,
@@ -357,9 +365,11 @@ export const WINGS: Record<WingId, WingConfig> = {
         title: 'Establish a family council and document your family\'s legacy story',
         description:
           "Expert families don't just have experiences — they build the institutional infrastructure to sustain a rich family culture across generations. Two practices set them apart:\n\nFamily Council: A regular, structured gathering (quarterly or annual) where the family makes decisions together about shared resources, values, and legacy. Agenda items might include: reviewing the family mission statement, discussing charitable giving, planning the annual experience, introducing the next generation to financial concepts, and hearing updates on family investments. Even with young children, a simplified family meeting once a year builds the muscle for the governance conversations that matter later.\n\nFamily Legacy Document: An oral and written record of your family's story — how wealth was built, the values that drove it, the sacrifices made, the lessons learned. Tools: StoryCorp (recorded interviews), Storyworth (guided weekly prompts), or a professionally facilitated family memoir. The families that successfully transfer wealth across generations share one trait: the heirs understand *why* the wealth was built and what they're supposed to do with it.\n\nFlo can guide you through both: ask it to facilitate a family council agenda, or to help you write the first chapter of your family's financial story.\n\nOngoing: Family council at least annually. Legacy document updated every 5 years.",
-        actionLabel: 'Start your family story with Flo',
+        actionLabel: 'Document your family story',
         actionUrl: '/flo',
         isInternal: true,
+        actionType: 'write',
+        placeholder: 'Our family\'s story began when...\n\nThe values that define us are...\n\nWhat we want future generations to understand about how we built this...\n\nThe sacrifices made and lessons learned...',
       },
     ],
   },
@@ -390,18 +400,22 @@ export const WINGS: Record<WingId, WingConfig> = {
         title: 'Write your family mission statement',
         description:
           "Every great institution has a mission. Your family is an institution. A family mission statement — one paragraph — answers three questions:\n\n1. Who are we? (identity: what values define your family)\n2. What are we building? (purpose: what do you want to create together)\n3. How do we behave? (principles: how do you make decisions)\n\nExamples:\n\"We are a family that builds wealth through integrity and hard work, protects what we've built through prudent stewardship, and uses our resources to create opportunities for those who don't have them.\"\n\n\"We believe every generation should be better prepared than the last. We invest in education, we build businesses, we give generously, and we never mistake wealth for character.\"\n\nThis doesn't have to be perfect. It just has to be written down. Flo can guide you through the questions interactively.\n\nTarget: First draft of family mission statement written. Shared with family.",
-        actionLabel: 'Write it with Flo',
+        actionLabel: 'Write your family mission statement',
         actionUrl: '/flo',
         isInternal: true,
+        actionType: 'write',
+        placeholder: 'We are a family that...\n\nWe believe...\n\nWe are building...\n\n(Tip: answer the three questions — Who are we? What are we building? How do we behave?)',
       },
       {
         level: 1,
         title: 'Name and document your core family values',
         description:
           "Values are the operating system that runs beneath every financial decision. They determine how you earn, spend, save, give, and eventually pass on wealth. Most families have implicit values they've never made explicit — which means they can't intentionally pass them to the next generation.\n\nStart by naming 5-7 core values that describe your family at its best. Not aspirational platitudes — actual values that show up in your behavior. \"We show up when it's hard.\" \"We never ask someone to do something we wouldn't do ourselves.\" \"We live below our means.\"\n\nFor each value, write:\n- A one-sentence definition\n- One example of when this value guided a family decision\n- How you want this value to show up in your children's lives\n\nOnce written, post these somewhere visible in your home. Reference them in hard conversations. Let them guide financial decisions — where you invest, what you fund, who you partner with.\n\nFlo can facilitate this exercise interactively.\n\nTarget: 5-7 core values named and defined in writing.",
-        actionLabel: 'Define your values with Flo',
+        actionLabel: 'Document your family values',
         actionUrl: '/flo',
         isInternal: true,
+        actionType: 'write',
+        placeholder: 'Our core values:\n\n1. [Value] — What it means: ... Example of when this guided a decision: ...\n2. [Value] — ...\n3. [Value] — ...\n4. [Value] — ...\n5. [Value] — ...',
       },
       {
         level: 2,
@@ -417,27 +431,33 @@ export const WINGS: Record<WingId, WingConfig> = {
         title: 'Create a family financial education curriculum and meeting cadence',
         description:
           "The number-one reason generational wealth fails by the third generation isn't investment performance — it's the failure to transmit the knowledge and values needed to manage it. Your heirs don't need to be handed money; they need to be trained to handle it.\n\nFor your children (age-appropriate financial education):\n- Elementary: Money is a tool. Earn it, spend it intentionally, save for goals, give some away.\n- Middle school: Investing basics. What's a stock? Why do companies grow? Why does compound interest matter?\n- High school: Real responsibility. A teen checking account, a part-time job, a meaningful savings goal. Reading The Millionaire Next Door or Rich Dad Poor Dad.\n- College: Portfolio overview. Show them what the family owns. Explain the strategy. Let them shadow advisor meetings.\n\nFamily meetings: Even one family meeting per year — reviewing net worth growth, discussing the giving budget, sharing one financial lesson learned — builds the engagement and literacy that makes wealthy heirs stewards rather than consumers.\n\nTarget: Age-appropriate financial education in place for each child. Annual family financial meeting scheduled.",
-        actionLabel: 'Plan a family meeting with Flo',
+        actionLabel: 'Write your family meeting plan',
         actionUrl: '/flo',
         isInternal: true,
+        actionType: 'write',
+        placeholder: 'Our family financial meeting — [date/frequency]\n\nAgenda:\n1. Net worth review — where we are vs. last year\n2. Giving update — what we funded and impact\n3. One financial lesson each person shares\n4. Goals for next year\n\nWho attends: ...\nWhen we meet: ...',
       },
       {
         level: 4,
         title: 'Build a succession plan for your business and major assets',
         description:
           "If you own a business, commercial real estate, or a significant concentration in any single asset, you need a succession plan. Without one, the default is usually forced liquidation at the worst time — a fire sale that destroys decades of value-building.\n\nBusiness succession paths:\n1. Family succession: Identify, train, and transition leadership to a family member. This takes 5-10 years to do properly. The #1 mistake is waiting too long to name an heir apparent.\n2. Management buyout: Key employees purchase the business using seller financing, SBA loans, or private equity. Often the best outcome when the family doesn't want to operate.\n3. Third-party sale: Sell to a strategic buyer or private equity. Prepare the business 3-5 years in advance: clean financials, documented processes, reduced owner dependency, strong management team.\n4. ESOP (Employee Stock Ownership Plan): Sell to employees with significant tax advantages. Best for businesses with 30+ employees and $5M+ in revenue.\n\nAll of these require a business attorney, a business valuation professional (a \"business appraiser\"), and ideally an M&A advisor.\n\nFor non-business asset succession: Ensure your trust properly accounts for each major asset class and your specific wishes for each.\n\nTarget: Succession timeline and preferred path documented. Key advisors engaged.",
-        actionLabel: 'Build a plan with Flo',
+        actionLabel: 'Document your succession plan',
         actionUrl: '/flo',
         isInternal: true,
+        actionType: 'write',
+        placeholder: 'Succession plan for [business / asset]:\n\nPreferred path: [family succession / management buyout / sale / ESOP]\nTimeline: ...\nNamed successor or buyer profile: ...\nKey milestones to reach: ...\nAdvisors engaged: ...',
       },
       {
         level: 5,
         title: 'Build a complete legacy package for the next generation',
         description:
           "At Expert level, your family's legacy infrastructure should be a complete, documented, and living system — not a collection of documents that only your attorney knows about.\n\nA complete legacy package includes:\n\n1. Family mission statement and values document (revisited annually)\n2. Letter of instruction: A plain-English guide for your executor and heirs — where everything is, what you want done with it, and why. Not a legal document, but the most important communication you'll ever write.\n3. Estate plan package: Will, trust(s), POA, healthcare proxy, advance directive — signed, witnessed, and accessible.\n4. Financial inventory: A complete picture of every asset, account, debt, and insurance policy — with account numbers, institutions, and beneficiary designations.\n5. Business succession plan: Documented path for every business interest.\n6. Family financial narrative: The story of how the family's wealth was built — the decisions, the sacrifices, the philosophy. This is the document that prevents heirs from thinking wealth appeared out of thin air.\n7. Values-based inheritance plan: Not just who gets what, but with what guidelines and with what expectations about stewardship.\n\nFlo can help you write each piece of this interactively. The process takes months — but it's the most important financial work you'll ever do.\n\nOngoing: Annual review and update of all documents. Family meeting to discuss any changes.",
-        actionLabel: 'Start your legacy package with Flo',
+        actionLabel: 'Build your legacy package',
         actionUrl: '/flo',
         isInternal: true,
+        actionType: 'write',
+        placeholder: 'Legacy package status:\n\n1. Family mission statement: [done / in progress / not started]\n2. Letter of instruction: ...\n3. Estate plan (will, trust, POA, advance directive): ...\n4. Financial inventory: ...\n5. Business succession plan: ...\n6. Family financial narrative: ...\n7. Values-based inheritance plan: ...\n\nNotes:',
       },
     ],
   },

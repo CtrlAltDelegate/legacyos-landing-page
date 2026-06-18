@@ -16,6 +16,8 @@ export interface WingStep {
   actionUrl: string;
   isInternal?: boolean;
   isAffiliate?: boolean;
+  actionType?: 'write';
+  placeholder?: string;
 }
 
 export interface WingQuestion {
@@ -34,10 +36,11 @@ export interface WingSummary {
   level: number;
   levelLabel: string;
   assessed: boolean;
-  stepCompletedAt: string | null; // ISO date when current step was marked done
+  stepCompletedAt: string | null;
   nextStep: WingStep;
   questions: WingQuestion[];
   answers: Record<string, boolean>;
+  stepNotes: Record<string, string>;
 }
 
 export interface WingDetail extends WingSummary {
@@ -71,4 +74,13 @@ export async function completeStep(
 
 export async function uncompleteStep(wingId: WingId): Promise<void> {
   await api.delete(`/wings/${wingId}/complete-step`);
+}
+
+export async function saveStepNote(
+  wingId: WingId,
+  level: number,
+  note: string,
+): Promise<Record<string, string>> {
+  const { data } = await api.put(`/wings/${wingId}/notes`, { level, note });
+  return data.stepNotes;
 }
